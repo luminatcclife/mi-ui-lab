@@ -9,23 +9,7 @@ interface NewComponentModalProps {
   onToast: (msg: string) => void;
 }
 
-export function NewComponentModal({
-  isOpen,
-  onClose,
-  onSave,
-  onToast,
-}: NewComponentModalProps) {
-  const [name, setName] = useState('');
-  const [version, setVersion] = useState('1.0.0');
-  const [versionNotes, setVersionNotes] = useState('Versión inicial documentada en mi-ui-lab');
-  const [tagline, setTagline] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<Exclude<ComponentCategory, 'all' | 'favorites'>>('cards');
-  const [tokensUsed, setTokensUsed] = useState('rounded-xl, border-zinc-800, p-6, transition-all');
-  const [tags, setTags] = useState('tarjeta, custom, react, ui');
-  const [variantName, setVariantName] = useState('Variante Principal');
-  const [variantDesc, setVariantDesc] = useState('Estilo estándar de la pieza.');
-  const [sourceCode, setSourceCode] = useState(`import React from 'react';
+const DEFAULT_SOURCE_CODE = `import React from 'react';
 
 export function MiNuevaPieza() {
   return (
@@ -34,8 +18,52 @@ export function MiNuevaPieza() {
       <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Diseño 100% bajo tu control sin dependencias externas.</p>
     </div>
   );
-}`);
-  const [usageSnippet, setUsageSnippet] = useState(`<MiNuevaPieza />`);
+}`;
+const DEFAULT_USAGE_SNIPPET = `<MiNuevaPieza />`;
+const DEFAULT_VERSION_NOTES = 'Versión inicial documentada en mi-ui-lab';
+const DEFAULT_TOKENS_USED = 'rounded-xl, border-zinc-800, p-6, transition-all';
+const DEFAULT_TAGS = 'tarjeta, custom, react, ui';
+const DEFAULT_VARIANT_NAME = 'Variante Principal';
+const DEFAULT_VARIANT_DESC = 'Estilo estándar de la pieza.';
+
+export function NewComponentModal({
+  isOpen,
+  onClose,
+  onSave,
+  onToast,
+}: NewComponentModalProps) {
+  const [name, setName] = useState('');
+  const [version, setVersion] = useState('1.0.0');
+  const [versionNotes, setVersionNotes] = useState(DEFAULT_VERSION_NOTES);
+  const [tagline, setTagline] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<Exclude<ComponentCategory, 'all' | 'favorites'>>('cards');
+  const [tokensUsed, setTokensUsed] = useState(DEFAULT_TOKENS_USED);
+  const [tags, setTags] = useState(DEFAULT_TAGS);
+  const [variantName, setVariantName] = useState(DEFAULT_VARIANT_NAME);
+  const [variantDesc, setVariantDesc] = useState(DEFAULT_VARIANT_DESC);
+  const [sourceCode, setSourceCode] = useState(DEFAULT_SOURCE_CODE);
+  const [usageSnippet, setUsageSnippet] = useState(DEFAULT_USAGE_SNIPPET);
+
+  const resetForm = () => {
+    setName('');
+    setVersion('1.0.0');
+    setVersionNotes(DEFAULT_VERSION_NOTES);
+    setTagline('');
+    setDescription('');
+    setCategory('cards');
+    setTokensUsed(DEFAULT_TOKENS_USED);
+    setTags(DEFAULT_TAGS);
+    setVariantName(DEFAULT_VARIANT_NAME);
+    setVariantDesc(DEFAULT_VARIANT_DESC);
+    setSourceCode(DEFAULT_SOURCE_CODE);
+    setUsageSnippet(DEFAULT_USAGE_SNIPPET);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -95,6 +123,7 @@ export function MiNuevaPieza() {
 
     onSave(newComp);
     onToast(`¡Pieza "${newComp.name}" (v${cleanVer}) guardada en tu catálogo local!`);
+    resetForm();
     onClose();
   };
 
@@ -124,7 +153,7 @@ export function MiNuevaPieza() {
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
@@ -301,7 +330,7 @@ export function MiNuevaPieza() {
           <div className="pt-4 border-t border-zinc-800/80 flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-lg bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
             >
               Cancelar
