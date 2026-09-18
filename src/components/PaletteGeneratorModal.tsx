@@ -96,8 +96,6 @@ export function PaletteGeneratorModal({
     return generateTintedNeutrals(valid);
   }, [primaryHex]);
 
-  if (!isOpen) return null;
-
   const handleHexChange = (newHex: string) => {
     setHexInput(newHex);
     if (isValidHex(newHex)) {
@@ -156,6 +154,8 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
         return '';
     }
   }, [exportFormat, tokenPrefix, shades]);
+
+  if (!isOpen) return null;
 
   // Dynamic styling helper for live preview
   const shade50 = shades.find((s) => s.step === '50')?.hex || '#f5f7ff';
