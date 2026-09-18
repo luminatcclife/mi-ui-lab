@@ -25,6 +25,29 @@ export interface StandardizedResult {
   };
 }
 
+// Elementos HTML "void": nunca llevan cierre propio ni hijos. El HTML real
+// casi nunca los auto-cierra (`<input ...>`), pero JSX lo exige (`<input ... />`)
+// o directamente no compila.
+const VOID_ELEMENTS = [
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+];
+const VOID_ELEMENT_PATTERN = new RegExp(`<(${VOID_ELEMENTS.join('|')})((?:"[^"]*"|'[^']*'|[^>])*)>`, 'gi');
+
+/**
+ * Auto-cierra elementos void (`<input ...>` -> `<input ... />`) que vengan
+ * sin cerrar desde HTML plano, dejando intactos los que ya están bien
+ * formados (`<br />`).
+ */
+export function closeVoidElements(html: string): string {
+  return html.replace(VOID_ELEMENT_PATTERN, (match, tag, attrs) => {
+    if (attrs.trimEnd().endsWith('/')) {
+      return match;
+    }
+    return `<${tag}${attrs} />`;
+  });
+}
+
 /**
  * Parses DOM structure from HTML to intelligently detect semantic text slots
  */
@@ -244,11 +267,13 @@ export function standardizeToUIComponent(options: AutoStandardizeOptions): Stand
   ];
 
   // 4. Generate Clean React TSX
-  const cleanJsx = rawHtml
-    .replace(/\bclass=/g, 'className=')
-    .replace(/\bfor=/g, 'htmlFor=')
-    .replace(/\btabindex=/g, 'tabIndex=')
-    .replace(/style="[^"]*"/g, ''); // strip inline styles for clean tailwind classes
+  const cleanJsx = closeVoidElements(
+    rawHtml
+      .replace(/\bclass=/g, 'className=')
+      .replace(/\bfor=/g, 'htmlFor=')
+      .replace(/\btabindex=/g, 'tabIndex=')
+      .replace(/style="[^"]*"/g, ''), // strip inline styles for clean tailwind classes
+  );
 
   const generatedTsx = `import React from 'react';
 
