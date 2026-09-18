@@ -17,6 +17,7 @@ import {
   BookOpen,
   ArrowLeftRight,
   Sparkles,
+  ScanSearch,
 } from 'lucide-react';
 import { CanvasBackground, ViewportMode, UIComponent } from '../types';
 import { useTheme } from '../context/ThemeContext';
@@ -34,6 +35,7 @@ interface HeaderProps {
   canvasBg: CanvasBackground;
   onCanvasBgChange: (bg: CanvasBackground) => void;
   onOpenNewComponent: () => void;
+  onOpenInspector: () => void;
   onOpenTokens: () => void;
   onOpenExport: () => void;
   totalComponents: number;
@@ -56,6 +58,7 @@ export function Header({
   canvasBg,
   onCanvasBgChange,
   onOpenNewComponent,
+  onOpenInspector,
   onOpenTokens,
   onOpenExport,
   totalComponents,
@@ -312,6 +315,18 @@ export function Header({
         >
           <Download className="h-3.5 w-3.5 text-zinc-400" />
           <span className="hidden xl:inline">Exportar</span>
+        </button>
+
+        {/* Inspector: capturar piezas de fuera de mi-ui-lab */}
+        <button
+          type="button"
+          id="btn-open-inspector"
+          onClick={onOpenInspector}
+          title="Inspector: pegar y estandarizar HTML de piezas capturadas en otro lado"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/60 hover:text-emerald-800 dark:hover:text-emerald-200 cursor-pointer shadow-2xs"
+        >
+          <ScanSearch className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span className="hidden lg:inline">Inspector</span>
         </button>
 
         {/* New Component button */}

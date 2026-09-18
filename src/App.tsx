@@ -16,6 +16,7 @@ import { ComparisonView } from './components/ComparisonView';
 import { TokensPanel } from './components/TokensPanel';
 import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
 import { NewComponentModal } from './components/NewComponentModal';
+import { InspectorModal } from './components/InspectorModal';
 import { ExportModal } from './components/ExportModal';
 import { IterationModal } from './components/IterationModal';
 import { ThemeProvider } from './context/ThemeContext';
@@ -87,6 +88,7 @@ function MainApp() {
   const [isPaletteGeneratorOpen, setIsPaletteGeneratorOpen] = useState(false);
   const [paletteGeneratorInitialHex, setPaletteGeneratorInitialHex] = useState('#6366f1');
   const [isNewComponentOpen, setIsNewComponentOpen] = useState(false);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isIterationOpen, setIsIterationOpen] = useState(false);
   const [iteratingComponent, setIteratingComponent] = useState<UIComponent | null>(null);
@@ -347,6 +349,7 @@ function MainApp() {
         canvasBg={canvasBg}
         onCanvasBgChange={setCanvasBg}
         onOpenNewComponent={() => setIsNewComponentOpen(true)}
+        onOpenInspector={() => setIsInspectorOpen(true)}
         onOpenTokens={() => setIsTokensOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onOpenPaletteGenerator={() => handleOpenPaletteGenerator()}
@@ -495,6 +498,14 @@ function MainApp() {
       <NewComponentModal
         isOpen={isNewComponentOpen}
         onClose={() => setIsNewComponentOpen(false)}
+        onSave={handleAddNewComponent}
+        onToast={showToast}
+      />
+
+      {/* Inspector: capturar y estandarizar piezas de fuera de mi-ui-lab */}
+      <InspectorModal
+        isOpen={isInspectorOpen}
+        onClose={() => setIsInspectorOpen(false)}
         onSave={handleAddNewComponent}
         onToast={showToast}
       />
