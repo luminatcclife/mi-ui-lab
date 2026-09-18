@@ -289,6 +289,12 @@ export function MiNuevaPieza() {
               onChange={(e) => setSourceCode(e.target.value)}
               className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-100 focus:border-indigo-500 focus:outline-none"
             />
+            <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-500">
+              Este código se compila y se ejecuta en tu navegador para mostrarte la vista previa
+              en vivo — pega solo piezas de fuentes en las que confíes. Debe exportar un único
+              componente de función (nombre en mayúscula) y solo puede importar{' '}
+              <code className="rounded bg-zinc-800 px-1 py-0.5 text-zinc-300">react</code>.
+            </p>
           </div>
 
           {/* Footer Buttons */}

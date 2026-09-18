@@ -7,6 +7,7 @@ import { InputField } from './ui/InputField';
 import { SegmentedControl } from './ui/SegmentedControl';
 import { NotificationCallout } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
+import { LiveComponentPreview } from './LiveComponentPreview';
 
 interface InteractiveComponentRendererProps {
   component: UIComponent;
@@ -209,25 +210,11 @@ export function InteractiveComponentRenderer({
     );
   }
 
-  // Fallback for custom or user-created pieces
+  // Piezas personalizadas o capturadas: se compilan y renderizan en vivo
+  // desde su sourceCode real, en vez de una tarjeta estática.
   return (
-    <div
-      className={`w-full ${
-        compact ? 'max-w-xs' : 'max-w-md'
-      } mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-5 shadow-lg backdrop-blur-sm`}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
-          {component.name}
-        </h3>
-      </div>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3 line-clamp-2">
-        {component.description}
-      </p>
-      <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-2.5 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 truncate">
-        {activeVariantProps?.codeSnippet || component.usageSnippet}
-      </div>
+    <div className={`w-full ${compact ? 'max-w-xs' : 'max-w-md'} mx-auto`}>
+      <LiveComponentPreview componentName={component.name} sourceCode={component.sourceCode} />
     </div>
   );
 }

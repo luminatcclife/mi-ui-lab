@@ -39,6 +39,7 @@ import { CodeViewer } from './CodeViewer';
 import { PropsTable } from './PropsTable';
 import { LocalHistoryControl } from './LocalHistoryControl';
 import { InteractivePropEditor } from './InteractivePropEditor';
+import { LiveComponentPreview } from './LiveComponentPreview';
 import { Sliders } from 'lucide-react';
 
 interface PreviewCanvasProps {
@@ -528,19 +529,11 @@ export function PreviewCanvas({
       );
     }
 
-    // Default for user created or generic pieces
+    // Piezas personalizadas o capturadas: se compilan y renderizan en vivo
+    // desde su sourceCode real, en vez de una tarjeta estática.
     return (
-      <div className="w-full max-w-md mx-auto rounded-2xl border border-zinc-800 bg-zinc-900/90 p-6 shadow-2xl backdrop-blur-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="h-2 w-2 rounded-full bg-emerald-400" />
-          <h3 className="font-semibold text-zinc-100 text-base">{component.name}</h3>
-        </div>
-        <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-          {component.description}
-        </p>
-        <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[11px] text-zinc-300">
-          {activeVariant?.codeSnippet || component.usageSnippet}
-        </div>
+      <div className="w-full max-w-md mx-auto">
+        <LiveComponentPreview componentName={component.name} sourceCode={component.sourceCode} />
       </div>
     );
   };
