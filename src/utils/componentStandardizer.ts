@@ -25,6 +25,57 @@ export interface StandardizedResult {
   };
 }
 
+// Atributos HTML/SVG en kebab-case o minúsculas que JSX espera en camelCase.
+// `class`, `for` y `tabindex` se manejan aparte porque no son 1:1 con su
+// nombre en minúsculas. Sin este mapeo, HTML real (fechas, tablas, SVGs con
+// stroke) compila pero React tira "Invalid DOM property" en consola.
+const HTML_TO_JSX_ATTRS: Record<string, string> = {
+  datetime: 'dateTime',
+  readonly: 'readOnly',
+  maxlength: 'maxLength',
+  minlength: 'minLength',
+  autoplay: 'autoPlay',
+  autofocus: 'autoFocus',
+  autocomplete: 'autoComplete',
+  contenteditable: 'contentEditable',
+  crossorigin: 'crossOrigin',
+  spellcheck: 'spellCheck',
+  srcset: 'srcSet',
+  colspan: 'colSpan',
+  rowspan: 'rowSpan',
+  usemap: 'useMap',
+  frameborder: 'frameBorder',
+  allowfullscreen: 'allowFullScreen',
+  charset: 'charSet',
+  enctype: 'encType',
+  novalidate: 'noValidate',
+  formaction: 'formAction',
+  accesskey: 'accessKey',
+  hreflang: 'hrefLang',
+  // Atributos de SVG en kebab-case
+  'stroke-width': 'strokeWidth',
+  'stroke-linecap': 'strokeLinecap',
+  'stroke-linejoin': 'strokeLinejoin',
+  'stroke-dasharray': 'strokeDasharray',
+  'stroke-dashoffset': 'strokeDashoffset',
+  'fill-rule': 'fillRule',
+  'clip-rule': 'clipRule',
+  'clip-path': 'clipPath',
+  'stop-color': 'stopColor',
+  'stop-opacity': 'stopOpacity',
+  'text-anchor': 'textAnchor',
+  'dominant-baseline': 'dominantBaseline',
+  'font-family': 'fontFamily',
+};
+
+/** Renombra atributos HTML/SVG a su equivalente JSX (camelCase). */
+export function renameAttributesToJsx(html: string): string {
+  return Object.entries(HTML_TO_JSX_ATTRS).reduce(
+    (acc, [htmlAttr, jsxAttr]) => acc.replace(new RegExp(`\\b${htmlAttr}=`, 'g'), `${jsxAttr}=`),
+    html,
+  );
+}
+
 // Elementos HTML "void": nunca llevan cierre propio ni hijos. El HTML real
 // casi nunca los auto-cierra (`<input ...>`), pero JSX lo exige (`<input ... />`)
 // o directamente no compila.
@@ -268,11 +319,13 @@ export function standardizeToUIComponent(options: AutoStandardizeOptions): Stand
 
   // 4. Generate Clean React TSX
   const cleanJsx = closeVoidElements(
-    rawHtml
-      .replace(/\bclass=/g, 'className=')
-      .replace(/\bfor=/g, 'htmlFor=')
-      .replace(/\btabindex=/g, 'tabIndex=')
-      .replace(/style="[^"]*"/g, ''), // strip inline styles for clean tailwind classes
+    renameAttributesToJsx(
+      rawHtml
+        .replace(/\bclass=/g, 'className=')
+        .replace(/\bfor=/g, 'htmlFor=')
+        .replace(/\btabindex=/g, 'tabIndex=')
+        .replace(/style="[^"]*"/g, ''), // strip inline styles for clean tailwind classes
+    ),
   );
 
   const generatedTsx = `import React from 'react';
