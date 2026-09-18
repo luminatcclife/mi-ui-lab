@@ -1,3 +1,7 @@
+// src/utils/componentStandardizer.ts
+// Utility to automatically transform any raw HTML / inspected snippet into a
+// fully standard UIComponent (matching the gold standard of AccentCard).
+
 import { UIComponent, PropDoc, ComponentVariant, ComponentCategory, AccentColor } from '../types';
 import { ElementTechSheet } from './elementInspector';
 
@@ -27,8 +31,10 @@ export interface StandardizedResult {
 
 // Atributos HTML/SVG en kebab-case o minúsculas que JSX espera en camelCase.
 // `class`, `for` y `tabindex` se manejan aparte porque no son 1:1 con su
-// nombre en minúsculas. Sin este mapeo, HTML real (fechas, tablas, SVGs con
-// stroke) compila pero React tira "Invalid DOM property" en consola.
+// nombre en minúsculas. Sin este mapeo, el código React TSX generado (no la
+// vista previa en vivo, que usa el HTML crudo) no compilaría si el usuario lo
+// copia a su propio proyecto: React tira "Invalid DOM property" o directamente
+// un error de sintaxis JSX (fechas, tablas, SVGs con stroke, comentarios HTML).
 const HTML_TO_JSX_ATTRS: Record<string, string> = {
   datetime: 'dateTime',
   readonly: 'readOnly',
@@ -433,6 +439,7 @@ export default function Pagina() {
     tags,
     isCustom: true,
     createdAt: todayStr,
+    rawHtml: rawHtml,
   };
 
   return {

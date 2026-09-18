@@ -7,7 +7,8 @@ import { InputField } from './ui/InputField';
 import { SegmentedControl } from './ui/SegmentedControl';
 import { NotificationCallout } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
-import { LiveComponentPreview } from './LiveComponentPreview';
+import { StepProgressCard } from './ui/StepProgressCard';
+import { CustomComponentRenderer } from './ui/CustomComponentRenderer';
 
 interface InteractiveComponentRendererProps {
   component: UIComponent;
@@ -210,11 +211,30 @@ export function InteractiveComponentRenderer({
     );
   }
 
-  // Piezas personalizadas o capturadas: se compilan y renderizan en vivo
-  // desde su sourceCode real, en vez de una tarjeta estática.
+  if (component.id === 'step-progress-card') {
+    return (
+      <div className={`w-full ${compact ? 'max-w-sm' : 'max-w-md'} mx-auto`}>
+        <StepProgressCard
+          variant={props.variant || 'default'}
+          accentColor={effectiveAccent}
+          title={props.title || 'Android Beta'}
+          badge={props.badge}
+          steps={props.steps}
+          onStepAction={(step) => onToast(`Paso seleccionado: ${step.title}`)}
+        />
+      </div>
+    );
+  }
+
+  // Fallback for custom or user-created pieces
   return (
-    <div className={`w-full ${compact ? 'max-w-xs' : 'max-w-md'} mx-auto`}>
-      <LiveComponentPreview componentName={component.name} sourceCode={component.sourceCode} />
-    </div>
+    <CustomComponentRenderer
+      component={component}
+      activeVariantProps={activeVariantProps}
+      propOverrides={propOverrides}
+      accentColor={effectiveAccent}
+      onToast={onToast}
+      compact={compact}
+    />
   );
 }

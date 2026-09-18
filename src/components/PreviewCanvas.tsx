@@ -35,11 +35,12 @@ import { InputField } from './ui/InputField';
 import { SegmentedControl } from './ui/SegmentedControl';
 import { NotificationCallout } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
+import { StepProgressCard } from './ui/StepProgressCard';
+import { CustomComponentRenderer } from './ui/CustomComponentRenderer';
 import { CodeViewer } from './CodeViewer';
 import { PropsTable } from './PropsTable';
 import { LocalHistoryControl } from './LocalHistoryControl';
 import { InteractivePropEditor } from './InteractivePropEditor';
-import { LiveComponentPreview } from './LiveComponentPreview';
 import { Sliders } from 'lucide-react';
 
 interface PreviewCanvasProps {
@@ -58,6 +59,7 @@ interface PreviewCanvasProps {
   onTogglePlaygroundLayout?: (layout: 'focus' | 'grid') => void;
   categoryComponentCount?: number;
   onOpenPaletteGenerator?: (primaryHex?: string) => void;
+  onOpenInspector?: () => void;
 }
 
 type CanvasTab = 'preview' | 'code' | 'props' | 'tokens' | 'versions';
@@ -108,6 +110,7 @@ export function PreviewCanvas({
   onTogglePlaygroundLayout,
   categoryComponentCount,
   onOpenPaletteGenerator,
+  onOpenInspector,
 }: PreviewCanvasProps) {
   const [activeTab, setActiveTab] = useState<CanvasTab>('preview');
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
@@ -529,12 +532,30 @@ export function PreviewCanvas({
       );
     }
 
-    // Piezas personalizadas o capturadas: se compilan y renderizan en vivo
-    // desde su sourceCode real, en vez de una tarjeta estática.
+    if (component.id === 'step-progress-card') {
+      return (
+        <div className="w-full max-w-md mx-auto">
+          <StepProgressCard
+            variant={props.variant || 'default'}
+            accentColor={effectiveAccent}
+            title={props.title || 'Android Beta'}
+            badge={props.badge}
+            steps={props.steps}
+            onStepAction={(step) => onToast(`Acción en paso: ${step.title}`)}
+          />
+        </div>
+      );
+    }
+
+    // Default for user created or generic pieces
     return (
-      <div className="w-full max-w-md mx-auto">
-        <LiveComponentPreview componentName={component.name} sourceCode={component.sourceCode} />
-      </div>
+      <CustomComponentRenderer
+        component={component}
+        activeVariantProps={activeVariant?.props || {}}
+        propOverrides={propOverrides}
+        accentColor={effectiveAccent}
+        onToast={onToast}
+      />
     );
   };
 
@@ -771,6 +792,19 @@ export function PreviewCanvas({
               >
                 <Palette className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Paleta Tailwind</span>
+              </button>
+            )}
+
+            {onOpenInspector && (
+              <button
+                type="button"
+                id="btn-open-inspector-from-canvas"
+                onClick={onOpenInspector}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-800/80 bg-purple-50/80 dark:bg-purple-950/40 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors cursor-pointer shadow-xs"
+                title="Inspeccionar estructura DOM, tokens Tailwind y estilos calculados del elemento"
+              >
+                <Sliders className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                <span>Inspeccionar</span>
               </button>
             )}
 

@@ -28,6 +28,7 @@ import { InputField } from './ui/InputField';
 import { SegmentedControl } from './ui/SegmentedControl';
 import { NotificationCallout } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
+import { StepProgressCard } from './ui/StepProgressCard';
 import { useTheme } from '../context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { CodeViewer } from './CodeViewer';
@@ -224,6 +225,19 @@ export function DocumentationView({
               onChange={(val) =>
                 onToast(`Interruptor: ${val ? 'Activado' : 'Desactivado'}`)
               }
+            />
+          </div>
+        );
+      case 'step-progress-card':
+        return (
+          <div className="w-full max-w-md mx-auto py-2">
+            <StepProgressCard
+              variant={variantProps.variant || 'default'}
+              accentColor={accentColorChoice}
+              title={variantProps.title || 'Android Beta'}
+              badge={variantProps.badge}
+              steps={variantProps.steps}
+              onStepAction={(step) => onToast(`Paso seleccionado: ${step.title}`)}
             />
           </div>
         );

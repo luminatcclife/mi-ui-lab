@@ -1348,4 +1348,211 @@ export function ToggleSwitch({
   );
 }`,
   },
+  {
+    id: 'step-progress-card',
+    name: 'StepProgressCard',
+    version: '1.0.0',
+    versionHistory: [
+      {
+        version: '1.0.0',
+        date: '2026-09-17',
+        notes: 'Versión inicial de StepProgressCard con flujo guiado, cajas de llamada a la acción y soporte de temas.',
+      },
+    ],
+    tagline: 'Tarjeta de progreso paso a paso para onboarding, betas guiadas y activación de usuarios.',
+    description:
+      'Componente modular diseñado para guiar a los usuarios en flujos secuenciales (como incorporación a betas o configuración inicial). Incluye números de paso en badge circular, cajas destacadas con gradiente ambiental, conectores verticales y botones con redirección.',
+    category: 'cards',
+    tags: [
+      'onboarding',
+      'steps',
+      'paso a paso',
+      'stepper',
+      'beta',
+      'card',
+      'tarjeta',
+      'progress',
+      'guia',
+      'callout',
+      'android',
+      'flow',
+    ],
+    tokensUsed: [
+      'rounded-2xl',
+      'rounded-full',
+      'rounded-xl',
+      'border-zinc-800/80',
+      'bg-white/5',
+      'space-y-6',
+      'tracking-[0.2em]',
+      'uppercase',
+      'transition-all',
+      'hover:scale-[1.01]',
+    ],
+    props: [
+      {
+        name: 'variant',
+        type: "'default' | 'glow' | 'compact'",
+        defaultValue: "'default'",
+        description: 'Estilo visual de la tarjeta: estándar, con resplandor ambiental o compacta.',
+        required: false,
+      },
+      {
+        name: 'accentColor',
+        type: "'fuchsia' | 'indigo' | 'emerald' | 'violet' | 'amber' | 'cyan' | 'zinc'",
+        defaultValue: "'fuchsia'",
+        description: 'Paleta cromática aplicada a las llamadas de atención y botones primarios.',
+        required: false,
+      },
+      {
+        name: 'title',
+        type: 'string',
+        defaultValue: "'Android Beta'",
+        description: 'Título superior del bloque de pasos.',
+        required: true,
+      },
+      {
+        name: 'badge',
+        type: 'string',
+        defaultValue: "undefined",
+        description: 'Insignia opcional en la esquina superior derecha.',
+        required: false,
+      },
+      {
+        name: 'steps',
+        type: 'StepItem[]',
+        defaultValue: 'DEFAULT_BETA_STEPS',
+        description: 'Lista de pasos estructurados con número, descripción, aviso y enlace.',
+        required: false,
+      },
+    ],
+    variants: [
+      {
+        id: 'beta-onboarding',
+        name: 'Beta Onboarding',
+        description: 'Flujo original de incorporación a Android Beta con Google Group y Google Play.',
+        props: {
+          variant: 'default',
+          title: 'Android Beta',
+          badge: 'v1.4 Beta',
+          accentColor: 'fuchsia',
+        },
+        codeSnippet: `<StepProgressCard
+  variant="default"
+  title="Android Beta"
+  badge="v1.4 Beta"
+  accentColor="fuchsia"
+/>`,
+      },
+      {
+        id: 'ambient-glow',
+        name: 'Resplandor Glow',
+        description: 'Fondo de cristal oscuro con resplandor ambiental violeta/fucsia.',
+        props: {
+          variant: 'glow',
+          title: 'Acceso Exclusivo',
+          badge: 'Privado',
+          accentColor: 'violet',
+        },
+        codeSnippet: `<StepProgressCard
+  variant="glow"
+  title="Acceso Exclusivo"
+  badge="Privado"
+  accentColor="violet"
+/>`,
+      },
+      {
+        id: 'setup-compact',
+        name: 'Compacto / Setup',
+        description: 'Versión ajustada para barras laterales o diálogos modales de configuración.',
+        props: {
+          variant: 'compact',
+          title: 'Configuración Rápida',
+          accentColor: 'indigo',
+        },
+        codeSnippet: `<StepProgressCard
+  variant="compact"
+  title="Configuración Rápida"
+  accentColor="indigo"
+/>`,
+      },
+    ],
+    usageSnippet: `import { StepProgressCard } from './components/ui/StepProgressCard';
+
+export default function MiPantalla() {
+  return (
+    <StepProgressCard
+      title="Android Beta"
+      badge="v1.4 Beta"
+      variant="default"
+      accentColor="fuchsia"
+    />
+  );
+}`,
+    sourceCode: `import React from 'react';
+
+export interface StepItem {
+  id?: string;
+  stepNumber: number | string;
+  title: string;
+  description: string;
+  callout?: { tag: string; text: string };
+  actionLabel?: string;
+  actionUrl?: string;
+  highlightAction?: boolean;
+}
+
+export interface StepProgressCardProps {
+  variant?: 'default' | 'glow' | 'compact';
+  accentColor?: string;
+  title?: string;
+  badge?: string;
+  steps?: StepItem[];
+}
+
+export function StepProgressCard({
+  variant = 'default',
+  title = 'Android Beta',
+  badge,
+  steps = [],
+}: StepProgressCardProps) {
+  return (
+    <div className="relative h-full flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 p-6 shadow-xl">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-100">{title}</h3>
+        {badge && <span className="text-[10px] uppercase font-bold text-zinc-400">{badge}</span>}
+      </div>
+      <div className="space-y-6 flex-1">
+        {steps.map((step, idx) => (
+          <div key={idx} className="flex gap-4">
+            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-[10px] font-bold text-zinc-100">{step.stepNumber}</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-1.5 text-zinc-100">{step.title}</p>
+              {step.callout && (
+                <div className="mb-3 rounded-xl px-3.5 py-2.5 bg-fuchsia-500/15 border border-fuchsia-500/40">
+                  <p className="text-[11px] font-bold uppercase text-fuchsia-200">{step.callout.tag}</p>
+                  <p className="text-xs text-fuchsia-100 mt-1">{step.callout.text}</p>
+                </div>
+              )}
+              <p className="text-xs text-zinc-400 mb-3">{step.description}</p>
+              {step.actionLabel && (
+                <a
+                  href={step.actionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2 text-[10px] font-bold uppercase rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white"
+                >
+                  {step.actionLabel} <span>↗</span>
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}`,
+  },
 ];

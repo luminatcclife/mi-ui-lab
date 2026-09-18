@@ -16,7 +16,7 @@ import { ComparisonView } from './components/ComparisonView';
 import { TokensPanel } from './components/TokensPanel';
 import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
 import { NewComponentModal } from './components/NewComponentModal';
-import { InspectorModal } from './components/InspectorModal';
+import { ElementInspectorModal } from './components/ElementInspectorModal';
 import { ExportModal } from './components/ExportModal';
 import { IterationModal } from './components/IterationModal';
 import { ThemeProvider } from './context/ThemeContext';
@@ -448,6 +448,7 @@ function MainApp() {
                 components.filter((c) => c.category === selectedComponent.category).length
               }
               onOpenPaletteGenerator={handleOpenPaletteGenerator}
+              onOpenInspector={() => setIsInspectorOpen(true)}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center text-zinc-500 text-sm">
@@ -503,10 +504,11 @@ function MainApp() {
       />
 
       {/* Inspector: capturar y estandarizar piezas de fuera de mi-ui-lab */}
-      <InspectorModal
+      <ElementInspectorModal
         isOpen={isInspectorOpen}
         onClose={() => setIsInspectorOpen(false)}
-        onSave={handleAddNewComponent}
+        activeComponent={selectedComponent}
+        onSaveComponent={handleAddNewComponent}
         onToast={showToast}
       />
 
@@ -538,10 +540,10 @@ function MainApp() {
       {toastMessage && (
         <div
           id="app-toast-notification"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl border border-indigo-500/30 bg-white dark:bg-zinc-900/95 px-4 py-2.5 text-xs font-medium text-zinc-900 dark:text-zinc-100 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl border border-indigo-500/30 dark:border-emerald-500/30 bg-white dark:bg-black/90 px-4 py-2.5 text-xs font-medium text-zinc-900 dark:text-zinc-100 shadow-2xl dark:shadow-[0_0_18px_-4px_rgba(57,255,20,0.4)] backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-          <span>{toastMessage}</span>
+          <span className="glow-dot h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+          <span className="font-mono text-[11px] tracking-wide">{toastMessage}</span>
         </div>
       )}
     </div>

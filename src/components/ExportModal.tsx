@@ -268,7 +268,7 @@ export function ExportModal({
                 Restablecer a Componentes de Fábrica
               </h4>
               <p className="text-[11px] text-zinc-500">
-                Restaura los 6 componentes predeterminados incluyendo AccentCard con todas sus variantes.
+                Restaura los componentes predeterminados incluyendo AccentCard y StepProgressCard con todas sus variantes.
               </p>
             </div>
             <button

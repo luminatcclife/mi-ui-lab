@@ -1,3 +1,5 @@
+import { DetectedDependency } from './utils/dependencyDetector';
+
 export type ComponentCategory =
   | 'all'
   | 'favorites'
@@ -49,6 +51,8 @@ export interface UIComponent {
   createdAt?: string;
   version?: string;
   versionHistory?: ComponentIteration[];
+  /** HTML crudo capturado (Inspector de Elementos) — fuente de verdad para el render en vivo vía CustomComponentRenderer. */
+  rawHtml?: string;
 }
 
 export type ViewportMode = 'responsive' | 'desktop' | 'tablet' | 'mobile';
@@ -72,14 +76,6 @@ export interface ComponentConfigSnapshot {
   accentColor: AccentColor;
   propOverrides: Record<string, any>;
 }
-export interface DetectedDependency {
-  library: string;
-  packageName: string;
-  installed: boolean;
-  installCommand: string;
-  matchedTokens: string[];
-}
-
 export interface ComponentDraft {
   id: string;
   name: string;

@@ -1,174 +1,251 @@
-import { DetectedDependency } from '../types';
+// src/utils/dependencyDetector.ts
 
-/**
- * mi-ui-lab — Detector de dependencias
- *
- * Analiza un fragmento de HTML/JSX pegado por el usuario y busca huellas
- * (clases, atributos, nombres de etiqueta) de librerías conocidas del
- * ecosistema. Es un cotejo de patrones, no un analizador semántico: sirve
- * para avisar antes de guardar, nunca para bloquear el guardado.
- *
- * Importante: pegar HTML solo captura marcado y clases, nunca lógica ni
- * estado. Una detección positiva (p. ej. Radix) es una señal de que lo
- * capturado probablemente depende de JavaScript que este HTML no incluye —
- * no una garantía de que el componente resultante será funcional.
- */
-
-interface DependencySignature {
-  library: string;
+export interface DetectedDependency {
+  id: string;
+  name: string;
   packageName: string;
   installCommand: string;
-  patterns: RegExp[];
+  reason: string;
+  isInstalledInCurrentApp: boolean;
+  severity: 'warning' | 'info';
+  matchedTokens: string[];
+  docsUrl?: string;
 }
 
-// Lista mantenida a mano: qué paquetes están instalados HOY en mi-ui-lab.
-// Actualízala si cambias package.json.
-const INSTALLED_PACKAGES = new Set([
-  'lucide-react',
-  'motion',
+// Map of packages present in this project's package.json.
+// Keep in sync with package.json — mi-ui-lab has no Firebase/Express/Gemini
+// dependency (that Google Workspace subsystem was removed as dead code).
+const CURRENT_PROJECT_PACKAGES = new Set([
   'react',
   'react-dom',
+  'lucide-react',
+  'motion',
+  'tailwindcss',
+  '@tailwindcss/vite',
   'dexie',
 ]);
 
-const SIGNATURES: DependencySignature[] = [
-  {
-    library: 'Lucide Icons',
-    packageName: 'lucide-react',
-    installCommand: 'npm install lucide-react',
-    patterns: [/\blucide\b/i, /\blucide-[\w-]+\b/i, /data-lucide=/i],
-  },
-  {
-    library: 'Framer Motion / Motion for React',
-    packageName: 'motion',
-    installCommand: 'npm install motion',
-    patterns: [
-      /<motion\.\w+/i,
-      /\b(animate|initial|whileHover|whileTap|layoutId)=/,
-      /\bframer-[\w-]+\b/i,
-      /data-framer-/i,
-    ],
-  },
-  {
-    library: 'Radix UI / Primitivas Shadcn',
-    packageName: '@radix-ui/react-primitive',
-    installCommand: 'npm install @radix-ui/react-dialog',
-    patterns: [
-      /data-state=["'](open|closed|checked)["']/i,
-      /data-radix-[\w-]+/i,
-      /data-side=/i,
-      /\bradix-[\w-]+\b/i,
-    ],
-  },
-  {
-    library: 'Flowbite (JS interactivo: dropdowns, modales, tooltips...)',
-    packageName: 'flowbite',
-    installCommand: 'npm install flowbite',
-    patterns: [
-      /data-dropdown-toggle=/i,
-      /data-modal-target=/i,
-      /data-modal-toggle=/i,
-      /data-collapse-toggle=/i,
-      /data-tooltip-target=/i,
-      /data-popover-target=/i,
-      /data-accordion-target=/i,
-      /data-tabs-target=/i,
-      /data-drawer-target=/i,
-      /data-carousel=/i,
-    ],
-  },
-  {
-    library: 'Headless UI',
-    packageName: '@headlessui/react',
-    installCommand: 'npm install @headlessui/react',
-    patterns: [/data-headlessui-[\w-]+/i, /\bheadlessui-[\w-]+\b/i],
-  },
-  {
-    library: 'Heroicons',
-    packageName: '@heroicons/react',
-    installCommand: 'npm install @heroicons/react',
-    patterns: [/\bheroicon-[\w-]+\b/i],
-  },
-  {
-    library: 'Tabler Icons',
-    packageName: '@tabler/icons-react',
-    installCommand: 'npm install @tabler/icons-react',
-    patterns: [/\btabler-[\w-]+\b/i],
-  },
-  {
-    library: 'Feather Icons',
-    packageName: 'react-feather',
-    installCommand: 'npm install react-feather',
-    patterns: [/\bfeather-[\w-]+\b/i],
-  },
-  {
-    library: 'Font Awesome',
-    packageName: '@fortawesome/react-fontawesome',
-    installCommand:
-      'npm install @fortawesome/react-fontawesome @fortawesome/free-solid-svg-icons',
-    patterns: [/\bfa-solid\b/i, /\bfa-regular\b/i],
-  },
-  {
-    library: '@tailwindcss/typography',
-    packageName: '@tailwindcss/typography',
-    installCommand: 'npm install -D @tailwindcss/typography',
-    patterns: [/\bprose\b/, /\bprose-invert\b/],
-  },
-  {
-    library: '@tailwindcss/forms',
-    packageName: '@tailwindcss/forms',
-    installCommand: 'npm install -D @tailwindcss/forms',
-    patterns: [/\bform-input\b/, /\bform-select\b/, /\bform-checkbox\b/, /\bform-radio\b/],
-  },
-  {
-    library: 'class-variance-authority (cva)',
-    packageName: 'class-variance-authority',
-    installCommand: 'npm install class-variance-authority',
-    patterns: [/\bcva\(/],
-  },
-  {
-    library: 'clsx',
-    packageName: 'clsx',
-    installCommand: 'npm install clsx',
-    patterns: [/\bclsx\(/],
-  },
-  {
-    library: 'tailwind-merge',
-    packageName: 'tailwind-merge',
-    installCommand: 'npm install tailwind-merge',
-    patterns: [/\btwMerge\(/],
-  },
-];
-
 /**
- * Analiza un fragmento de HTML/JSX y devuelve las dependencias detectadas,
- * marcando cuáles ya están instaladas en el lab.
+ * Analyzes an HTML or JSX fragment and its class names to detect required or related external libraries.
  */
-export function detectDependencies(code: string): DetectedDependency[] {
+export function analyzeSnippetDependencies(
+  rawCode: string,
+  classNames: string[] = []
+): DetectedDependency[] {
+  const code = rawCode || '';
+  const classes = classNames || [];
+  const allClassesStr = classes.join(' ');
+  const combined = `${code} ${allClassesStr}`;
+
   const results: DetectedDependency[] = [];
 
-  for (const sig of SIGNATURES) {
-    const matchedTokens = new Set<string>();
-    for (const pattern of sig.patterns) {
-      const match = code.match(pattern);
-      if (match) matchedTokens.add(match[0]);
+  // 1. Lucide React Icons
+  // Detects: class="... lucide lucide-check ...", class="lucide-sparkles", <svg ... data-lucide=...>
+  const lucideMatches: string[] = [];
+  const lucideClassRegex = /\blucide(-[a-z0-9-]+)?\b/gi;
+  let match;
+  while ((match = lucideClassRegex.exec(combined)) !== null) {
+    if (!lucideMatches.includes(match[0])) {
+      lucideMatches.push(match[0]);
     }
+  }
+  if (/data-lucide\b/i.test(code) || /<Lucide/i.test(code)) {
+    lucideMatches.push('data-lucide / <Lucide* />');
+  }
 
-    if (matchedTokens.size > 0) {
-      results.push({
-        library: sig.library,
-        packageName: sig.packageName,
-        installed: INSTALLED_PACKAGES.has(sig.packageName),
-        installCommand: sig.installCommand,
-        matchedTokens: Array.from(matchedTokens),
-      });
+  if (lucideMatches.length > 0) {
+    results.push({
+      id: 'lucide-react',
+      name: 'Lucide Icons',
+      packageName: 'lucide-react',
+      installCommand: 'npm install lucide-react',
+      reason: `Se detectaron clases o marcadores de iconos Lucide (${lucideMatches.slice(0, 3).join(', ')}).`,
+      isInstalledInCurrentApp: CURRENT_PROJECT_PACKAGES.has('lucide-react'),
+      severity: 'info',
+      matchedTokens: lucideMatches,
+      docsUrl: 'https://lucide.dev',
+    });
+  }
+
+  // 2. Framer Motion / Motion React
+  // Detects: <motion.div, framer-motion, animate=, initial=, whileHover=, data-framer, framer-*
+  const motionMatches: string[] = [];
+  if (/<motion\.[a-z0-9]+/i.test(code)) {
+    motionMatches.push('<motion.*>');
+  }
+  if (/\b(initial|animate|exit|whileHover|whileTap|layoutId)\s*=/i.test(code)) {
+    motionMatches.push('props de animación (animate/whileHover)');
+  }
+  if (/\bframer(-[a-z0-9-]+)?\b/i.test(combined)) {
+    motionMatches.push('clases framer');
+  }
+  if (/data-framer/i.test(code)) {
+    motionMatches.push('data-framer-*');
+  }
+
+  if (motionMatches.length > 0) {
+    const isInstalled = CURRENT_PROJECT_PACKAGES.has('motion');
+    results.push({
+      id: 'motion',
+      name: 'Motion (Framer Motion)',
+      packageName: 'motion',
+      installCommand: 'npm install motion',
+      reason: `Utiliza componentes o props de animación declarativa (${motionMatches.join(', ')}).`,
+      isInstalledInCurrentApp: isInstalled,
+      severity: isInstalled ? 'info' : 'warning',
+      matchedTokens: motionMatches,
+      docsUrl: 'https://motion.dev',
+    });
+  }
+
+  // 3. Radix UI / Headless Primitives (Shadcn UI base)
+  // Detects: data-state=, data-radix-, data-side=, data-orientation=, radix-*
+  const radixMatches: string[] = [];
+  if (/data-radix-[a-z0-9-]+/i.test(code)) {
+    radixMatches.push('data-radix-*');
+  }
+  if (/data-state=["'](open|closed|checked|unchecked|active|inactive)["']/i.test(code)) {
+    radixMatches.push('data-state="..."');
+  }
+  if (/\bradix-[a-z0-9-]+\b/i.test(combined)) {
+    radixMatches.push('clases radix-*');
+  }
+  if (/data-(side|align|orientation)=/i.test(code)) {
+    radixMatches.push('atributos de posicionamiento Radix');
+  }
+
+  if (radixMatches.length > 0) {
+    results.push({
+      id: 'radix-ui',
+      name: 'Radix UI Primitives',
+      packageName: '@radix-ui/react-primitive',
+      installCommand: 'npm install @radix-ui/react-dialog @radix-ui/react-slot',
+      reason: `El componente utiliza atributos de accesibilidad y estado de Radix UI / Shadcn (${radixMatches.join(', ')}).`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: radixMatches,
+      docsUrl: 'https://www.radix-ui.com',
+    });
+  }
+
+  // 4. Headless UI
+  const headlessMatches: string[] = [];
+  if (/data-headlessui-[a-z0-9-]+/i.test(code) || /\bheadlessui-[a-z0-9-]+\b/i.test(combined)) {
+    headlessMatches.push('headlessui-*');
+  }
+  if (headlessMatches.length > 0) {
+    results.push({
+      id: 'headlessui',
+      name: 'Headless UI',
+      packageName: '@headlessui/react',
+      installCommand: 'npm install @headlessui/react',
+      reason: `Requiere primitivas accesibles de Headless UI para su interacción.`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: headlessMatches,
+      docsUrl: 'https://headlessui.com',
+    });
+  }
+
+  // 5. Heroicons / FontAwesome / Tabler / React Icons
+  const iconLibMatches: string[] = [];
+  if (/\bheroicon(-[a-z0-9-]+)?\b/i.test(combined)) {
+    iconLibMatches.push('heroicon');
+  }
+  if (/\btabler(-[a-z0-9-]+)?\b/i.test(combined)) {
+    iconLibMatches.push('tabler-icons');
+  }
+  if (/\b(fa-solid|fa-regular|fa-brands|fa-[a-z0-9-]+)\b/i.test(combined)) {
+    iconLibMatches.push('font-awesome');
+  }
+  if (/\bfeather(-[a-z0-9-]+)?\b/i.test(combined)) {
+    iconLibMatches.push('feather-icons');
+  }
+
+  if (iconLibMatches.length > 0) {
+    results.push({
+      id: 'external-icons',
+      name: 'Librería de Iconos Externa',
+      packageName: '@heroicons/react o @tabler/icons-react',
+      installCommand: 'npm install @heroicons/react',
+      reason: `Se detectaron clases de paquetes de iconos (${iconLibMatches.join(', ')}).`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: iconLibMatches,
+    });
+  }
+
+  // 6. Tailwind Plugins: Typography (prose)
+  const proseMatches = classes.filter((c) => /\bprose\b|\bprose-[a-z0-9-]+\b/i.test(c));
+  if (proseMatches.length > 0) {
+    results.push({
+      id: 'tailwindcss-typography',
+      name: 'Tailwind Typography',
+      packageName: '@tailwindcss/typography',
+      installCommand: 'npm install -D @tailwindcss/typography',
+      reason: `Usa clases de tipografía enriquecida (${proseMatches.slice(0, 3).join(', ')}).`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: proseMatches,
+      docsUrl: 'https://tailwindcss.com/docs/typography-plugin',
+    });
+  }
+
+  // 7. Tailwind Forms
+  const formsMatches = classes.filter((c) => /^form-(input|textarea|select|checkbox|radio)$/i.test(c));
+  if (formsMatches.length > 0) {
+    results.push({
+      id: 'tailwindcss-forms',
+      name: 'Tailwind Forms',
+      packageName: '@tailwindcss/forms',
+      installCommand: 'npm install -D @tailwindcss/forms',
+      reason: `Usa clases específicas del plugin oficial de formularios Tailwind.`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: formsMatches,
+      docsUrl: 'https://github.com/tailwindlabs/tailwindcss-forms',
+    });
+  }
+
+  // 8. Flowbite (JS interactivo: dropdowns, modales, tooltips, acordeones...)
+  // Estos componentes solo alternan una clase `hidden` mediante el JS propio
+  // de Flowbite (data-dropdown-toggle, data-modal-target, etc.) — el HTML
+  // capturado se ve idéntico pero el botón no hace nada sin esta dependencia.
+  const flowbiteMatches: string[] = [];
+  const flowbiteAttrRegex = /data-(dropdown|modal|collapse|tooltip|popover|accordion|tabs|drawer)-(toggle|target|hide|item)\b|data-carousel\b/gi;
+  while ((match = flowbiteAttrRegex.exec(code)) !== null) {
+    if (!flowbiteMatches.includes(match[0])) {
+      flowbiteMatches.push(match[0]);
     }
   }
 
-  return results;
-}
+  if (flowbiteMatches.length > 0) {
+    results.push({
+      id: 'flowbite',
+      name: 'Flowbite (JS interactivo)',
+      packageName: 'flowbite',
+      installCommand: 'npm install flowbite',
+      reason: `El marcado depende del JS de Flowbite para funcionar (${flowbiteMatches.slice(0, 3).join(', ')}) — sin él, el botón no abre/cierra nada.`,
+      isInstalledInCurrentApp: CURRENT_PROJECT_PACKAGES.has('flowbite'),
+      severity: 'warning',
+      matchedTokens: flowbiteMatches,
+      docsUrl: 'https://flowbite.com/docs/getting-started/introduction/',
+    });
+  }
 
-/** True si hay alguna dependencia detectada que no está instalada. */
-export function hasPendingDependencies(deps: DetectedDependency[]): boolean {
-  return deps.some((d) => !d.installed);
+  // 9. Class Variance Authority (CVA) / clsx / tailwind-merge
+  if (/\b(cva\(|clsx\(|twMerge\(|cn\()\b/.test(code)) {
+    results.push({
+      id: 'cva-clsx',
+      name: 'Class Variance Authority & Tailwind Merge',
+      packageName: 'class-variance-authority clsx tailwind-merge',
+      installCommand: 'npm install class-variance-authority clsx tailwind-merge',
+      reason: `El código incluye funciones auxiliares de composición condicional de variantes (cn/cva/clsx).`,
+      isInstalledInCurrentApp: false,
+      severity: 'warning',
+      matchedTokens: ['cva / clsx / twMerge'],
+    });
+  }
+
+  return results;
 }

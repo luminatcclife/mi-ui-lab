@@ -17,7 +17,7 @@ import {
   BookOpen,
   ArrowLeftRight,
   Sparkles,
-  ScanSearch,
+  Sliders,
 } from 'lucide-react';
 import { CanvasBackground, ViewportMode, UIComponent } from '../types';
 import { useTheme } from '../context/ThemeContext';
@@ -35,7 +35,6 @@ interface HeaderProps {
   canvasBg: CanvasBackground;
   onCanvasBgChange: (bg: CanvasBackground) => void;
   onOpenNewComponent: () => void;
-  onOpenInspector: () => void;
   onOpenTokens: () => void;
   onOpenExport: () => void;
   totalComponents: number;
@@ -46,6 +45,7 @@ interface HeaderProps {
   playgroundLayout?: 'focus' | 'grid';
   onPlaygroundLayoutChange?: (layout: 'focus' | 'grid') => void;
   onOpenPaletteGenerator?: () => void;
+  onOpenInspector?: () => void;
 }
 
 export function Header({
@@ -58,7 +58,6 @@ export function Header({
   canvasBg,
   onCanvasBgChange,
   onOpenNewComponent,
-  onOpenInspector,
   onOpenTokens,
   onOpenExport,
   totalComponents,
@@ -69,26 +68,27 @@ export function Header({
   playgroundLayout = 'focus',
   onPlaygroundLayoutChange,
   onOpenPaletteGenerator,
+  onOpenInspector,
 }: HeaderProps) {
   const { theme, toggleTheme, isDark, typographyName } = useTheme();
 
   return (
     <header
       id="header-nav"
-      className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800/90 bg-white/90 dark:bg-zinc-950/90 px-3 sm:px-4 backdrop-blur-md transition-colors duration-200"
+      className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-zinc-200 dark:border-transparent dark:shadow-[0_1px_0_0_rgba(139,92,246,0.25)] bg-white/90 dark:bg-zinc-950/90 px-3 sm:px-4 backdrop-blur-md transition-colors duration-200"
     >
       {/* Left: Brand & Main View Switcher */}
       <div className="flex items-center gap-3 shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600/10 dark:bg-indigo-600/20 border border-indigo-500/20 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
+        <div className="border-gradient-pill flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600/10 dark:bg-black border border-indigo-500/20 dark:shadow-[0_0_10px_-2px_rgba(139,92,246,0.6)] text-indigo-600 dark:text-emerald-400">
           <Layers className="h-4 w-4" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 tracking-tight font-mono">
+            <span className="text-brand-gradient mono-label font-extrabold text-sm tracking-[0.08em]">
               mi-ui-lab
             </span>
             {customComponentsCount > 0 && (
-              <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="glow-dot mono-label rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
                 +{customComponentsCount}
               </span>
             )}
@@ -101,7 +101,7 @@ export function Header({
             type="button"
             id="view-tab-playground"
             onClick={() => onViewChange('playground')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+            className={`mono-label inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-all cursor-pointer ${
               activeView === 'playground'
                 ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -114,7 +114,7 @@ export function Header({
             type="button"
             id="view-tab-docs"
             onClick={() => onViewChange('docs')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+            className={`mono-label inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-all cursor-pointer ${
               activeView === 'docs'
                 ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -127,7 +127,7 @@ export function Header({
             type="button"
             id="view-tab-compare"
             onClick={() => onViewChange('compare')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+            className={`mono-label inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-semibold transition-all cursor-pointer ${
               activeView === 'compare'
                 ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -293,6 +293,20 @@ export function Header({
           </button>
         )}
 
+        {/* Inspector de Elementos & HTML */}
+        {onOpenInspector && (
+          <button
+            type="button"
+            id="btn-open-element-inspector"
+            onClick={onOpenInspector}
+            title="Inspector de Elementos: Analizar HTML, Tailwind y estilos computados"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 dark:border-purple-800/80 bg-purple-50/80 dark:bg-purple-950/40 px-2.5 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 transition-colors hover:bg-purple-100 dark:hover:bg-purple-900/60 hover:text-purple-800 dark:hover:text-purple-200 cursor-pointer shadow-2xs"
+          >
+            <Sliders className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="hidden md:inline">Inspector</span>
+          </button>
+        )}
+
         {/* Tokens & Typo */}
         <button
           type="button"
@@ -317,24 +331,12 @@ export function Header({
           <span className="hidden xl:inline">Exportar</span>
         </button>
 
-        {/* Inspector: capturar piezas de fuera de mi-ui-lab */}
-        <button
-          type="button"
-          id="btn-open-inspector"
-          onClick={onOpenInspector}
-          title="Inspector: pegar y estandarizar HTML de piezas capturadas en otro lado"
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/60 hover:text-emerald-800 dark:hover:text-emerald-200 cursor-pointer shadow-2xs"
-        >
-          <ScanSearch className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span className="hidden lg:inline">Inspector</span>
-        </button>
-
         {/* New Component button */}
         <button
           type="button"
           id="btn-new-component"
           onClick={onOpenNewComponent}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-500 cursor-pointer"
+          className="mono-label inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-white dark:text-black transition-transform hover:scale-[1.03] active:scale-[0.98] cursor-pointer bg-indigo-600 dark:bg-none dark:[background-image:linear-gradient(90deg,#39ff14,#22d3ee)] dark:shadow-[0_0_16px_-2px_rgba(57,255,20,0.55)]"
         >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Nueva Pieza</span>

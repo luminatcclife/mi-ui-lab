@@ -211,6 +211,7 @@ export function ComparisonView({
   const presets = [
     { label: 'Botón vs Interruptor', a: 'primary-button', b: 'toggle-switch' },
     { label: 'Tarjeta vs Callout', a: 'accent-card', b: 'notification-callout' },
+    { label: 'AccentCard vs Stepper', a: 'accent-card', b: 'step-progress-card' },
     { label: 'Input vs Segmented', a: 'input-field', b: 'segmented-control' },
     { label: 'Badge vs Botón', a: 'status-badge', b: 'primary-button' },
   ].filter(
