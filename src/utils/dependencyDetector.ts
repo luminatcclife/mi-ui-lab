@@ -61,6 +61,23 @@ const SIGNATURES: DependencySignature[] = [
     ],
   },
   {
+    library: 'Flowbite (JS interactivo: dropdowns, modales, tooltips...)',
+    packageName: 'flowbite',
+    installCommand: 'npm install flowbite',
+    patterns: [
+      /data-dropdown-toggle=/i,
+      /data-modal-target=/i,
+      /data-modal-toggle=/i,
+      /data-collapse-toggle=/i,
+      /data-tooltip-target=/i,
+      /data-popover-target=/i,
+      /data-accordion-target=/i,
+      /data-tabs-target=/i,
+      /data-drawer-target=/i,
+      /data-carousel=/i,
+    ],
+  },
+  {
     library: 'Headless UI',
     packageName: '@headlessui/react',
     installCommand: 'npm install @headlessui/react',

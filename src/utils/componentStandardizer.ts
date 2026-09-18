@@ -76,6 +76,16 @@ export function renameAttributesToJsx(html: string): string {
   );
 }
 
+/**
+ * Convierte comentarios HTML (`<!-- ... -->`) a comentarios JSX (`{/* ... *\/}`).
+ * El HTML real capturado de otros sitios trae comentarios de documentación
+ * con frecuencia (p. ej. "<!-- Dropdown menu -->"); JSX no entiende la
+ * sintaxis HTML y no compila si queda tal cual.
+ */
+export function convertHtmlComments(html: string): string {
+  return html.replace(/<!--([\s\S]*?)-->/g, (_match, inner) => `{/*${inner}*/}`);
+}
+
 // Elementos HTML "void": nunca llevan cierre propio ni hijos. El HTML real
 // casi nunca los auto-cierra (`<input ...>`), pero JSX lo exige (`<input ... />`)
 // o directamente no compila.
@@ -320,7 +330,7 @@ export function standardizeToUIComponent(options: AutoStandardizeOptions): Stand
   // 4. Generate Clean React TSX
   const cleanJsx = closeVoidElements(
     renameAttributesToJsx(
-      rawHtml
+      convertHtmlComments(rawHtml)
         .replace(/\bclass=/g, 'className=')
         .replace(/\bfor=/g, 'htmlFor=')
         .replace(/\btabindex=/g, 'tabIndex=')
