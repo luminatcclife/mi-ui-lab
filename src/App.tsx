@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-  CanvasBackground,
-  ComponentCategory,
-  UIComponent,
-  ViewportMode,
-  ComponentIteration,
-} from './types';
+import { CanvasBackground, UIComponent, ViewportMode, ComponentIteration } from './types';
 import { INITIAL_COMPONENTS } from './data/initialComponents';
-import { Header, AppViewMode } from './components/Header';
-import { Sidebar } from './components/Sidebar';
-import { PreviewCanvas } from './components/PreviewCanvas';
-import { CategoryGridView } from './components/CategoryGridView';
-import { DocumentationView } from './components/DocumentationView';
-import { ComparisonView } from './components/ComparisonView';
+import { Header } from './components/Header';
+import { HomeScreen, AppScreen } from './components/HomeScreen';
+import { BibliotecaScreen } from './components/BibliotecaScreen';
+import { LaboratorioScreen } from './components/LaboratorioScreen';
+import { PlaygroundScreen } from './components/PlaygroundScreen';
 import { TokensPanel } from './components/TokensPanel';
 import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
-import { NewComponentModal } from './components/NewComponentModal';
-import { ElementInspectorModal } from './components/ElementInspectorModal';
-import { ExportModal } from './components/ExportModal';
 import { IterationModal } from './components/IterationModal';
+import { ExportModal } from './components/ExportModal';
 import { ThemeProvider } from './context/ThemeContext';
 import {
   loadCatalogFromDB,
@@ -72,23 +63,17 @@ function MainApp() {
     return ['accent-card', 'custom-button'];
   });
 
-  const [activeView, setActiveView] = useState<AppViewMode>('playground');
-  const [playgroundLayout, setPlaygroundLayout] = useState<'focus' | 'grid'>('focus');
+  const [screen, setScreen] = useState<AppScreen>('home');
+  const [bibliotecaInitialMode, setBibliotecaInitialMode] = useState<'grid' | 'detail'>('grid');
   const [selectedId, setSelectedId] = useState<string>('accent-card');
-  const [selectedCategory, setSelectedCategory] = useState<ComponentCategory>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [viewportMode, setViewportMode] = useState<ViewportMode>('responsive');
-  const [canvasBg, setCanvasBg] = useState<CanvasBackground>('dots');
-  const [compareCompAId, setCompareCompAId] = useState<string>('accent-card');
-  const [compareCompBId, setCompareCompBId] = useState<string>('notification-callout');
+  const [canvasBg] = useState<CanvasBackground>('dots');
 
-  // Modals state
+  // Modals state (Tokens/Paleta/Exportar/Iteración: siguen siendo modales, sin cambios internos)
   const [isTokensOpen, setIsTokensOpen] = useState(false);
   const [isPaletteGeneratorOpen, setIsPaletteGeneratorOpen] = useState(false);
   const [paletteGeneratorInitialHex, setPaletteGeneratorInitialHex] = useState('#6366f1');
-  const [isNewComponentOpen, setIsNewComponentOpen] = useState(false);
-  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isIterationOpen, setIsIterationOpen] = useState(false);
   const [iteratingComponent, setIteratingComponent] = useState<UIComponent | null>(null);
@@ -153,23 +138,7 @@ function MainApp() {
     }
   };
 
-  // Save custom components to Dexie and state
-  const saveCustomComponents = (updated: UIComponent[]) => {
-    const customOnly = updated.filter((c) => c.isCustom);
-    setComponents(updated);
-
-    for (const comp of customOnly) {
-      saveCustomComponentToDB(comp);
-    }
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customOnly));
-    } catch (e) {
-      console.warn('Storage fallback note', e);
-    }
-  };
-
-  // Add new piece
+  // Add new piece (desde Laboratorio: a mano o capturado)
   const handleAddNewComponent = (newComp: UIComponent) => {
     const updated = [newComp, ...components];
     setComponents(updated);
@@ -187,13 +156,8 @@ function MainApp() {
   };
 
   // Save new iteration/version of a piece
-  const handleSaveIteration = (
-    updatedComp: UIComponent,
-    _newIteration: ComponentIteration,
-  ) => {
-    const updated = components.map((c) =>
-      c.id === updatedComp.id ? updatedComp : c,
-    );
+  const handleSaveIteration = (updatedComp: UIComponent, _newIteration: ComponentIteration) => {
+    const updated = components.map((c) => (c.id === updatedComp.id ? updatedComp : c));
     setComponents(updated);
     saveCustomComponentToDB(updatedComp);
     try {
@@ -218,20 +182,11 @@ function MainApp() {
   // Update tags of a component (persists for both custom & built-in components)
   const handleUpdateComponentTags = (componentId: string, updatedTags: string[]) => {
     const cleaned = Array.from(
-      new Set(
-        updatedTags
-          .map((t) => t.trim().toLowerCase().replace(/^#/, ''))
-          .filter(Boolean),
-      ),
+      new Set(updatedTags.map((t) => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean)),
     );
 
     const target = components.find((c) => c.id === componentId);
-    const updated = components.map((c) => {
-      if (c.id === componentId) {
-        return { ...c, tags: cleaned };
-      }
-      return c;
-    });
+    const updated = components.map((c) => (c.id === componentId ? { ...c, tags: cleaned } : c));
 
     setComponents(updated);
 
@@ -244,14 +199,9 @@ function MainApp() {
       saveTagOverrideToDB(componentId, cleaned);
       try {
         const savedOverrides = localStorage.getItem(STORAGE_TAGS_OVERRIDE_KEY);
-        const tagOverrides: Record<string, string[]> = savedOverrides
-          ? JSON.parse(savedOverrides)
-          : {};
+        const tagOverrides: Record<string, string[]> = savedOverrides ? JSON.parse(savedOverrides) : {};
         tagOverrides[componentId] = cleaned;
-        localStorage.setItem(
-          STORAGE_TAGS_OVERRIDE_KEY,
-          JSON.stringify(tagOverrides),
-        );
+        localStorage.setItem(STORAGE_TAGS_OVERRIDE_KEY, JSON.stringify(tagOverrides));
       } catch (e) {
         console.warn('Storage fallback note', e);
       }
@@ -285,9 +235,7 @@ function MainApp() {
   const handleToggleTagFilter = (tag: string) => {
     const clean = tag.trim().toLowerCase().replace(/^#/, '');
     if (!clean) return;
-    setActiveTags((prev) =>
-      prev.includes(clean) ? prev.filter((t) => t !== clean) : [...prev, clean],
-    );
+    setActiveTags((prev) => (prev.includes(clean) ? prev.filter((t) => t !== clean) : [...prev, clean]));
   };
 
   // Import external collection
@@ -317,165 +265,83 @@ function MainApp() {
     showToast('Base de datos restablecida a las piezas base de mi-ui-lab');
   };
 
-  const selectedComponent =
-    components.find((c) => c.id === selectedId) || components[0];
-
   const customCount = components.filter((c) => c.isCustom).length;
 
-  const handleOpenInPlayground = (componentId: string) => {
-    setSelectedId(componentId);
-    setActiveView('playground');
+  // Navegación entre pantallas
+  const handleNavigate = (target: AppScreen) => {
+    if (target === 'biblioteca') setBibliotecaInitialMode('grid');
+    setScreen(target);
   };
 
-  const handleOpenCompare = (componentId: string) => {
-    setCompareCompAId(componentId);
-    const other = components.find((c) => c.id !== componentId);
-    if (other && compareCompBId === componentId) {
-      setCompareCompBId(other.id);
-    }
-    setActiveView('compare');
+  const handlePlayInPlayground = (componentId: string) => {
+    setSelectedId(componentId);
+    setScreen('playground');
+  };
+
+  const handleViewInBiblioteca = (componentId: string) => {
+    setSelectedId(componentId);
+    setBibliotecaInitialMode('detail');
+    setScreen('biblioteca');
   };
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      {/* Header Bar */}
-      <Header
-        activeView={activeView}
-        onViewChange={setActiveView}
-        components={components}
-        onSelectComponent={setSelectedId}
-        viewportMode={viewportMode}
-        onViewportChange={setViewportMode}
-        canvasBg={canvasBg}
-        onCanvasBgChange={setCanvasBg}
-        onOpenNewComponent={() => setIsNewComponentOpen(true)}
-        onOpenInspector={() => setIsInspectorOpen(true)}
-        onOpenTokens={() => setIsTokensOpen(true)}
-        onOpenExport={() => setIsExportOpen(true)}
-        onOpenPaletteGenerator={() => handleOpenPaletteGenerator()}
-        totalComponents={components.length}
-        customComponentsCount={customCount}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        favoriteIds={favoriteIds}
-        playgroundLayout={playgroundLayout}
-        onPlaygroundLayoutChange={(layout) => {
-          setPlaygroundLayout(layout);
-          if (layout === 'grid' && selectedCategory === 'all' && selectedComponent) {
-            setSelectedCategory(selectedComponent.category);
-          }
-        }}
-      />
+      <Header onNavigateHome={() => handleNavigate('home')} customComponentsCount={customCount} />
 
-      {/* Main Workspace Area: View Switcher between Playground, Docs, and Compare */}
-      {activeView === 'playground' ? (
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar
-            components={components}
-            selectedId={selectedId}
-            onSelectComponent={(id) => {
-              setSelectedId(id);
-              const comp = components.find((c) => c.id === id);
-              if (
-                comp &&
-                selectedCategory !== 'all' &&
-                selectedCategory !== 'favorites' &&
-                selectedCategory !== 'custom' &&
-                selectedCategory !== comp.category
-              ) {
-                setSelectedCategory(comp.category);
-              }
-            }}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onDeleteCustomComponent={handleDeleteCustomComponent}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={handleToggleFavorite}
-            activeTags={activeTags}
-            onActiveTagsChange={setActiveTags}
-            onAddTagToComponent={handleAddTagToComponent}
-            onRemoveTagFromComponent={handleRemoveTagFromComponent}
-          />
+      {screen === 'home' && (
+        <HomeScreen
+          totalComponents={components.length}
+          customCount={customCount}
+          favoritesCount={favoriteIds.length}
+          onNavigate={handleNavigate}
+        />
+      )}
 
-          {playgroundLayout === 'grid' ? (
-            <CategoryGridView
-              components={components}
-              currentCategory={
-                selectedCategory === 'all' && selectedComponent
-                  ? selectedComponent.category
-                  : selectedCategory
-              }
-              onSelectCategory={setSelectedCategory}
-              selectedId={selectedId}
-              onSelectComponent={setSelectedId}
-              onSwitchToFocus={(id) => {
-                if (id) setSelectedId(id);
-                setPlaygroundLayout('focus');
-              }}
-              onOpenCompare={handleOpenCompare}
-              favoriteIds={favoriteIds}
-              onToggleFavorite={handleToggleFavorite}
-              canvasBg={canvasBg}
-              onToast={showToast}
-              activeTags={activeTags}
-              onToggleTagFilter={handleToggleTagFilter}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          ) : selectedComponent ? (
-            <PreviewCanvas
-              component={selectedComponent}
-              viewportMode={viewportMode}
-              canvasBg={canvasBg}
-              onToast={showToast}
-              onOpenIteration={handleOpenIteration}
-              onOpenCompare={handleOpenCompare}
-              isFavorite={favoriteIds.includes(selectedComponent.id)}
-              onToggleFavorite={handleToggleFavorite}
-              activeTags={activeTags}
-              onToggleTagFilter={handleToggleTagFilter}
-              onAddTagToComponent={handleAddTagToComponent}
-              onRemoveTagFromComponent={handleRemoveTagFromComponent}
-              onTogglePlaygroundLayout={(layout) => {
-                setPlaygroundLayout(layout);
-                if (layout === 'grid' && selectedCategory === 'all' && selectedComponent) {
-                  setSelectedCategory(selectedComponent.category);
-                }
-              }}
-              categoryComponentCount={
-                components.filter((c) => c.category === selectedComponent.category).length
-              }
-              onOpenPaletteGenerator={handleOpenPaletteGenerator}
-              onOpenInspector={() => setIsInspectorOpen(true)}
-            />
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-zinc-500 text-sm">
-              Selecciona un componente del panel lateral para inspeccionarlo.
-            </div>
-          )}
-        </div>
-      ) : activeView === 'docs' ? (
-        <DocumentationView
+      {screen === 'biblioteca' && (
+        <BibliotecaScreen
           components={components}
-          onOpenInPlayground={handleOpenInPlayground}
-          onOpenIteration={handleOpenIteration}
-          onOpenCompare={handleOpenCompare}
-          onToast={showToast}
-          initialSelectedId={selectedId}
+          selectedId={selectedId}
+          onSelectComponent={setSelectedId}
           favoriteIds={favoriteIds}
           onToggleFavorite={handleToggleFavorite}
+          onDeleteCustomComponent={handleDeleteCustomComponent}
           activeTags={activeTags}
+          onActiveTagsChange={setActiveTags}
           onToggleTagFilter={handleToggleTagFilter}
-        />
-      ) : (
-        <ComparisonView
-          components={components}
-          initialComponentAId={compareCompAId}
-          initialComponentBId={compareCompBId}
-          onSelectComponentForPlayground={handleOpenInPlayground}
+          onAddTagToComponent={handleAddTagToComponent}
+          onRemoveTagFromComponent={handleRemoveTagFromComponent}
+          canvasBg={canvasBg}
           onToast={showToast}
+          onOpenIteration={handleOpenIteration}
+          onOpenTokens={() => setIsTokensOpen(true)}
+          onOpenExport={() => setIsExportOpen(true)}
+          onOpenPaletteGenerator={handleOpenPaletteGenerator}
+          onPlayInPlayground={handlePlayInPlayground}
+          initialMode={bibliotecaInitialMode}
+        />
+      )}
+
+      {screen === 'laboratorio' && (
+        <LaboratorioScreen
+          components={components}
+          activeComponent={components.find((c) => c.id === selectedId)}
+          onSave={handleAddNewComponent}
+          onToast={showToast}
+        />
+      )}
+
+      {screen === 'playground' && (
+        <PlaygroundScreen
+          components={components}
+          selectedId={selectedId}
+          onSelectComponent={setSelectedId}
+          viewportMode={viewportMode}
+          onViewportChange={setViewportMode}
+          canvasBg={canvasBg}
+          onToast={showToast}
+          isFavorite={favoriteIds.includes(selectedId)}
+          onToggleFavorite={handleToggleFavorite}
+          onViewInBiblioteca={handleViewInBiblioteca}
         />
       )}
 
@@ -492,23 +358,6 @@ function MainApp() {
         isOpen={isPaletteGeneratorOpen}
         onClose={() => setIsPaletteGeneratorOpen(false)}
         initialPrimaryHex={paletteGeneratorInitialHex}
-        onToast={showToast}
-      />
-
-      {/* Document New Piece Modal */}
-      <NewComponentModal
-        isOpen={isNewComponentOpen}
-        onClose={() => setIsNewComponentOpen(false)}
-        onSave={handleAddNewComponent}
-        onToast={showToast}
-      />
-
-      {/* Inspector: capturar y estandarizar piezas de fuera de mi-ui-lab */}
-      <ElementInspectorModal
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        activeComponent={selectedComponent}
-        onSaveComponent={handleAddNewComponent}
         onToast={showToast}
       />
 

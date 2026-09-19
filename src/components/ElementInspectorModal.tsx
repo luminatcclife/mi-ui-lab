@@ -52,8 +52,6 @@ import {
 import { ComponentCategory, UIComponent } from '../types';
 
 export interface ElementInspectorModalProps {
-  isOpen: boolean;
-  onClose: () => void;
   activeComponent?: UIComponent;
   onToast?: (message: string) => void;
   onSaveComponent?: (component: UIComponent) => void;
@@ -102,8 +100,6 @@ const SAMPLE_SNIPPETS = [
 ];
 
 export function ElementInspectorModal({
-  isOpen,
-  onClose,
   activeComponent,
   onToast,
   onSaveComponent,
@@ -212,10 +208,11 @@ export function ElementInspectorModal({
   };
 
   useEffect(() => {
-    if (isOpen && !techSheet) {
+    if (!techSheet) {
       handleAnalyzeHtml();
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -457,14 +454,27 @@ export function ${compName}() {
         onToast(`¡"${newComp.name}" guardado exitosamente en la base de datos!`);
       }
       setIsSavingDrawerOpen(false);
-      onClose();
+      resetCaptureForm();
     } else {
       if (onToast) onToast('Función de guardado no conectada en este contexto');
     }
   };
 
-  // Rule of Hooks: early return AFTER all hooks
-  if (!isOpen) return null;
+  // Clears the capture form after a successful save, ready for the next piece.
+  const resetCaptureForm = () => {
+    setHtmlInput(SAMPLE_SNIPPETS[0].code);
+    setTechSheet(null);
+    setErrorMsg(null);
+    setActiveTab('paste');
+    setRightPanelTab('preview');
+    setSaveName('');
+    setSaveCategory('cards');
+    setSaveTagline('');
+    setSaveDescription('');
+    setSaveTags('custom, importado, tailwind');
+    setUseGoldStandard(true);
+    setIframeKey((prev) => prev + 1);
+  };
 
   const tokenCategories: Array<{
     key: keyof TailwindCategorizedTokens;
@@ -483,22 +493,11 @@ export function ${compName}() {
 
   return (
     <div
-      id="modal-element-inspector"
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSavingDrawerOpen) onClose();
-      }}
+      id="element-inspector-panel"
+      className="relative flex flex-1 flex-col w-full h-full overflow-hidden bg-zinc-950 text-zinc-100"
     >
       {/* Hidden sandbox mount point for DOMParser style computation */}
       <div ref={sandboxMountRef} className="hidden pointer-events-none" aria-hidden="true" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 15 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="relative flex flex-col w-full max-w-6xl h-[92vh] rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
-      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800/80 px-6 py-3.5 bg-zinc-900/70">
           <div className="flex items-center gap-3">
@@ -544,15 +543,6 @@ export function ${compName}() {
                 <span>Guardar en Base de Datos</span>
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors cursor-pointer"
-              title="Cerrar modal"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
         </div>
 
@@ -1537,8 +1527,7 @@ export function ${compName}() {
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
-    </div>
+      </div>
   );
 }
 
