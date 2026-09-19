@@ -184,7 +184,7 @@ export function Sidebar({
   return (
     <aside
       id="sidebar-panel"
-      className="flex w-full md:w-80 shrink-0 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/60 backdrop-blur-sm transition-colors duration-200"
+      className="panel-glow flex w-full md:w-80 shrink-0 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/60 backdrop-blur-sm transition-colors duration-200"
     >
       {/* Search Input Section */}
       <div className="p-3 border-b border-zinc-200 dark:border-zinc-800/80 space-y-2.5">

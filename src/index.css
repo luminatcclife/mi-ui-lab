@@ -49,6 +49,7 @@
   --app-text: #f4f4f5;
   --app-card-bg: #0d0d12;
   --app-border: #27272a;
+  --app-bg-image: none;
   --brand-gradient: linear-gradient(90deg, #39ff14, #22d3ee 55%, #8b5cf6 100%);
 }
 
@@ -59,6 +60,7 @@ html.dark, :root[data-theme="dark"] {
   --app-text: #f4f4f5;
   --app-card-bg: #0d0d12;
   --app-border: #27272a;
+  --app-bg-image: none;
   --brand-gradient: linear-gradient(90deg, #39ff14, #22d3ee 55%, #8b5cf6 100%);
   color-scheme: dark;
 }
@@ -66,10 +68,16 @@ html.dark, :root[data-theme="dark"] {
 html.light, :root[data-theme="light"] {
   --app-font-family: "Outfit", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --app-heading-font: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
-  --app-bg: #f8fafc;
+  --app-bg: #f7f7fb;
   --app-text: #0f172a;
   --app-card-bg: #ffffff;
   --app-border: #e2e8f0;
+  /* Soft color wash so the page doesn't read as flat gray-on-white: faint violet top-left,
+     faint green bottom-right, fixed so it doesn't scroll with content. */
+  --app-bg-image:
+    radial-gradient(at 8% 0%, rgba(139, 92, 246, 0.10) 0px, transparent 55%),
+    radial-gradient(at 100% 90%, rgba(34, 211, 238, 0.08) 0px, transparent 50%),
+    radial-gradient(at 90% 5%, rgba(57, 200, 20, 0.07) 0px, transparent 45%);
   /* Darker, more saturated stops for legibility on a light background. */
   --brand-gradient: linear-gradient(90deg, #16a34a, #0891b2 55%, #7c3aed 100%);
   color-scheme: light;
@@ -78,6 +86,8 @@ html.light, :root[data-theme="light"] {
 body {
   font-family: var(--app-font-family);
   background-color: var(--app-bg);
+  background-image: var(--app-bg-image);
+  background-attachment: fixed;
   color: var(--app-text);
 }
 
@@ -113,13 +123,21 @@ h1, h2, h3, h4, h5, h6 {
   color: transparent;
 }
 
-/* Only takes effect inside dark mode (.dark / [data-theme="dark"]); plain class,
-   no Tailwind `dark:` prefix needed since it isn't a Tailwind utility. */
-:where(.dark, [data-theme="dark"]) .border-gradient-pill {
+/* Plain class (no Tailwind `dark:` prefix needed, since it isn't a Tailwind utility):
+   a pastel gradient border in light mode, a saturated neon one in dark mode. */
+.border-gradient-pill {
   border: 1px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(120deg, #a78bfa, #22d3ee) border-box;
+  box-shadow: 0 2px 10px -4px rgba(139, 92, 246, 0.35);
+}
+
+:where(.dark, [data-theme="dark"]) .border-gradient-pill {
   background:
     linear-gradient(#000, #000) padding-box,
     linear-gradient(120deg, #ec4899, #8b5cf6) border-box;
+  box-shadow: none;
 }
 
 .card-hairline-top {
@@ -146,6 +164,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .glow-dot {
   box-shadow: 0 0 6px 1px currentColor;
+}
+
+/* Soft ambient color shadow for flat white panels in light mode (header, sidebar) so they
+   read as "designed" rather than a plain bordered rectangle. No-op in dark mode, which
+   already has its own neon glow treatment. */
+:where(.light, [data-theme="light"]) .panel-glow {
+  box-shadow: 0 1px 0 0 rgba(139, 92, 246, 0.05), 0 12px 28px -16px rgba(139, 92, 246, 0.22);
 }
 
 
