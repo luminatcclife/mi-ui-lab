@@ -1,0 +1,2 @@
+# Instantáneas de texto de Playwright: siempre LF, para que la comparación no dependa del SO
+e2e/**/*-snapshots/*.txt text eol=lf
