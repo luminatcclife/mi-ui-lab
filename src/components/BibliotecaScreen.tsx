@@ -23,6 +23,7 @@ interface BibliotecaScreenProps {
   canvasBg: CanvasBackground;
   onToast: (msg: string) => void;
   onOpenIteration: (comp: UIComponent) => void;
+  onEditComponent: (comp: UIComponent) => void;
   onOpenTokens: () => void;
   onOpenExport: () => void;
   onOpenPaletteGenerator: (primaryHex?: string) => void;
@@ -45,6 +46,7 @@ export function BibliotecaScreen({
   canvasBg,
   onToast,
   onOpenIteration,
+  onEditComponent,
   onOpenTokens,
   onOpenExport,
   onOpenPaletteGenerator,
@@ -156,6 +158,7 @@ export function BibliotecaScreen({
             component={selectedComponent}
             onToast={onToast}
             onOpenIteration={onOpenIteration}
+            onEditComponent={onEditComponent}
             onOpenCompare={handleOpenCompare}
             onPlayInPlayground={onPlayInPlayground}
             isFavorite={favoriteIds.includes(selectedComponent.id)}

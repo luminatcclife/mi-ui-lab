@@ -11,6 +11,7 @@ const PlaygroundScreen = lazy(() => import('./components/PlaygroundScreen').then
 const TokensPanel = lazy(() => import('./components/TokensPanel').then((m) => ({ default: m.TokensPanel })));
 const PaletteGeneratorModal = lazy(() => import('./components/PaletteGeneratorModal').then((m) => ({ default: m.PaletteGeneratorModal })));
 const IterationModal = lazy(() => import('./components/IterationModal').then((m) => ({ default: m.IterationModal })));
+const EditComponentModal = lazy(() => import('./components/EditComponentModal').then((m) => ({ default: m.EditComponentModal })));
 const ExportModal = lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
 
 /** true desde la primera vez que `flag` es true: el modal se carga al abrirlo y luego queda montado (conserva su estado). */
@@ -46,6 +47,7 @@ function MainApp() {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isIterationOpen, setIsIterationOpen] = useState(false);
   const [iteratingComponent, setIteratingComponent] = useState<UIComponent | null>(null);
+  const [editingComponent, setEditingComponent] = useState<UIComponent | null>(null);
   const tokensLoaded = useLoadedOnce(isTokensOpen);
   const paletteLoaded = useLoadedOnce(isPaletteGeneratorOpen);
   const exportLoaded = useLoadedOnce(isExportOpen);
@@ -223,6 +225,7 @@ function MainApp() {
             canvasBg={canvasBg}
             onToast={showToast}
             onOpenIteration={handleOpenIteration}
+          onEditComponent={setEditingComponent}
             onOpenTokens={() => setIsTokensOpen(true)}
             onOpenExport={() => setIsExportOpen(true)}
             onOpenPaletteGenerator={handleOpenPaletteGenerator}
@@ -291,6 +294,16 @@ function MainApp() {
           }}
           component={iteratingComponent}
           onSaveIteration={handleSaveIteration}
+          onToast={showToast}
+        />
+      )}
+
+      {/* Edit custom piece Modal (se desmonta al cerrar: cada apertura parte de la pieza actual) */}
+      {editingComponent && (
+        <EditComponentModal
+          component={editingComponent}
+          onClose={() => setEditingComponent(null)}
+          onSave={catalog.updateComponent}
           onToast={showToast}
         />
       )}

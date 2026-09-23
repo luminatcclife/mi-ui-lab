@@ -7,6 +7,7 @@ import {
   Palette,
   History,
   GitCommit,
+  PenLine,
   Clock,
   Star,
   Tag,
@@ -28,6 +29,8 @@ interface ComponentDetailPanelProps {
   component: UIComponent;
   onToast: (msg: string) => void;
   onOpenIteration?: (comp: UIComponent) => void;
+  /** Solo se ofrece para piezas propias. */
+  onEditComponent?: (comp: UIComponent) => void;
   onOpenCompare?: (componentId: string) => void;
   onPlayInPlayground: (componentId: string) => void;
   isFavorite?: boolean;
@@ -50,6 +53,7 @@ export function ComponentDetailPanel({
   component,
   onToast,
   onOpenIteration,
+  onEditComponent,
   onOpenCompare,
   onPlayInPlayground,
   isFavorite = false,
@@ -222,6 +226,19 @@ export function ComponentDetailPanel({
               <GitCommit className="h-3.5 w-3.5" />
               <span>Nueva Iteración</span>
             </button>
+
+            {component.isCustom && onEditComponent && (
+              <button
+                type="button"
+                id="btn-edit-component-detail"
+                onClick={() => onEditComponent(component)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-xs"
+                title="Editar nombre, descripción, categoría y código"
+              >
+                <PenLine className="h-3.5 w-3.5 text-indigo-500" />
+                <span>Editar</span>
+              </button>
+            )}
 
             {onOpenCompare && (
               <button

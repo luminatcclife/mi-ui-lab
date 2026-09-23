@@ -7,7 +7,7 @@ Taller personal de componentes de interfaz en React + Tailwind CSS. Funciona **1
 | Pantalla | Para qué sirve |
 |---|---|
 | **Inicio** | Punto de entrada con acceso a las tres zonas y contadores de la colección. |
-| **Biblioteca** | Explorar, buscar (búsqueda fuzzy tolerante a erratas y acentos), filtrar por categoría y etiquetas, favoritos, ficha de detalle, comparar dos piezas (diff de código, props y tokens), registrar iteraciones, explorar tokens, generar paletas y exportar/importar la colección. |
+| **Biblioteca** | Explorar, buscar (búsqueda fuzzy tolerante a erratas y acentos), filtrar por categoría y etiquetas, favoritos, ficha de detalle, comparar dos piezas (diff de código, props y tokens), registrar iteraciones, editar piezas propias (nombre, descripción, categoría, tokens, HTML y código), explorar tokens, generar paletas y exportar/importar la colección. |
 | **Laboratorio** | Incorporar piezas nuevas: **a mano** (metadatos + código TSX de referencia) o **capturando HTML** con el Inspector (ficha técnica, clases Tailwind categorizadas, detección de dependencias como Lucide/Radix/Flowbite, TSX generado y vista previa aislada). |
 | **Playground** | Interactuar con una pieza: variantes, editor de props, tono de acento, viewport y deshacer/rehacer. |
 
