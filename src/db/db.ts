@@ -14,7 +14,7 @@ export interface DBTagOverride {
 
 export interface DBMeta {
   key: string;
-  value: any;
+  value: unknown;
 }
 
 /**

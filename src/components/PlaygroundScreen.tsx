@@ -12,7 +12,12 @@ import {
   Smartphone,
   ArrowRight,
 } from 'lucide-react';
-import { AccentColor, CanvasBackground, UIComponent, ViewportMode, ComponentConfigSnapshot } from '../types';
+import { ACCENT_COLORS, AccentColor, CanvasBackground, UIComponent, ViewportMode, ComponentConfigSnapshot } from '../types';
+import { PropValue, PropValues, readOneOf } from '../utils/propValues';
+
+/** Tono de una variante, o `fallback` si no declara uno válido. */
+const variantAccent = (props: PropValues | undefined, fallback: AccentColor): AccentColor =>
+  readOneOf(props?.accentColor, ACCENT_COLORS, fallback);
 import { InteractiveComponentRenderer } from './InteractiveComponentRenderer';
 import { LocalHistoryControl } from './LocalHistoryControl';
 import { InteractivePropEditor } from './InteractivePropEditor';
@@ -144,7 +149,7 @@ export function PlaygroundScreen({
   const [selectedVariantId, setSelectedVariantId] = useState<string>(component.variants[0]?.id || 'default');
   const [accentColor, setAccentColor] = useState<AccentColor>('indigo');
   const [copiedVariant, setCopiedVariant] = useState(false);
-  const [propOverrides, setPropOverrides] = useState<Record<string, any>>({});
+  const [propOverrides, setPropOverrides] = useState<PropValues>({});
   const [isPropEditorOpen, setIsPropEditorOpen] = useState(false);
 
   const [history, setHistory] = useState<ComponentConfigSnapshot[]>(() => [
@@ -153,7 +158,7 @@ export function PlaygroundScreen({
       timestamp: Date.now(),
       actionLabel: `Carga inicial de ${component.name}`,
       selectedVariantId: component.variants[0]?.id || 'default',
-      accentColor: component.variants[0]?.props?.accentColor || 'indigo',
+      accentColor: variantAccent(component.variants[0]?.props, 'indigo'),
       propOverrides: {},
     },
   ]);
@@ -161,7 +166,7 @@ export function PlaygroundScreen({
 
   useEffect(() => {
     const initialVariant = component.variants[0]?.id || 'default';
-    const initialColor = component.variants[0]?.props?.accentColor || 'indigo';
+    const initialColor = variantAccent(component.variants[0]?.props, 'indigo');
     setSelectedVariantId(initialVariant);
     setAccentColor(initialColor);
     setPropOverrides({});
@@ -182,7 +187,7 @@ export function PlaygroundScreen({
   const canRedo = historyIndex < history.length - 1;
 
   const pushSnapshot = (
-    newConfig: { selectedVariantId: string; accentColor: AccentColor; propOverrides: Record<string, any> },
+    newConfig: { selectedVariantId: string; accentColor: AccentColor; propOverrides: PropValues },
     actionLabel: string,
   ) => {
     const newSnapshot: ComponentConfigSnapshot = {
@@ -259,9 +264,9 @@ export function PlaygroundScreen({
   const handleSelectVariant = (variantId: string) => {
     if (variantId === selectedVariantId) return;
     const v = component.variants.find((item) => item.id === variantId);
-    const nextColor = v?.props?.accentColor || accentColor;
+    const nextColor = variantAccent(v?.props, accentColor);
     setSelectedVariantId(variantId);
-    if (v?.props?.accentColor) setAccentColor(nextColor);
+    setAccentColor(nextColor);
     pushSnapshot({ selectedVariantId: variantId, accentColor: nextColor, propOverrides }, `Variante: ${v?.name || variantId}`);
   };
 
@@ -271,7 +276,7 @@ export function PlaygroundScreen({
     pushSnapshot({ selectedVariantId, accentColor: col, propOverrides }, `Tono: ${col}`);
   };
 
-  const handlePropChange = (propName: string, value: any, actionLabel: string) => {
+  const handlePropChange = (propName: string, value: PropValue, actionLabel: string) => {
     const updatedOverrides = { ...propOverrides, [propName]: value };
     setPropOverrides(updatedOverrides);
     pushSnapshot({ selectedVariantId, accentColor, propOverrides: updatedOverrides }, actionLabel);
@@ -508,7 +513,7 @@ export function PlaygroundScreen({
               component={component}
               activeVariantProps={activeVariant?.props || {}}
               propOverrides={propOverrides}
-              accentColor={props.accentColor || accentColor}
+              accentColor={readOneOf(props.accentColor, ACCENT_COLORS, accentColor)}
               onToast={onToast}
               onPropChange={(name, val) => handlePropChange(name, val, `Prop en vivo: ${name}`)}
             />

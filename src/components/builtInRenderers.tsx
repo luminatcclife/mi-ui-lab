@@ -1,38 +1,97 @@
 // src/components/builtInRenderers.tsx
 // Registro id -> render de las piezas base. Añadir una pieza base = añadir su entrada aquí
 // (un test comprueba que cada pieza de INITIAL_COMPONENTS tiene la suya).
+// Los props llegan como datos (PropValues): se leen con accesores tipados, y un valor con el tipo
+// equivocado cae al valor por defecto de la pieza en lugar de llegar tal cual al componente.
 import React from 'react';
 import { AccentColor } from '../types';
-import { AccentCard } from './ui/AccentCard';
-import { Button } from './ui/Button';
-import { StatusBadge } from './ui/StatusBadge';
+import { AccentCard, AccentCardProps, AccentCardVariant } from './ui/AccentCard';
+import { Button, ButtonProps } from './ui/Button';
+import { StatusBadge, StatusBadgeProps } from './ui/StatusBadge';
 import { InputField } from './ui/InputField';
-import { SegmentedControl } from './ui/SegmentedControl';
-import { NotificationCallout } from './ui/NotificationCallout';
+import { SegmentedControl, Option } from './ui/SegmentedControl';
+import { NotificationCallout, NotificationCalloutProps } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
-import { StepProgressCard } from './ui/StepProgressCard';
+import { StepProgressCard, StepItem, StepProgressCardVariant } from './ui/StepProgressCard';
+import {
+  isPropObject,
+  PropValue,
+  PropValues,
+  readArray,
+  readBool,
+  readOneOf,
+  readString,
+} from '../utils/propValues';
 
 export interface BuiltInRenderContext {
   /** Props de la variante activa + overrides del editor. */
-  props: Record<string, any>;
+  props: PropValues;
   effectiveAccent: AccentColor;
   compact: boolean;
   onToast: (msg: string) => void;
-  onPropChange: (propName: string, val: any) => void;
+  onPropChange: (propName: string, val: PropValue) => void;
 }
+
+const ACCENT_CARD_VARIANTS: readonly AccentCardVariant[] = [
+  'default', 'accent-top', 'accent-left', 'ambient-glow', 'metric', 'actionable',
+];
+const BUTTON_VARIANTS: readonly NonNullable<ButtonProps['variant']>[] = [
+  'primary', 'secondary', 'subtle', 'outline', 'destructive', 'ghost',
+];
+const BADGE_STATUSES: readonly NonNullable<StatusBadgeProps['status']>[] = [
+  'neutral', 'success', 'warning', 'danger', 'info', 'purple',
+];
+const CALLOUT_TYPES: readonly NonNullable<NotificationCalloutProps['type']>[] = ['info', 'success', 'warning', 'alert'];
+const STEP_CARD_VARIANTS: readonly StepProgressCardVariant[] = ['default', 'glow', 'compact'];
+
+function readTrend(v: unknown): AccentCardProps['trend'] {
+  if (!isPropObject(v)) return undefined;
+  const value = readString(v.value);
+  return value === undefined ? undefined : { value, positive: readBool(v.positive, true) };
+}
+
+const readOptions = (v: unknown): Option[] | undefined =>
+  readArray(v, (item) => {
+    if (!isPropObject(item)) return undefined;
+    const id = readString(item.id);
+    const label = readString(item.label);
+    return id !== undefined && label !== undefined ? { id, label } : undefined;
+  });
+
+const readSteps = (v: unknown): StepItem[] | undefined =>
+  readArray(v, (item) => {
+    if (!isPropObject(item)) return undefined;
+    const title = readString(item.title);
+    const stepNumber = typeof item.stepNumber === 'number' ? item.stepNumber : readString(item.stepNumber);
+    if (title === undefined || stepNumber === undefined) return undefined;
+    const callout = isPropObject(item.callout) ? item.callout : undefined;
+    const calloutTag = readString(callout?.tag);
+    const calloutText = readString(callout?.text);
+    return {
+      id: readString(item.id),
+      stepNumber,
+      title,
+      description: readString(item.description) ?? '',
+      callout: calloutTag !== undefined && calloutText !== undefined ? { tag: calloutTag, text: calloutText } : undefined,
+      actionLabel: readString(item.actionLabel),
+      actionUrl: readString(item.actionUrl),
+      isCompleted: typeof item.isCompleted === 'boolean' ? item.isCompleted : undefined,
+      highlightAction: typeof item.highlightAction === 'boolean' ? item.highlightAction : undefined,
+    };
+  });
 
 export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => React.ReactNode> = {
   'accent-card': ({ props, effectiveAccent, compact, onToast, onPropChange }) => (
     <div className={`w-full ${compact ? 'max-w-xs' : 'max-w-md'} mx-auto`}>
       <AccentCard
-        variant={props.variant || 'default'}
+        variant={readOneOf(props.variant, ACCENT_CARD_VARIANTS, 'default')}
         accentColor={effectiveAccent}
-        title={props.title || 'Título de Ejemplo'}
-        subtitle={props.subtitle}
-        badge={props.badge}
-        metric={props.metric}
-        trend={props.trend}
-        actionLabel={props.actionLabel}
+        title={readString(props.title) || 'Título de Ejemplo'}
+        subtitle={readString(props.subtitle)}
+        badge={readString(props.badge)}
+        metric={readString(props.metric)}
+        trend={readTrend(props.trend)}
+        actionLabel={readString(props.actionLabel)}
         onAction={() => onToast(`Acción en AccentCard (${effectiveAccent})`)}
       />
     </div>
@@ -44,12 +103,12 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       }`}
     >
       <Button
-        variant={props.variant || 'primary'}
-        loading={Boolean(props.loading)}
-        disabled={Boolean(props.disabled)}
+        variant={readOneOf(props.variant, BUTTON_VARIANTS, 'primary')}
+        loading={readBool(props.loading, false)}
+        disabled={readBool(props.disabled, false)}
         onClick={() => onToast('Clic en botón!')}
       >
-        {props.label || 'Botón de Acción'}
+        {readString(props.label) || 'Botón de Acción'}
       </Button>
       <Button variant="secondary" onClick={() => onToast('Clic secundario')}>
         Secundario
@@ -64,9 +123,9 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       }`}
     >
       <StatusBadge
-        status={props.status || 'success'}
-        label={props.label || 'Operativo'}
-        withDot={props.withDot ?? true}
+        status={readOneOf(props.status, BADGE_STATUSES, 'success')}
+        label={readString(props.label) || 'Operativo'}
+        withDot={readBool(props.withDot, true)}
       />
       <StatusBadge status="warning" label="En revisión" withDot />
       <StatusBadge status="danger" label="Error 503" withDot />
@@ -85,11 +144,11 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       } mx-auto space-y-3 ${compact ? 'py-2' : 'py-6'}`}
     >
       <InputField
-        label={props.label || 'Nombre de la Pieza'}
-        placeholder={props.placeholder || 'Ej. CustomModal'}
-        helperText={props.helperText}
-        error={props.error}
-        disabled={Boolean(props.disabled)}
+        label={readString(props.label) || 'Nombre de la Pieza'}
+        placeholder={readString(props.placeholder) || 'Ej. CustomModal'}
+        helperText={readString(props.helperText)}
+        error={readString(props.error)}
+        disabled={readBool(props.disabled, false)}
       />
       {!compact && (
         <InputField
@@ -108,13 +167,13 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
     >
       <SegmentedControl
         options={
-          props.options || [
+          readOptions(props.options) || [
             { id: 'view1', label: 'General' },
             { id: 'view2', label: 'Variantes' },
             { id: 'view3', label: 'Tokens' },
           ]
         }
-        value={props.value || 'view1'}
+        value={readString(props.value) || 'view1'}
         onChange={(val) => {
           onPropChange('value', val);
           onToast(`Opción seleccionada: ${val}`);
@@ -122,7 +181,7 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       />
       <span className="text-xs text-zinc-400">
         Opción activa:{' '}
-        <strong className="text-zinc-200">{props.value || 'view1'}</strong>
+        <strong className="text-zinc-200">{readString(props.value) || 'view1'}</strong>
       </span>
     </div>
   ),
@@ -133,10 +192,10 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       } mx-auto space-y-2.5 ${compact ? 'py-2' : 'py-4'}`}
     >
       <NotificationCallout
-        type={props.type || 'info'}
-        title={props.title || 'Información de Tokens'}
+        type={readOneOf(props.type, CALLOUT_TYPES, 'info')}
+        title={readString(props.title) || 'Información de Tokens'}
         message={
-          props.message ||
+          readString(props.message) ||
           'Componente adaptado a tus tipografías y reglas de espaciado.'
         }
         onClose={() => onToast('Aviso cerrado')}
@@ -159,13 +218,13 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
       }`}
     >
       <ToggleSwitch
-        checked={props.checked !== undefined ? Boolean(props.checked) : true}
+        checked={readBool(props.checked, true)}
         onChange={(val) => {
           onPropChange('checked', val);
           onToast(`Toggle: ${val ? 'Activado' : 'Desactivado'}`);
         }}
-        label={props.label || 'Acentuar bordes activos'}
-        description={props.description || 'Aplica resplandor en foco y hover'}
+        label={readString(props.label) || 'Acentuar bordes activos'}
+        description={readString(props.description) || 'Aplica resplandor en foco y hover'}
       />
       {!compact && (
         <>
@@ -183,11 +242,11 @@ export const BUILT_IN_RENDERERS: Record<string, (ctx: BuiltInRenderContext) => R
   'step-progress-card': ({ props, effectiveAccent, compact, onToast, onPropChange }) => (
     <div className={`w-full ${compact ? 'max-w-sm' : 'max-w-md'} mx-auto`}>
       <StepProgressCard
-        variant={props.variant || 'default'}
+        variant={readOneOf(props.variant, STEP_CARD_VARIANTS, 'default')}
         accentColor={effectiveAccent}
-        title={props.title || 'Android Beta'}
-        badge={props.badge}
-        steps={props.steps}
+        title={readString(props.title) || 'Android Beta'}
+        badge={readString(props.badge)}
+        steps={readSteps(props.steps)}
         onStepAction={(step) => onToast(`Paso seleccionado: ${step.title}`)}
       />
     </div>

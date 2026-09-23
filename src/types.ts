@@ -1,3 +1,5 @@
+import type { PropValues } from './utils/propValues';
+
 export type ComponentCategory =
   | 'all'
   | 'favorites'
@@ -21,7 +23,7 @@ export interface ComponentVariant {
   id: string;
   name: string;
   description: string;
-  props: Record<string, any>;
+  props: PropValues;
   codeSnippet: string;
 }
 
@@ -66,11 +68,13 @@ export type AccentColor =
   | 'cyan'
   | 'zinc';
 
+export const ACCENT_COLORS: readonly AccentColor[] = ['indigo', 'emerald', 'violet', 'amber', 'rose', 'cyan', 'zinc'];
+
 export interface ComponentConfigSnapshot {
   id: string;
   timestamp: number;
   actionLabel: string;
   selectedVariantId: string;
   accentColor: AccentColor;
-  propOverrides: Record<string, any>;
+  propOverrides: PropValues;
 }

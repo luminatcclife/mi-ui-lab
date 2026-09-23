@@ -174,7 +174,7 @@ export function NewComponentModal({ onSave, onToast }: NewComponentModalProps) {
             <label className="block text-zinc-700 dark:text-zinc-300 font-medium mb-1">Categoría</label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as any)}
+              onChange={(e) => setCategory(e.target.value as Exclude<ComponentCategory, 'all' | 'favorites'>)}
               className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none"
             >
               <option value="cards">Tarjetas & Contenedores</option>

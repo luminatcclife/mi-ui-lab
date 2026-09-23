@@ -1,4 +1,5 @@
 import { PropDoc, UIComponent } from '../types';
+import { PropValue, PropValues } from './propValues';
 
 export interface DiffLine {
   text: string;
@@ -190,8 +191,8 @@ export interface PropDiffItem {
   status: PropDiffStatus;
   propA?: PropDoc;
   propB?: PropDoc;
-  renderedValueA?: any;
-  renderedValueB?: any;
+  renderedValueA?: PropValue;
+  renderedValueB?: PropValue;
   differences: string[];
 }
 
@@ -212,8 +213,8 @@ export interface PropDiffResult {
 export function computePropDiff(
   propsA: PropDoc[] = [],
   propsB: PropDoc[] = [],
-  renderedPropsA: Record<string, any> = {},
-  renderedPropsB: Record<string, any> = {},
+  renderedPropsA: PropValues = {},
+  renderedPropsB: PropValues = {},
 ): PropDiffResult {
   const mapA = new Map<string, PropDoc>();
   propsA.forEach((p) => mapA.set(p.name, p));

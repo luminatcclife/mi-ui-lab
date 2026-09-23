@@ -51,6 +51,7 @@ import {
 } from '../utils/componentStandardizer';
 import { buildSandboxDocument, SandboxTheme } from '../utils/sandboxDocument';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
+import { errorMessage } from '../utils/propValues';
 import { ComponentCategory, UIComponent } from '../types';
 
 export interface ElementInspectorModalProps {
@@ -166,8 +167,8 @@ export function ElementInspectorModal({
       setIframeKey((prev) => prev + 1);
 
       if (onToast) onToast('Ficha técnica y vista previa aislada generadas');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al analizar el código HTML.');
+    } catch (err) {
+      setErrorMsg(errorMessage(err, 'Error al analizar el código HTML.'));
       setTechSheet(null);
     }
   };
@@ -188,8 +189,8 @@ export function ElementInspectorModal({
             setIframeKey((prev) => prev + 1);
             if (onToast) onToast('Inspeccionado desde el lienzo en pantalla');
             return;
-          } catch (e: any) {
-            setErrorMsg(e.message);
+          } catch (e) {
+            setErrorMsg(errorMessage(e, 'Error al inspeccionar elemento.'));
           }
         }
       }
@@ -204,8 +205,8 @@ export function ElementInspectorModal({
       setHtmlInput(sheet.cleanHtml);
       setIframeKey((prev) => prev + 1);
       if (onToast) onToast('Inspección de elemento renderizado completada');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al inspeccionar elemento.');
+    } catch (err) {
+      setErrorMsg(errorMessage(err, 'Error al inspeccionar elemento.'));
     }
   };
 
@@ -1368,7 +1369,7 @@ export function ${compName}() {
                     </label>
                     <select
                       value={saveCategory}
-                      onChange={(e) => setSaveCategory(e.target.value as any)}
+                      onChange={(e) => setSaveCategory(e.target.value as Exclude<ComponentCategory, 'all' | 'favorites'>)}
                       className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-xs text-zinc-100 focus:border-indigo-500 focus:outline-none"
                     >
                       <option value="buttons">Botones (buttons)</option>

@@ -5,6 +5,7 @@
 
 import { ComponentCategory, ComponentVariant, PropDoc, UIComponent } from '../types';
 import { sanitizeHtml } from './sanitizeHtml';
+import { PropValue, PropValues } from './propValues';
 
 type PieceCategory = Exclude<ComponentCategory, 'all' | 'favorites'>;
 
@@ -35,6 +36,31 @@ const str = (v: unknown, fallback = ''): string =>
 const strArray = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((x) => x.slice(0, 200)) : [];
 
+/** Solo valores JSON (sin profundidad excesiva); el resto se descarta. */
+function parsePropValue(v: unknown, depth = 0): PropValue | undefined {
+  if (v === null || typeof v === 'boolean') return v;
+  if (typeof v === 'string') return v.slice(0, MAX_TEXT);
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+  if (depth >= 6) return undefined;
+  if (Array.isArray(v)) {
+    return v.map((x) => parsePropValue(x, depth + 1)).filter((x): x is PropValue => x !== undefined);
+  }
+  if (isObject(v)) {
+    const out: { [key: string]: PropValue } = {};
+    for (const [k, val] of Object.entries(v)) {
+      const parsed = parsePropValue(val, depth + 1);
+      if (parsed !== undefined) out[k] = parsed;
+    }
+    return out;
+  }
+  return undefined;
+}
+
+function parsePropValues(v: unknown): PropValues {
+  const parsed = isObject(v) ? parsePropValue(v) : undefined;
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+}
+
 function parseVariants(v: unknown): ComponentVariant[] {
   if (!Array.isArray(v)) return [];
   return v.filter(isObject).flatMap((item) => {
@@ -45,7 +71,7 @@ function parseVariants(v: unknown): ComponentVariant[] {
         id,
         name: str(item.name, id),
         description: str(item.description),
-        props: isObject(item.props) ? item.props : {},
+        props: parsePropValues(item.props),
         codeSnippet: str(item.codeSnippet),
       },
     ];

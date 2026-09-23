@@ -1,16 +1,17 @@
 import React from 'react';
-import { AccentColor, UIComponent } from '../types';
+import { ACCENT_COLORS, AccentColor, UIComponent } from '../types';
+import { PropValue, PropValues, readOneOf } from '../utils/propValues';
 import { BUILT_IN_RENDERERS } from './builtInRenderers';
 import { CustomComponentRenderer } from './ui/CustomComponentRenderer';
 import { ErrorBoundary, PieceErrorFallback } from './ErrorBoundary';
 
 interface InteractiveComponentRendererProps {
   component: UIComponent;
-  activeVariantProps?: Record<string, any>;
-  propOverrides?: Record<string, any>;
+  activeVariantProps?: PropValues;
+  propOverrides?: PropValues;
   accentColor?: AccentColor;
   onToast?: (msg: string) => void;
-  onPropChange?: (propName: string, val: any) => void;
+  onPropChange?: (propName: string, val: PropValue) => void;
   compact?: boolean;
 }
 
@@ -24,7 +25,7 @@ function PieceRenderer({
   compact = false,
 }: InteractiveComponentRendererProps) {
   const props = { ...activeVariantProps, ...propOverrides };
-  const effectiveAccent = (props.accentColor as AccentColor) || accentColor;
+  const effectiveAccent = readOneOf(props.accentColor, ACCENT_COLORS, accentColor);
 
   const renderBuiltIn = BUILT_IN_RENDERERS[component.id];
   if (renderBuiltIn) {

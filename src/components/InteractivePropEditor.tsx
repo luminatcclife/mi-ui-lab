@@ -1,12 +1,13 @@
 import React from 'react';
 import { Sliders, RotateCcw, Check, Sparkles } from 'lucide-react';
 import { UIComponent, PropDoc } from '../types';
+import { PropValue, PropValues } from '../utils/propValues';
 
 interface InteractivePropEditorProps {
   component: UIComponent;
-  activeVariantProps: Record<string, any>;
-  propOverrides: Record<string, any>;
-  onPropChange: (propName: string, value: any, actionLabel: string) => void;
+  activeVariantProps: PropValues;
+  propOverrides: PropValues;
+  onPropChange: (propName: string, value: PropValue, actionLabel: string) => void;
   onResetProps: () => void;
 }
 
@@ -18,7 +19,7 @@ export function InteractivePropEditor({
   onResetProps,
 }: InteractivePropEditorProps) {
   // Merge active variant props with user overrides
-  const effectiveProps: Record<string, any> = {
+  const effectiveProps: PropValues = {
     ...activeVariantProps,
     ...propOverrides,
   };
@@ -155,7 +156,13 @@ export function InteractivePropEditor({
               <input
                 id={`prop-input-${propKey}`}
                 type="text"
-                value={currentVal ?? ''}
+                value={
+                  typeof currentVal === 'string' || typeof currentVal === 'number'
+                    ? currentVal
+                    : currentVal == null
+                      ? ''
+                      : JSON.stringify(currentVal)
+                }
                 onChange={(e) => {
                   const val = e.target.value;
                   onPropChange(

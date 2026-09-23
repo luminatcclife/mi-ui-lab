@@ -238,16 +238,16 @@ export function IterationModal({
               Tipo de Cambio Principal
             </label>
             <div className="flex flex-wrap gap-2">
-              {[
+              {([
                 { id: 'feature', label: '✨ Nueva funcionalidad / variante' },
                 { id: 'enhancement', label: '⚡ Mejora / refactor' },
                 { id: 'style', label: '🎨 Estilos / temas' },
                 { id: 'fix', label: '🐛 Corrección de bug' },
-              ].map((t) => (
+              ] as const).map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setChangeTag(t.id as any)}
+                  onClick={() => setChangeTag(t.id)}
                   className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                     changeTag === t.id
                       ? 'bg-indigo-600 text-white shadow-xs'

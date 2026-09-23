@@ -193,3 +193,19 @@ MVP de referencia: *biblioteca personal local que permite explorar, probar, aña
 3. ✅ **Hecho (2026-09-23)** — Vitest 5 + jsdom + fake-indexeddb (`npm test`, también en CI): 57 tests en 8 archivos (utilidades puras, saneado/validación/sandbox, `db.ts` incluida la migración, y `ErrorBoundary`); `strict: true` en TypeScript (0 errores, aunque el uso de `any` sigue ocultando tipos); `ErrorBoundary` a tres niveles: por pieza (en `InteractiveComponentRenderer`), por pantalla y global. Pendiente: tests de componentes/E2E de los flujos completos. Plan original: **Poner una red de seguridad**: Vitest más tests de las 6 utilidades puras y de `db.ts`; añadir `npm test` a CI; activar `strict` en TypeScript; error boundary global y por pieza.
 4. ✅ **Hecho (2026-09-23)** — decisión: se descarta todo lo huérfano. El compilador en vivo no se recupera (las piezas manuales se muestran como tarjeta de referencia; documentado en el README, sección "Limitaciones conocidas"); la tabla `drafts` se elimina con el schema v3 de Dexie (test de actualización v2→v3 incluido) junto con `ComponentDraft` y sus funciones; eliminados `.env.example`, `metadata.json`, `SearchBar.tsx`, la lógica `DISABLE_HMR` de `vite.config.ts` y el alias `@` sin uso. Plan original: **Resolver las funcionalidades huérfanas**: decidir si se recupera el compilador en vivo (Sucrase) para las piezas manuales y la UI de borradores, o se eliminan; quitar los restos de AI Studio/Gemini (`.env.example`, `metadata.json`) y `SearchBar.tsx`.
 5. ✅ **Hecho (2026-09-23)** — README reescrito (pantallas, stack real, datos, formato de export/import, cómo añadir una pieza base, seguridad, limitaciones); `types.ts` de la raíz eliminado; `.gitignore` sin duplicados y excluyendo la nota personal; herramientas de build a `devDependencies` y fuera `autoprefixer`/`esbuild`/`tsx` (sin uso); pantallas y modales con `React.lazy`: el chunk principal pasa de 872 kB a 392 kB (123 kB gzip) y desaparece el aviso de tamaño. Plan original: **Documentación e higiene**: reescribir el README, borrar `types.ts` de la raíz, sacar `carta.md` del repo, arreglar `.gitignore` y `package.json` (devDeps), y hacer code-splitting de modales y pantallas.
+
+---
+
+## 9. Seguimiento posterior a la hoja de ruta (2026-09-23)
+
+Pendientes del informe cerrados después de los 5 pasos:
+
+- ✅ **Registro de piezas base**: `BUILT_IN_RENDERERS` (`components/builtInRenderers.tsx`) sustituye la cadena de `if (component.id === …)`. Un test comprueba que cubre exactamente las piezas de `INITIAL_COMPONENTS` y otro renderiza todas sus variantes.
+- ✅ **Carrera de hidratación**: las pantallas no se muestran hasta que IndexedDB ha cargado.
+- ✅ **Edición de piezas propias**: botón "Editar" en la ficha (solo piezas propias) → `EditComponentModal`; reglas en `utils/componentEdits.ts`.
+- ✅ **Tests E2E**: Playwright (`e2e/`, `npm run test:e2e`), 7 flujos, job propio en CI.
+- ✅ **`any` eliminado del código fuente**: los props de variantes/editor son `PropValues` (JSON tipado) y las piezas base los leen con accesores (`utils/propValues.ts`); un prop con tipo equivocado cae al valor por defecto en lugar de romper el render. Esto además cerró una **inyección de HTML en el documento del sandbox** vía `accentColor` (un JSON importado podía interpolar `"><img onerror…>` en el atributo `class`; el iframe la contenía, pero ya no ocurre), y el import valida los props de variantes como JSON.
+
+Estado de las pruebas: 130 tests unitarios/integración + 7 E2E, `tsc` en modo `strict` sin errores.
+
+Sigue pendiente (menor): archivos muy grandes (`ElementInspectorModal`, `ComparisonView`, `PaletteGeneratorModal`), el código fuente duplicado como string en `initialComponents.ts`, la dependencia del Tailwind Play CDN para ver piezas capturadas sin conexión, y persistir el historial del Playground (opcional).

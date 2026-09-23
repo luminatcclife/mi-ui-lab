@@ -1,13 +1,14 @@
 // src/components/ui/CustomComponentRenderer.tsx
 import React from 'react';
-import { AccentColor, UIComponent } from '../../types';
+import { ACCENT_COLORS, AccentColor, UIComponent } from '../../types';
+import { PropValues, readOneOf, readString } from '../../utils/propValues';
 import { useTheme } from '../../context/ThemeContext';
 import { SandboxedHtmlPreview } from './SandboxedHtmlPreview';
 
 interface CustomComponentRendererProps {
   component: UIComponent;
-  activeVariantProps?: Record<string, any>;
-  propOverrides?: Record<string, any>;
+  activeVariantProps?: PropValues;
+  propOverrides?: PropValues;
   accentColor?: AccentColor;
   onToast?: (msg: string) => void;
   compact?: boolean;
@@ -23,8 +24,9 @@ export function CustomComponentRenderer({
 }: CustomComponentRendererProps) {
   const { isDark } = useTheme();
   const mergedProps = { ...activeVariantProps, ...propOverrides };
-  const variant = mergedProps.variant || 'default';
-  const effectiveAccent = mergedProps.accentColor || accentColor;
+  const variant = readOneOf(mergedProps.variant, ['default', 'glow', 'compact'] as const, 'default');
+  // Validado contra la lista: se interpola en el atributo class del documento del iframe
+  const effectiveAccent = readOneOf(mergedProps.accentColor, ACCENT_COLORS, accentColor);
 
   if (!component.rawHtml) {
     // Elegant fallback card
@@ -44,7 +46,7 @@ export function CustomComponentRenderer({
           {component.description}
         </p>
         <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto">
-          {activeVariantProps?.codeSnippet || component.usageSnippet}
+          {readString(activeVariantProps?.codeSnippet) || component.usageSnippet}
         </div>
       </div>
     );
