@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 // así que parte de una IndexedDB vacía. Sin el Chromium de Playwright descargado, se puede usar
 // el Chrome instalado: PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
 const PORT = 5174;
+// E2E_PROD=1 prueba el build de producción (vite build + preview), que es lo que se publica; la CI lo usa.
+const PROD = process.env.E2E_PROD === '1';
 
 export default defineConfig({
   testDir: 'e2e',
@@ -23,9 +25,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npx vite --port ${PORT} --strictPort`,
+    command: PROD
+      ? `npm run build && npx vite preview --port ${PORT} --strictPort`
+      : `npx vite --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 });

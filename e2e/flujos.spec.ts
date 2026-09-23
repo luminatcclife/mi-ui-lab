@@ -1,4 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { goHome, goTo, importJson, piece, storedPiece } from './helpers';
 
 // Cualquier alert()/confirm() inesperado o error de página hace fallar el test.
 test.beforeEach(async ({ page }) => {
@@ -8,36 +9,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText(/\d+ piezas · \d+ favoritas/)).toBeVisible();
 });
-
-const goHome = (page: Page) => page.getByRole('button', { name: /mi-ui-lab/i }).first().click();
-const goTo = (page: Page, screen: 'Biblioteca' | 'Laboratorio' | 'Playground') =>
-  page.getByRole('button', { name: new RegExp(`^\\s*${screen}`) }).first().click();
-
-async function importJson(page: Page, data: unknown) {
-  await goTo(page, 'Biblioteca');
-  await page.getByRole('button', { name: 'Exportar', exact: true }).click();
-  await page.getByPlaceholder('Pega aquí el JSON con la colección...').fill(JSON.stringify(data));
-  await page.getByRole('button', { name: 'Cargar e Integrar Piezas' }).click();
-}
-
-const piece = (id: string, name: string, rawHtml?: string) => ({ id, name, category: 'cards', rawHtml });
-
-/** Lee una pieza guardada directamente de IndexedDB (lo que sobrevive a una recarga). */
-const storedPiece = (page: Page, id: string) =>
-  page.evaluate(
-    (pieceId) =>
-      new Promise<{ name?: string; category?: string } | undefined>((resolve) => {
-        const rq = indexedDB.open('MiUILabDatabase');
-        rq.onsuccess = () => {
-          const get = rq.result.transaction('customComponents').objectStore('customComponents').get(pieceId);
-          get.onsuccess = () => {
-            rq.result.close();
-            resolve(get.result);
-          };
-        };
-      }),
-    id,
-  );
 
 test('Inicio muestra el catálogo base con favoritos válidos', async ({ page }) => {
   await expect(page.getByText('8 piezas · 2 favoritas')).toBeVisible();
@@ -152,3 +123,4 @@ test('Playground carga una pieza sin errores', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.locator('main')).toContainText(/Variante|Props/i);
 });
+

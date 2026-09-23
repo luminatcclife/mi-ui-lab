@@ -15,7 +15,7 @@ interface SandboxedHtmlPreviewProps {
 }
 
 /**
- * Renderiza HTML capturado dentro de un iframe aislado (origen opaco + Tailwind Play CDN), igual que
+ * Renderiza HTML capturado dentro de un iframe aislado (origen opaco + Tailwind compilado en el navegador), igual que
  * la vista previa del Inspector: así se ve con los mismos estilos en Biblioteca y Playground, y el
  * HTML nunca se ejecuta en el documento de la app. El alto se ajusta al contenido vía postMessage.
  */

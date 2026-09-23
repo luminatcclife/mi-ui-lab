@@ -15,7 +15,7 @@ Taller personal de componentes de interfaz en React + Tailwind CSS. Funciona **1
 
 - React 19 + TypeScript (`strict`) · Vite 6 · Tailwind CSS 4
 - Dexie 4 (IndexedDB) para la persistencia local
-- DOMPurify + iframe aislado (`sandbox="allow-scripts"`, Tailwind Play CDN) para mostrar en vivo el HTML capturado
+- DOMPurify + iframe aislado (`sandbox="allow-scripts"`) con `@tailwindcss/browser` servido por la propia app para mostrar en vivo el HTML capturado
 - Vitest 5 + jsdom + fake-indexeddb para los tests; Playwright para los E2E (`e2e/`)
 
 ## Ejecutar en local
@@ -33,7 +33,7 @@ npm run build      # build de producción en dist/
 
 La CI (GitHub Actions) ejecuta `lint`, `test` y `build`, y en paralelo los E2E, en cada push y PR a `master`.
 
-La primera vez, los E2E necesitan el Chromium de Playwright (`npx playwright install chromium`). Si no puedes descargarlo, usa el Chrome instalado: `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`.
+La primera vez, los E2E necesitan el Chromium de Playwright (`npx playwright install chromium`). Si no puedes descargarlo, usa el Chrome instalado: `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. Por defecto corren contra el servidor de desarrollo; con `E2E_PROD=1` corren contra el build de producción, que es lo que hace la CI.
 
 ## Estructura
 
@@ -88,6 +88,7 @@ El HTML que se pega en el Inspector o llega en un JSON importado se considera no
 ## Limitaciones conocidas
 
 - Las piezas **creadas a mano** guardan su código TSX como referencia y se muestran como una tarjeta con el snippet: **no se compilan ni se renderizan en vivo**. Solo las piezas **capturadas** (HTML) se ven en vivo. Es una decisión consciente: un compilador en vivo (Sucrase) existió brevemente y se retiró.
-- La vista previa de las piezas capturadas carga el Tailwind Play CDN, así que sin conexión se muestran sin estilos.
+- La vista previa compila las clases con Tailwind v4. HTML escrito para Tailwind v3 puede verse ligeramente distinto en algunas utilidades que cambiaron entre versiones (p. ej. `ring`, `shadow-sm`, `bg-opacity-*`).
+- Sin conexión, las piezas capturadas se ven con estilos, pero con la fuente del sistema: las fuentes se cargan de Google Fonts.
 - El Inspector detecta dependencias como Flowbite o Radix, pero no las carga: el JavaScript interactivo que necesiten no funcionará en la vista previa.
-- Los E2E cubren los flujos principales (capturar, importar, editar, piezas corruptas), no cada interacción de cada pantalla. Los que muestran piezas capturadas necesitan red para el CDN de Tailwind.
+- Los E2E cubren los flujos principales (capturar, importar, editar, piezas corruptas, uso sin conexión), no cada interacción de cada pantalla.

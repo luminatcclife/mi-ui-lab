@@ -1,7 +1,21 @@
 // src/utils/sandboxDocument.ts
 // Construye el documento `srcDoc` de los iframes aislados donde se renderiza HTML capturado.
 // El iframe se monta con sandbox="allow-scripts" (sin allow-same-origin): corre en un origen opaco,
-// así que ni el snippet ni el Tailwind Play CDN pueden tocar el DOM, IndexedDB o localStorage de la app.
+// así que ni el snippet ni el compilador de Tailwind pueden tocar el DOM, IndexedDB o localStorage de la app.
+//
+// Tailwind se compila en el propio iframe con @tailwindcss/browser (misma versión que el build de la app),
+// servido por la app en lugar de un CDN: funciona sin conexión y no depende de un script de terceros.
+
+import tailwindBrowserUrl from '@tailwindcss/browser?url';
+
+/** URL absoluta: el documento srcdoc resuelve rutas contra la base del padre, pero así no hay ambigüedad. */
+function absoluteTailwindUrl(): string {
+  try {
+    return typeof document !== 'undefined' ? new URL(tailwindBrowserUrl, document.baseURI).href : tailwindBrowserUrl;
+  } catch {
+    return tailwindBrowserUrl;
+  }
+}
 
 export type SandboxTheme = 'dark' | 'light' | 'checkerboard';
 
@@ -88,21 +102,15 @@ export function buildSandboxDocument({
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Tailwind Play CDN for isolated runtime styling of ANY class -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          }
-        }
-      }
+  <!-- Tailwind v4 en el navegador: genera en runtime cualquier clase que use el snippet -->
+  <script src="${absoluteTailwindUrl()}"></script>
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where(.dark, .dark *));
+    @theme {
+      --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
     }
-  </script>
+  </style>
   <style>
     *, ::before, ::after { box-sizing: border-box; }
     html, body {

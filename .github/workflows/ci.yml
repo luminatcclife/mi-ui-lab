@@ -35,6 +35,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+        env:
+          E2E_PROD: '1'
 
       # También si un reintento pasó: las trazas de los intentos fallidos (flaky) se conservan
       - uses: actions/upload-artifact@v7

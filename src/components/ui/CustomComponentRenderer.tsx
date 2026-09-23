@@ -52,7 +52,7 @@ export function CustomComponentRenderer({
     );
   }
 
-  // Variant wrapper styling. Se aplica DENTRO del iframe, donde el Tailwind Play CDN genera en runtime
+  // Variant wrapper styling. Se aplica DENTRO del iframe, donde Tailwind (@tailwindcss/browser) genera en runtime
   // también las clases dinámicas (border-${accent}-500/40), que el build de la app no podría generar.
   const wrapperClass =
     variant === 'glow'
