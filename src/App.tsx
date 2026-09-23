@@ -192,6 +192,11 @@ function MainApp() {
           />
         )}
       >
+        {/* Hasta que IndexedDB carga no se muestra ninguna pantalla: así ninguna acción del usuario
+            opera sobre el catálogo base y luego queda pisada por la hidratación. */}
+        {!catalog.isHydrated ? (
+          <ScreenLoading />
+        ) : (
         <Suspense fallback={<ScreenLoading />}>
         {screen === 'home' && (
           <HomeScreen
@@ -250,6 +255,7 @@ function MainApp() {
           />
         )}
         </Suspense>
+        )}
       </ErrorBoundary>
 
       {/* Modales (lazy). Si su chunk no carga, el fallo queda aislado aquí. */}
