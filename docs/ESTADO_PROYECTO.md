@@ -208,4 +208,14 @@ Pendientes del informe cerrados después de los 5 pasos:
 
 Estado de las pruebas: 130 tests unitarios/integración + 7 E2E, `tsc` en modo `strict` sin errores.
 
-Sigue pendiente (menor): archivos muy grandes (`ElementInspectorModal`, `ComparisonView`, `PaletteGeneratorModal`), el código fuente duplicado como string en `initialComponents.ts`, la dependencia del Tailwind Play CDN para ver piezas capturadas sin conexión, y persistir el historial del Playground (opcional).
+### Pendientes menores (2026-09-23)
+
+- ✅ **Sin dependencia del CDN de Tailwind**: el sandbox carga `@tailwindcss/browser` 4.3.3 (misma versión que el build) servido por la app. Las piezas capturadas se ven con estilos sin conexión; un E2E lo comprueba bloqueando la red a nivel del navegador (verificado: falla con la versión CDN). Los E2E de la CI corren contra el build de producción (`E2E_PROD=1`).
+- ✅ **Código fuente de las piezas base sin duplicar**: `sourceCode` se importa de los propios archivos con `?raw`. Las 8 copias a mano estaban desactualizadas respecto a los componentes reales. `initialComponents.ts`: 1558 → 986 líneas.
+- ✅ **Archivos grandes divididos por pestaña** (JSX sin cambios; el estado que solo usa una pestaña se mueve a ella), protegidos por instantáneas de texto de cada pestaña (`e2e/pestanas.spec.ts`) que pasan igual antes y después:
+  - `PaletteGeneratorModal`: 1120 → 538 líneas (`components/palette/`).
+  - `ComparisonView`: 1293 → 380 líneas (`components/comparison/`).
+  - `ElementInspectorModal`: 1495 → 1261 líneas (`components/inspector/`). El panel de captura y el cajón de guardado se quedan: dependen de 15-19 valores del estado del modal y extraerlos solo movería el acoplamiento.
+- ⏸ **Persistir el historial del Playground**: no se hace. Deshacer/rehacer dentro de la sesión ya funciona; persistirlo añade estado y casos borde (piezas borradas o editadas, historial obsoleto) sin una necesidad clara. Queda como decisión abierta.
+
+Estado de las pruebas: 139 tests unitarios/integración + 11 E2E (incluido uno sin conexión), `tsc` en modo `strict` sin errores.

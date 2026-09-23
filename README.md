@@ -49,11 +49,13 @@ src/
     InteractiveComponentRenderer.tsx  Elige cómo renderizar cada pieza (registro de piezas base o sandbox)
     builtInRenderers.tsx   Registro id → render de las 8 piezas base
     ui/                    Las 8 piezas base + CustomComponentRenderer y SandboxedHtmlPreview
+    palette/, comparison/, inspector/  Pestañas del generador de paletas, el comparador y el Inspector
   data/                    Catálogo base (initialComponents.ts) y tokens de diseño
   utils/                   Lógica pura: inspector, estandarizador HTML→JSX, detector de dependencias,
                            diff, búsqueda fuzzy, paletas, saneado de HTML, documento del sandbox,
                            validación de imports (cada una con su *.test.ts)
 docs/ESTADO_PROYECTO.md    Auditoría técnica y hoja de ruta
+e2e/                       Tests E2E (Playwright) e instantáneas de texto de cada pestaña
 ```
 
 ## Cómo se guardan los datos
