@@ -52,6 +52,23 @@ test('Comparador: las tres pestañas', async ({ page }) => {
     { name: 'compare-code', button: page.locator('#tab-btn-compare-code') },
     { name: 'compare-meta', button: page.locator('#tab-btn-compare-meta') },
   ]);
+
+  // Estado propio de cada pestaña: búsqueda de props y controles del diff
+  await page.locator('#tab-btn-compare-preview').click();
+  const before = await visibleText(view);
+  await view.getByPlaceholder('Buscar propiedad...').fill('zzz-no-existe');
+  await expect.poll(() => visibleText(view)).not.toBe(before);
+  await view.getByPlaceholder('Buscar propiedad...').fill('');
+  await expect.poll(() => visibleText(view)).toBe(before);
+
+  await page.locator('#tab-btn-compare-code').click();
+  const split = await visibleText(view);
+  await view.getByTitle('Vista unificada (estilo git diff)').click();
+  await expect.poll(() => visibleText(view)).not.toBe(split);
+  await view.getByTitle('Vista dividida lado a lado').click();
+  await expect.poll(() => visibleText(view)).toBe(split);
+  await view.getByText('Solo líneas con diferencias').click();
+  await expect.poll(() => visibleText(view)).not.toBe(split);
 });
 
 test('Generador de paletas: las cuatro pestañas', async ({ page }) => {
