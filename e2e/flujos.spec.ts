@@ -22,6 +22,23 @@ async function importJson(page: Page, data: unknown) {
 
 const piece = (id: string, name: string, rawHtml?: string) => ({ id, name, category: 'cards', rawHtml });
 
+/** Lee una pieza guardada directamente de IndexedDB (lo que sobrevive a una recarga). */
+const storedPiece = (page: Page, id: string) =>
+  page.evaluate(
+    (pieceId) =>
+      new Promise<{ name?: string; category?: string } | undefined>((resolve) => {
+        const rq = indexedDB.open('MiUILabDatabase');
+        rq.onsuccess = () => {
+          const get = rq.result.transaction('customComponents').objectStore('customComponents').get(pieceId);
+          get.onsuccess = () => {
+            rq.result.close();
+            resolve(get.result);
+          };
+        };
+      }),
+    id,
+  );
+
 test('Inicio muestra el catálogo base con favoritos válidos', async ({ page }) => {
   await expect(page.getByText('8 piezas · 2 favoritas')).toBeVisible();
   await expect(page.getByText('0 piezas propias')).toBeVisible();
@@ -87,6 +104,10 @@ test('editar una pieza propia persiste tras recargar', async ({ page }) => {
   await page.locator('#edit-category').selectOption('buttons');
   await page.locator('#btn-save-edit').click();
   await expect(page.getByRole('heading', { name: 'Después' })).toBeVisible();
+  // La escritura en IndexedDB es asíncrona: se espera a que esté guardada antes de recargar
+  await expect
+    .poll(() => storedPiece(page, 'editable'))
+    .toMatchObject({ name: 'Después', category: 'buttons' });
 
   await page.reload();
   await goTo(page, 'Biblioteca');
