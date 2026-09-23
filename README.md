@@ -20,7 +20,7 @@ Taller personal de componentes de interfaz en React + Tailwind CSS. Funciona **1
 
 ## Ejecutar en local
 
-Requisito: Node.js 20 o superior.
+Requisito: Node.js 24 o superior (la versión que usa la CI).
 
 ```bash
 npm install
