@@ -9,3 +9,7 @@ coverage/
 
 # Notas personales, fuera del proyecto
 src/utils/carta.md
+
+# Playwright
+test-results/
+playwright-report/
