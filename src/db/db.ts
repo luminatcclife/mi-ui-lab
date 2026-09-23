@@ -51,6 +51,9 @@ export class MiUILabDatabase extends Dexie {
 // Single instance of the database
 export const db = new MiUILabDatabase();
 
+/** Favoritos sembrados en una base nueva o tras restablecer. */
+export const DEFAULT_FAVORITES = ['accent-card', 'primary-button'];
+
 // Legacy LocalStorage Keys for Migration
 const LEGACY_CUSTOM_KEY = 'mi_ui_lab_custom_components';
 const LEGACY_FAVORITES_KEY = 'mi_ui_lab_favorite_components';
@@ -143,24 +146,33 @@ export async function loadCatalogFromDB(): Promise<{
       tagMap[record.id] = record.tags;
     }
 
-    // Merge built-in components with tag overrides
-    const processedBuiltIns = INITIAL_COMPONENTS.map((comp) => {
-      if (tagMap[comp.id]) {
-        return { ...comp, tags: tagMap[comp.id] };
-      }
-      return comp;
-    });
+    // Una entrada guardada con el id de una pieza base (p. ej. tras registrar una iteración)
+    // la reemplaza en su posición en vez de duplicarla.
+    const storedById = new Map(customList.map((c) => [c.id, c]));
+    const builtIns = INITIAL_COMPONENTS.map((comp) => storedById.get(comp.id) ?? comp);
+    const builtInIds = new Set(INITIAL_COMPONENTS.map((c) => c.id));
+    const customOnly = customList.filter((c) => !builtInIds.has(c.id));
 
-    // Merge with custom components
-    const mergedComponents = [...processedBuiltIns, ...customList];
+    // Los overrides de tags aplican a las piezas base (las propias guardan sus tags en su registro)
+    const mergedComponents = [...builtIns, ...customOnly].map((comp) =>
+      !comp.isCustom && tagMap[comp.id] ? { ...comp, tags: tagMap[comp.id] } : comp,
+    );
 
-    // Favorites list sorted by addedAt descending
+    // Favorites list sorted by addedAt descending; se descartan ids que ya no existen
+    const existingIds = new Set(mergedComponents.map((c) => c.id));
     const favoriteIds =
       favoriteRecords.length > 0
         ? favoriteRecords
             .sort((a, b) => b.addedAt - a.addedAt)
             .map((f) => f.id)
-        : ['accent-card', 'custom-button'];
+            .filter((id) => existingIds.has(id))
+        : DEFAULT_FAVORITES;
+
+    // Purga favoritos huérfanos (p. ej. el antiguo 'custom-button' sembrado por defecto)
+    const orphanFavorites = favoriteRecords.map((f) => f.id).filter((id) => !existingIds.has(id));
+    if (orphanFavorites.length > 0) {
+      await db.favorites.bulkDelete(orphanFavorites);
+    }
 
     return {
       components: mergedComponents,
@@ -171,51 +183,58 @@ export async function loadCatalogFromDB(): Promise<{
     console.error('Error loading data from Dexie IndexedDB:', err);
     return {
       components: INITIAL_COMPONENTS,
-      favorites: ['accent-card', 'custom-button'],
+      favorites: DEFAULT_FAVORITES,
       tagOverrides: {},
     };
   }
 }
 
 /**
- * Save or update a custom component in Dexie
+ * Save or update a custom component in Dexie.
+ * Las funciones de escritura devuelven false si IndexedDB falla, para que la UI lo comunique.
  */
-export async function saveCustomComponentToDB(component: UIComponent): Promise<void> {
+export async function saveCustomComponentToDB(component: UIComponent): Promise<boolean> {
   try {
     await db.customComponents.put(component);
+    return true;
   } catch (err) {
     console.error(`Error saving component ${component.id} to Dexie:`, err);
+    return false;
   }
 }
 
 /**
  * Delete a custom component from Dexie
  */
-export async function deleteCustomComponentFromDB(id: string): Promise<void> {
+export async function deleteCustomComponentFromDB(id: string): Promise<boolean> {
   try {
     await db.customComponents.delete(id);
     await db.favorites.delete(id);
     await db.tagOverrides.delete(id);
+    return true;
   } catch (err) {
     console.error(`Error deleting component ${id} from Dexie:`, err);
+    return false;
   }
 }
 
 /**
  * Save or update component tags in Dexie
  */
-export async function saveTagOverrideToDB(componentId: string, tags: string[]): Promise<void> {
+export async function saveTagOverrideToDB(componentId: string, tags: string[]): Promise<boolean> {
   try {
     await db.tagOverrides.put({ id: componentId, tags });
+    return true;
   } catch (err) {
     console.error(`Error saving tag overrides for ${componentId} to Dexie:`, err);
+    return false;
   }
 }
 
 /**
  * Update the complete list of favorites in Dexie
  */
-export async function saveFavoritesToDB(favoriteIds: string[]): Promise<void> {
+export async function saveFavoritesToDB(favoriteIds: string[]): Promise<boolean> {
   try {
     await db.transaction('rw', db.favorites, async () => {
       await db.favorites.clear();
@@ -225,15 +244,17 @@ export async function saveFavoritesToDB(favoriteIds: string[]): Promise<void> {
       }));
       await db.favorites.bulkPut(entries);
     });
+    return true;
   } catch (err) {
     console.error('Error saving favorites to Dexie:', err);
+    return false;
   }
 }
 
 /**
  * Import a collection of components into Dexie
  */
-export async function importComponentsToDB(imported: UIComponent[]): Promise<void> {
+export async function importComponentsToDB(imported: UIComponent[]): Promise<boolean> {
   try {
     const builtInIds = new Set(INITIAL_COMPONENTS.map((c) => c.id));
     const customOnly = imported.filter((c) => c.isCustom || !builtInIds.has(c.id));
@@ -241,15 +262,17 @@ export async function importComponentsToDB(imported: UIComponent[]): Promise<voi
     if (customOnly.length > 0) {
       await db.customComponents.bulkPut(customOnly);
     }
+    return true;
   } catch (err) {
     console.error('Error importing components to Dexie:', err);
+    return false;
   }
 }
 
 /**
  * Reset all custom components and overrides from Dexie back to clean default state
  */
-export async function resetDBToDefaults(): Promise<void> {
+export async function resetDBToDefaults(): Promise<boolean> {
   try {
     await db.transaction('rw', [db.customComponents, db.favorites, db.tagOverrides], async () => {
       await db.customComponents.clear();
@@ -257,13 +280,14 @@ export async function resetDBToDefaults(): Promise<void> {
       await db.tagOverrides.clear();
 
       // Seed default favorites
-      await db.favorites.bulkPut([
-        { id: 'accent-card', addedAt: Date.now() },
-        { id: 'custom-button', addedAt: Date.now() - 100 },
-      ]);
+      await db.favorites.bulkPut(
+        DEFAULT_FAVORITES.map((id, index) => ({ id, addedAt: Date.now() - index * 100 })),
+      );
     });
+    return true;
   } catch (err) {
     console.error('Error resetting Dexie database to defaults:', err);
+    return false;
   }
 }
 

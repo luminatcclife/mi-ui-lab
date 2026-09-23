@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CanvasBackground, UIComponent, ViewportMode, ComponentIteration } from './types';
-import { INITIAL_COMPONENTS } from './data/initialComponents';
 import { Header } from './components/Header';
 import { HomeScreen, AppScreen } from './components/HomeScreen';
 import { BibliotecaScreen } from './components/BibliotecaScreen';
@@ -11,58 +10,9 @@ import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
 import { IterationModal } from './components/IterationModal';
 import { ExportModal } from './components/ExportModal';
 import { ThemeProvider } from './context/ThemeContext';
-import {
-  loadCatalogFromDB,
-  saveCustomComponentToDB,
-  deleteCustomComponentFromDB,
-  saveTagOverrideToDB,
-  saveFavoritesToDB,
-  importComponentsToDB,
-  resetDBToDefaults,
-} from './db/db';
-
-const STORAGE_KEY = 'mi_ui_lab_custom_components';
-const STORAGE_FAVORITES_KEY = 'mi_ui_lab_favorite_components';
-const STORAGE_TAGS_OVERRIDE_KEY = 'mi_ui_lab_component_tags_overrides';
+import { useCatalog, normalizeTag } from './hooks/useCatalog';
 
 function MainApp() {
-  const [components, setComponents] = useState<UIComponent[]>(() => {
-    let base: UIComponent[] = INITIAL_COMPONENTS;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsedCustom: UIComponent[] = JSON.parse(saved);
-        base = [...INITIAL_COMPONENTS, ...parsedCustom];
-      }
-      const savedOverrides = localStorage.getItem(STORAGE_TAGS_OVERRIDE_KEY);
-      if (savedOverrides) {
-        const tagOverrides: Record<string, string[]> = JSON.parse(savedOverrides);
-        base = base.map((c) => {
-          if (tagOverrides[c.id]) {
-            return { ...c, tags: tagOverrides[c.id] };
-          }
-          return c;
-        });
-      }
-    } catch (e) {
-      console.error('Error loading custom components or tags from localStorage', e);
-    }
-    return base;
-  });
-
-  // Favorite components state persisted in localStorage
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_FAVORITES_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Error loading favorite components from localStorage', e);
-    }
-    return ['accent-card', 'custom-button'];
-  });
-
   const [screen, setScreen] = useState<AppScreen>('home');
   const [bibliotecaInitialMode, setBibliotecaInitialMode] = useState<'grid' | 'detail'>('grid');
   const [selectedId, setSelectedId] = useState<string>('accent-card');
@@ -81,9 +31,12 @@ function MainApp() {
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
-  };
+  }, []);
+
+  const catalog = useCatalog(showToast);
+  const { components, favoriteIds } = catalog;
 
   const handleOpenPaletteGenerator = (hex?: string) => {
     if (hex) {
@@ -100,52 +53,18 @@ function MainApp() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
-  // Hydrate state from Dexie (IndexedDB) with automatic migration from localStorage
-  useEffect(() => {
-    let isMounted = true;
-    loadCatalogFromDB().then((catalog) => {
-      if (isMounted) {
-        setComponents(catalog.components);
-        setFavoriteIds(catalog.favorites);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   // Toggle favorite status of a component
   const handleToggleFavorite = (componentId: string) => {
-    const isFav = favoriteIds.includes(componentId);
-    let updated: string[];
-    const comp = components.find((c) => c.id === componentId);
-    const compName = comp?.name || 'Pieza';
-
-    if (isFav) {
-      updated = favoriteIds.filter((id) => id !== componentId);
-      showToast(`"${compName}" eliminada de tus favoritos`);
-    } else {
-      updated = [...favoriteIds, componentId];
-      showToast(`★ "${compName}" añadida a tus favoritos`);
-    }
-
-    setFavoriteIds(updated);
-    saveFavoritesToDB(updated);
-    try {
-      localStorage.setItem(STORAGE_FAVORITES_KEY, JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Storage fallback note', e);
-    }
+    const compName = components.find((c) => c.id === componentId)?.name || 'Pieza';
+    const nowFavorite = catalog.toggleFavorite(componentId);
+    showToast(
+      nowFavorite ? `★ "${compName}" añadida a tus favoritos` : `"${compName}" eliminada de tus favoritos`,
+    );
   };
 
   // Add new piece (desde Laboratorio: a mano o capturado)
   const handleAddNewComponent = (newComp: UIComponent) => {
-    const updated = [newComp, ...components];
-    setComponents(updated);
-    saveCustomComponentToDB(newComp);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated.filter((c) => c.isCustom)));
-    } catch (e) {}
+    catalog.addComponent(newComp);
     setSelectedId(newComp.id);
   };
 
@@ -157,75 +76,36 @@ function MainApp() {
 
   // Save new iteration/version of a piece
   const handleSaveIteration = (updatedComp: UIComponent, _newIteration: ComponentIteration) => {
-    const updated = components.map((c) => (c.id === updatedComp.id ? updatedComp : c));
-    setComponents(updated);
-    saveCustomComponentToDB(updatedComp);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated.filter((c) => c.isCustom)));
-    } catch (e) {}
+    catalog.updateComponent(updatedComp);
   };
 
   // Delete custom piece
   const handleDeleteCustomComponent = (id: string) => {
-    const updated = components.filter((c) => c.id !== id);
-    setComponents(updated);
-    deleteCustomComponentFromDB(id);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated.filter((c) => c.isCustom)));
-    } catch (e) {}
+    catalog.deleteComponent(id);
     if (selectedId === id) {
       setSelectedId('accent-card');
     }
     showToast('Pieza eliminada de la base de datos IndexedDB');
   };
 
-  // Update tags of a component (persists for both custom & built-in components)
-  const handleUpdateComponentTags = (componentId: string, updatedTags: string[]) => {
-    const cleaned = Array.from(
-      new Set(updatedTags.map((t) => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean)),
-    );
-
-    const target = components.find((c) => c.id === componentId);
-    const updated = components.map((c) => (c.id === componentId ? { ...c, tags: cleaned } : c));
-
-    setComponents(updated);
-
-    if (target?.isCustom) {
-      saveCustomComponentToDB({ ...target, tags: cleaned });
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated.filter((c) => c.isCustom)));
-      } catch (e) {}
-    } else {
-      saveTagOverrideToDB(componentId, cleaned);
-      try {
-        const savedOverrides = localStorage.getItem(STORAGE_TAGS_OVERRIDE_KEY);
-        const tagOverrides: Record<string, string[]> = savedOverrides ? JSON.parse(savedOverrides) : {};
-        tagOverrides[componentId] = cleaned;
-        localStorage.setItem(STORAGE_TAGS_OVERRIDE_KEY, JSON.stringify(tagOverrides));
-      } catch (e) {
-        console.warn('Storage fallback note', e);
-      }
-    }
-  };
-
   const handleAddTagToComponent = (componentId: string, newTag: string) => {
     const comp = components.find((c) => c.id === componentId);
     if (!comp) return;
-    const cleanTag = newTag.trim().toLowerCase().replace(/^#/, '');
+    const cleanTag = normalizeTag(newTag);
     if (!cleanTag) return;
     if (comp.tags.includes(cleanTag)) {
       showToast(`El tag #${cleanTag} ya existe en "${comp.name}"`);
       return;
     }
-    handleUpdateComponentTags(componentId, [...comp.tags, cleanTag]);
+    catalog.setTags(componentId, [...comp.tags, cleanTag]);
     showToast(`Etiqueta #${cleanTag} añadida a "${comp.name}"`);
   };
 
   const handleRemoveTagFromComponent = (componentId: string, tagToRemove: string) => {
     const comp = components.find((c) => c.id === componentId);
     if (!comp) return;
-    const cleanTag = tagToRemove.trim().toLowerCase().replace(/^#/, '');
-    handleUpdateComponentTags(
+    const cleanTag = normalizeTag(tagToRemove);
+    catalog.setTags(
       componentId,
       comp.tags.filter((t) => t.toLowerCase() !== cleanTag),
     );
@@ -233,34 +113,22 @@ function MainApp() {
   };
 
   const handleToggleTagFilter = (tag: string) => {
-    const clean = tag.trim().toLowerCase().replace(/^#/, '');
+    const clean = normalizeTag(tag);
     if (!clean) return;
     setActiveTags((prev) => (prev.includes(clean) ? prev.filter((t) => t !== clean) : [...prev, clean]));
   };
 
-  // Import external collection
+  // Import external collection (ya validada en ExportModal)
   const handleImportComponents = (imported: UIComponent[]) => {
-    const existingIds = new Set(INITIAL_COMPONENTS.map((c) => c.id));
-    const newItems = imported.filter((item) => !existingIds.has(item.id));
-    const merged = [...INITIAL_COMPONENTS, ...newItems];
-    setComponents(merged);
-    importComponentsToDB(newItems);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged.filter((c) => c.isCustom)));
-    } catch (e) {}
-    if (newItems.length > 0) {
-      setSelectedId(newItems[0].id);
+    const added = catalog.importComponents(imported);
+    if (added.length > 0) {
+      setSelectedId(added[0].id);
     }
   };
 
   // Reset to initial
   const handleResetToDefaults = () => {
-    resetDBToDefaults();
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_TAGS_OVERRIDE_KEY);
-    } catch (e) {}
-    setComponents(INITIAL_COMPONENTS);
+    catalog.resetToDefaults();
     setSelectedId('accent-card');
     showToast('Base de datos restablecida a las piezas base de mi-ui-lab');
   };
