@@ -1,0 +1,504 @@
+A
+PIEZA BASE (IZQUIERDA)
+AccentCard (cards · v1.2.0)
+Button (buttons · v1.1.0)
+StatusBadge (feedback · v1.1.0)
+InputField (inputs · v1.1.0)
+SegmentedControl (navigation · v1.0.0)
+NotificationCallout (feedback · v1.0.0)
+ToggleSwitch (inputs · v1.0.0)
+StepProgressCard (cards · v1.0.0)
+Intercambiar
+B
+PIEZA A COMPARAR (DERECHA)
+AccentCard (cards · v1.2.0)
+Button (buttons · v1.1.0)
+StatusBadge (feedback · v1.1.0)
+InputField (inputs · v1.1.0)
+SegmentedControl (navigation · v1.0.0)
+NotificationCallout (feedback · v1.0.0)
+ToggleSwitch (inputs · v1.0.0)
+StepProgressCard (cards · v1.0.0)
+Comparaciones sugeridas:
+Botón vs Interruptor
+Tarjeta vs Callout
+AccentCard vs Stepper
+Input vs Segmented
+Badge vs Botón
+Similitud de código: 10%
+Props: 0 comunes · 1 distintas
+Renderizado y Propiedades
+13
+Diferencias de Código TSX
++36 / -199
+Tokens y Metadatos
+Código Fuente (.tsx)
+Snippet de Uso (JSX)
+Dividida (Lado a Lado)
+Unificada
+Solo líneas con diferencias
++36 añadidos
+-199 eliminados
+13 comunes
+A
+AccentCard.tsx
+Copiar A
+1 import React from 'react';
+2 - import { AccentColor } from '../../types';
+3 - 
+4 - export type AccentCardVariant =
+5 - | 'default'
+6 - | 'accent-top'
+7 - | 'accent-left'
+8 - | 'ambient-glow'
+9 - | 'metric'
+10 - | 'actionable';
+11 
+12 - export interface AccentCardProps {
+13 - id?: string;
+14 - variant?: AccentCardVariant;
+15 - accentColor?: AccentColor;
+16 - title: string;
+17 - subtitle?: string;
+18 - badge?: string;
+19 - metric?: string;
+20 - trend?: {
+21 - value: string;
+22 - positive: boolean;
+23 - };
+24 - actionLabel?: string;
+25 - onAction?: () => void;
+26 - className?: string;
+27 - children?: React.ReactNode;
+28 }
+29 - 
+30 - const colorMap: Record<
+31 - AccentColor,
+32 - {
+33 - border: string;
+34 - bgAccent: string;
+35 - glow: string;
+36 - badgeBg: string;
+37 - buttonBg: string;
+38 - buttonHover: string;
+39 - metricText: string;
+40 - }
+41 - > = {
+42 - indigo: {
+43 - border: 'border-indigo-500',
+44 - bgAccent: 'bg-indigo-500',
+45 - glow: 'from-indigo-500/25 via-indigo-500/5 to-transparent',
+46 - badgeBg: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-300',
+47 - buttonBg: 'bg-indigo-600 text-white',
+48 - buttonHover: 'hover:bg-indigo-500',
+49 - metricText: 'text-indigo-600 dark:text-indigo-400',
+50 - },
+51 - emerald: {
+52 - border: 'border-emerald-500',
+53 - bgAccent: 'bg-emerald-500',
+54 - glow: 'from-emerald-500/25 via-emerald-500/5 to-transparent',
+55 - badgeBg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
+56 - buttonBg: 'bg-emerald-600 text-white',
+57 - buttonHover: 'hover:bg-emerald-500',
+58 - metricText: 'text-emerald-600 dark:text-emerald-400',
+59 - },
+60 - violet: {
+61 - border: 'border-violet-500',
+62 - bgAccent: 'bg-violet-500',
+63 - glow: 'from-violet-500/25 via-violet-500/5 to-transparent',
+64 - badgeBg: 'bg-violet-500/10 border-violet-500/30 text-violet-700 dark:text-violet-300',
+65 - buttonBg: 'bg-violet-600 text-white',
+66 - buttonHover: 'hover:bg-violet-500',
+67 - metricText: 'text-violet-600 dark:text-violet-400',
+68 - },
+69 - amber: {
+70 - border: 'border-amber-500',
+71 - bgAccent: 'bg-amber-500',
+72 - glow: 'from-amber-500/25 via-amber-500/5 to-transparent',
+73 - badgeBg: 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300',
+74 - buttonBg: 'bg-amber-600 text-white',
+75 - buttonHover: 'hover:bg-amber-500',
+76 - metricText: 'text-amber-600 dark:text-amber-400',
+77 - },
+78 - rose: {
+79 - border: 'border-rose-500',
+80 - bgAccent: 'bg-rose-500',
+81 - glow: 'from-rose-500/25 via-rose-500/5 to-transparent',
+82 - badgeBg: 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300',
+83 - buttonBg: 'bg-rose-600 text-white',
+84 - buttonHover: 'hover:bg-rose-500',
+85 - metricText: 'text-rose-600 dark:text-rose-400',
+86 - },
+87 - cyan: {
+88 - border: 'border-cyan-500',
+89 - bgAccent: 'bg-cyan-500',
+90 - glow: 'from-cyan-500/25 via-cyan-500/5 to-transparent',
+91 - badgeBg: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-800 dark:text-cyan-300',
+92 - buttonBg: 'bg-cyan-600 text-white',
+93 - buttonHover: 'hover:bg-cyan-500',
+94 - metricText: 'text-cyan-600 dark:text-cyan-400',
+95 - },
+96 - zinc: {
+97 - border: 'border-zinc-400 dark:border-zinc-500',
+98 - bgAccent: 'bg-zinc-500',
+99 - glow: 'from-zinc-500/15 via-zinc-500/5 to-transparent',
+100 - badgeBg: 'bg-zinc-500/10 border-zinc-400/30 text-zinc-700 dark:text-zinc-300',
+101 - buttonBg: 'bg-zinc-800 dark:bg-zinc-800 text-zinc-100',
+102 - buttonHover: 'hover:bg-zinc-700',
+103 - metricText: 'text-zinc-800 dark:text-zinc-200',
+104 - },
+105 - };
+106 
+107 - export function AccentCard({
+108 - id,
+109 - variant = 'default',
+110 - accentColor = 'indigo',
+111 - title,
+112 - subtitle,
+113 - badge,
+114 - metric,
+115 - trend,
+116 - actionLabel,
+117 - onAction,
+118 className = '',
+119 children,
+120 - }: AccentCardProps) {
+121 - const styles = colorMap[accentColor] || colorMap.indigo;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+122 
+123 return (
+124 - <div
+125 - id={id}
+126 - className={`group relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/90 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-black/50 ${className}`}
+ 
+127 >
+128 - {/* Resplandor ambiental para variante ambient-glow */}
+129 - {variant === 'ambient-glow' && (
+130 - <div
+131 - className={`pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-gradient-to-br ${styles.glow} blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-60 dark:opacity-70`}
+132 - />
+133 - )}
+134 - 
+135 - {/* Acento superior */}
+136 - {variant === 'accent-top' && (
+137 - <div
+138 - className={`absolute top-0 left-0 right-0 h-1.5 ${styles.bgAccent}`}
+139 - />
+140 - )}
+141 - 
+142 - {/* Acento lateral */}
+143 - {variant === 'accent-left' && (
+144 - <div
+145 - className={`absolute top-0 bottom-0 left-0 w-1.5 ${styles.bgAccent}`}
+146 - />
+147 - )}
+148 - 
+149 - {/* Cabecera con Badge */}
+150 - <div className="flex items-start justify-between gap-4 mb-3">
+151 - <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100 tracking-tight leading-snug">
+152 - {title}
+153 - </h3>
+154 - {badge && (
+155 - <span
+156 - className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${styles.badgeBg}`}
+157 - >
+158 - {badge}
+159 - </span>
+160 - )}
+161 - </div>
+162 - 
+163 - {/* Subtítulo descriptivo */}
+164 - {subtitle && (
+165 - <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
+166 - {subtitle}
+167 - </p>
+168 - )}
+169 - 
+170 - {/* Métrica / KPI */}
+171 - {variant === 'metric' && (
+172 - <div className="my-3 flex items-baseline gap-3">
+173 - {metric && (
+174 - <span
+175 - className={`text-3xl font-bold tracking-tight ${styles.metricText}`}
+176 - >
+177 - {metric}
+178 - </span>
+179 - )}
+180 - {trend && (
+181 - <span
+182 - className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ${
+183 - trend.positive
+184 - ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+185 - : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20'
+186 - }`}
+187 - >
+188 - {trend.positive ? '↑' : '↓'} {trend.value}
+189 - </span>
+190 - )}
+191 - </div>
+192 - )}
+193 - 
+194 - {/* Hijos personalizados */}
+195 - {children && <div className="mt-4">{children}</div>}
+196 - 
+197 - {/* Botón de acción */}
+198 - {actionLabel && (
+199 - <div className="mt-5 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+200 - <button
+201 - type="button"
+202 - onClick={onAction}
+203 - className={`inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer shadow-sm ${styles.buttonBg} ${styles.buttonHover}`}
+204 - >
+205 - {actionLabel}
+206 - </button>
+207 - </div>
+208 )}
+209 - </div>
+ 
+210 );
+211 }
+212 
+B
+Button.tsx
+Copiar B
+1 import React from 'react';
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2 
+3 + export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
+4 + variant?: 'primary' | 'secondary' | 'subtle' | 'outline' | 'destructive' | 'ghost';
+5 + size?: 'sm' | 'md' | 'lg';
+6 + loading?: boolean;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+7 }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+8 
+9 + export function Button({
+10 + variant = 'primary',
+11 + size = 'md',
+12 + loading = false,
+13 + disabled,
+ 
+ 
+ 
+ 
+ 
+ 
+14 className = '',
+15 children,
+16 + ...props
+17 + }: ButtonProps) {
+18 + const sizeClasses = {
+19 + sm: 'px-3 py-1.5 text-xs rounded-md',
+20 + md: 'px-4 py-2 text-sm rounded-lg',
+21 + lg: 'px-5 py-2.5 text-base rounded-xl',
+22 + }[size];
+23 + 
+24 + const variantClasses = {
+25 + primary: 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm border border-indigo-500/30',
+26 + secondary: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700/60 shadow-sm',
+27 + subtle: 'bg-zinc-100/70 dark:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100',
+28 + outline: 'border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 hover:text-zinc-900 dark:hover:text-white',
+29 + destructive: 'bg-rose-600 text-white hover:bg-rose-500 shadow-sm border border-rose-500/30',
+30 + ghost: 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-white',
+31 + }[variant];
+32 
+33 return (
+34 + <button
+35 + disabled={disabled || loading}
+36 + className={`inline-flex items-center justify-center font-medium transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98] ${sizeClasses} ${variantClasses} ${className}`}
+37 + {...props}
+38 >
+39 + {loading && (
+40 + <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
+41 + <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+42 + <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+43 + </svg>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+44 )}
+45 + {children}
+46 + </button>
+47 );
+48 }
+49

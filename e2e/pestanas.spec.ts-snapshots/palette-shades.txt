@@ -1,0 +1,140 @@
+Generador de Paletas & Tokens Tailwind
+11 ESCALAS
+Calcula automáticamente la escala 50-950, ratios WCAG y exporta tokens CSS/Tailwind para tus componentes.
+#
+RGB(99, 102, 241)
+|
+HSL(239°, 84%, 67%)
+Aleatorio
+Prefijo Token:
+Copiar 500
+PRESETS:
+Indigo Eléctrico
+Esmeralda Menta
+Violeta Profundo
+Ámbar Cálido
+Rosa Carmesí
+Cian Neón
+Azul Cobalto
+Naranja Fuego
+Fucsia Magenta
+Pizarra Neutro
+Lima Fresca
+Escala Tailwind (50-950)
+Vista Previa de Componente
+Armonías & Neutros
+Exportar Tokens Tailwind
+Haz clic en cualquier tono para copiar su valor
+50
+100
+200
+300
+400
+500
+600
+700
+800
+900
+950
+50
+brand-50
+#E6E6F9
+16.15:1
+H: 239°
+S: 63%
+L: 94%
+HEX
+Tailwind
+100
+brand-100
+#CBCCF6
+12.8:1
+H: 239°
+S: 69%
+L: 88%
+HEX
+Tailwind
+200
+brand-200
+#9D9FF0
+2.43:1
+H: 239°
+S: 74%
+L: 78%
+HEX
+Tailwind
+300
+brand-300
+#7678EF
+3.68:1
+H: 239°
+S: 79%
+L: 70%
+HEX
+Tailwind
+400
+brand-400
+#6668F0
+4.37:1
+H: 239°
+S: 82%
+L: 67%
+HEX
+Tailwind
+500
+brand-500
+Base
+#6366F1
+4.47:1
+H: 239°
+S: 84%
+L: 67%
+HEX
+Tailwind
+600
+brand-600
+#484BEF
+5.95:1
+H: 239°
+S: 84%
+L: 61%
+HEX
+Tailwind
+700
+brand-700
+#2024E9
+8.43:1
+H: 239°
+S: 82%
+L: 52%
+HEX
+Tailwind
+800
+brand-800
+#1518B7
+11.37:1
+H: 239°
+S: 79%
+L: 40%
+HEX
+Tailwind
+900
+brand-900
+#0F1166
+16.25:1
+H: 239°
+S: 74%
+L: 23%
+HEX
+Tailwind
+950
+brand-950
+#08082B
+19.45:1
+H: 239°
+S: 69%
+L: 10%
+HEX
+Tailwind
+Color activo: #6366F1 (Tono 500)
+Cerrar

@@ -1,0 +1,51 @@
+Inspector de Elementos & Live Preview Aislado
+COPIA FIEL EN IFRAME
+Captura fragmentos HTML/Tailwind, detecta dependencias requeridas (Lucide, Motion, Radix) y valida en sandbox antes de guardar
+Guardar en Base de Datos
+Pegar HTML / CSS
+Elemento en Lienzo
+Código HTML con clases Tailwind
+Ejemplos:
+Botón
+Tarjeta
+Artículo
+Badge
+Analizar & Renderizar Preview
+Limpiar
+Análisis de Dependencias de Librerías
+COMPATIBLE
+Lucide Icons
+lucide-react
+Instalada en este lab
+Se detectaron clases o marcadores de iconos Lucide (lucide, lucide-sparkles, Lucide).
+Tokens:
+lucide, lucide-sparkles
+Validación de Fidelidad Visual
+SANDBOX AISLADO
+Etiqueta Principal:
+<button>
+Tokens Tailwind Detectados:
+21 clases
+Medidas Calculadas:
+0px × 0px
+Aislamiento de Estilos:
+Iframe sandbox 100% aislado
+¿Listo para agregarlo a tu colección?
+Una vez verificado que se ve idéntico al original, guárdalo permanentemente en IndexedDB.
+Guardar en Base de Datos
+Live Preview Aislado
+Ficha Técnica & Tokens
+Código React TSX
+Componente React (TypeScript / TSX)
+Transformación limpia y lista para integrar en cualquier proyecto Vite/Next.js
+Copiar Código TSX
+import React from 'react';
+// Nota: Si reemplazas el <svg> por componentes Lucide, importa desde 'lucide-react'
+export function BotonPrimarioGlow() {
+ return (
+ <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+ <svg className="lucide lucide-sparkles h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+ <span>Confirmar con Lucide</span>
+ </button>
+ );
+}

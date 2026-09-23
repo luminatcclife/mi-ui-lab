@@ -1,0 +1,78 @@
+Generador de Paletas & Tokens Tailwind
+11 ESCALAS
+Calcula automáticamente la escala 50-950, ratios WCAG y exporta tokens CSS/Tailwind para tus componentes.
+#
+RGB(99, 102, 241)
+|
+HSL(239°, 84%, 67%)
+Aleatorio
+Prefijo Token:
+Copiar 500
+PRESETS:
+Indigo Eléctrico
+Esmeralda Menta
+Violeta Profundo
+Ámbar Cálido
+Rosa Carmesí
+Cian Neón
+Azul Cobalto
+Naranja Fuego
+Fucsia Magenta
+Pizarra Neutro
+Lima Fresca
+Escala Tailwind (50-950)
+Vista Previa de Componente
+Armonías & Neutros
+Exportar Tokens Tailwind
+Armonías Cromáticas Derivadas
+Colores complementarios, análogos y triádicos calculados en el círculo cromático respecto a tu color primario.
+Complementario
+#F2EF64 (+180°)
+Opuesto directo (180°), ideal para acentos y llamadas a la acción.
+Usar como Primario
+Análogo Derecho
+#A864F2 (+30°)
+Tono adyacente cálido (+30°), crea una sensación suave y armónica.
+Usar como Primario
+Análogo Izquierdo
+#64ADF2 (-30°)
+Tono adyacente frío (-30°), coherente y natural para elementos secundarios.
+Usar como Primario
+Triádico 1
+#F26467 (+120°)
+Separación de un tercio (120°), ofrece vibración y riqueza cromática equilibrada.
+Usar como Primario
+Triádico 2
+#67F264 (+240°)
+Separación de dos tercios (240°), contraste vivo sin tensión visual.
+Usar como Primario
+Split Complementario
+#F2A864 (+150°)
+Variación suave del complementario (150°), vibrante pero menos severo.
+Usar como Primario
+Neutros Tintados con el Tono Primario (brand-slate)
+Grises sofisticados tintados sutilmente con el matiz de tu color primario (~7% saturación). Diseñados para fondos, bordes y superficies en armonía visual perfecta.
+50
+#E8E8EE
+100
+#D0D0DC
+200
+#AAAAC0
+300
+#8A8AA8
+400
+#727297
+500
+#777788
+600
+#68688D
+700
+#5D5D7E
+800
+#4A4A64
+900
+#303041
+950
+#16161D
+Color activo: #6366F1 (Tono 500)
+Cerrar

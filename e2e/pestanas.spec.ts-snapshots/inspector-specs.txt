@@ -1,0 +1,98 @@
+Inspector de Elementos & Live Preview Aislado
+COPIA FIEL EN IFRAME
+Captura fragmentos HTML/Tailwind, detecta dependencias requeridas (Lucide, Motion, Radix) y valida en sandbox antes de guardar
+Guardar en Base de Datos
+Pegar HTML / CSS
+Elemento en Lienzo
+Código HTML con clases Tailwind
+Ejemplos:
+Botón
+Tarjeta
+Artículo
+Badge
+Analizar & Renderizar Preview
+Limpiar
+Análisis de Dependencias de Librerías
+COMPATIBLE
+Lucide Icons
+lucide-react
+Instalada en este lab
+Se detectaron clases o marcadores de iconos Lucide (lucide, lucide-sparkles, Lucide).
+Tokens:
+lucide, lucide-sparkles
+Validación de Fidelidad Visual
+SANDBOX AISLADO
+Etiqueta Principal:
+<button>
+Tokens Tailwind Detectados:
+21 clases
+Medidas Calculadas:
+0px × 0px
+Aislamiento de Estilos:
+Iframe sandbox 100% aislado
+¿Listo para agregarlo a tu colección?
+Una vez verificado que se ve idéntico al original, guárdalo permanentemente en IndexedDB.
+Guardar en Base de Datos
+Live Preview Aislado
+Ficha Técnica & Tokens
+Código React TSX
+<button>
+• 21 clases Tailwind
+• <hora>
+Copiar JSON
+Copiar Clases
+ESTILOS COMPUTADOS EN PANTALLA (WINDOW.GETCOMPUTEDSTYLE)
+Valores reales en runtime
+Color de Texto
+rgb(255, 255, 255)
+Fondo (Background)
+rgb(124, 58, 237)
+Tipografía / Tamaño
+14px (600)
+Dimensiones Reales
+0px × 0px
+Radio de Borde
+12px
+Relleno (Padding)
+10px 20px 10px 20px
+Fuente (Font Family)
+Outfit
+Sombra (Box Shadow)
+rgba(0, 0, 0, 0) 0px 0px ...
+TOKENS DE DISEÑO TAILWIND CLASIFICADOS
+Haz clic en cualquier token para copiar
+Colores & Superficie
+2 clases
+bg-indigo-600
+text-white
+Espaciado & Medidas
+3 clases
+gap-2
+px-5
+py-2.5
+Tipografía
+2 clases
+text-sm
+font-semibold
+Bordes & Radios
+1 clase
+rounded-xl
+Layout & Flex/Grid
+3 clases
+inline-flex
+items-center
+justify-center
+Efectos & Sombras
+3 clases
+shadow-lg
+shadow-indigo-500/25
+transition-all
+Estados (hover/focus)
+7 clases
+hover:bg-indigo-500
+hover:shadow-indigo-500/40
+hover:-translate-y-0.5
+active:translate-y-0
+focus:ring-2
+focus:ring-indigo-400
+focus:outline-none

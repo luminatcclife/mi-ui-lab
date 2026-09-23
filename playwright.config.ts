@@ -9,6 +9,8 @@ const PROD = process.env.E2E_PROD === '1';
 
 export default defineConfig({
   testDir: 'e2e',
+  // Las instantáneas son de texto: iguales en cualquier SO, sin sufijo de plataforma
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

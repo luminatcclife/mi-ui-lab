@@ -1,0 +1,188 @@
+A
+PIEZA BASE (IZQUIERDA)
+AccentCard (cards · v1.2.0)
+Button (buttons · v1.1.0)
+StatusBadge (feedback · v1.1.0)
+InputField (inputs · v1.1.0)
+SegmentedControl (navigation · v1.0.0)
+NotificationCallout (feedback · v1.0.0)
+ToggleSwitch (inputs · v1.0.0)
+StepProgressCard (cards · v1.0.0)
+Intercambiar
+B
+PIEZA A COMPARAR (DERECHA)
+AccentCard (cards · v1.2.0)
+Button (buttons · v1.1.0)
+StatusBadge (feedback · v1.1.0)
+InputField (inputs · v1.1.0)
+SegmentedControl (navigation · v1.0.0)
+NotificationCallout (feedback · v1.0.0)
+ToggleSwitch (inputs · v1.0.0)
+StepProgressCard (cards · v1.0.0)
+Comparaciones sugeridas:
+Botón vs Interruptor
+Tarjeta vs Callout
+AccentCard vs Stepper
+Input vs Segmented
+Badge vs Botón
+Similitud de código: 10%
+Props: 0 comunes · 1 distintas
+Renderizado y Propiedades
+13
+Diferencias de Código TSX
++36 / -199
+Tokens y Metadatos
+A
+AccentCard
+v1.2.0
+VARIANTE:
+Borde Superior de Acento
+Resplandor Ambiental (Ambient Glow)
+Indicador Lateral
+Tarjeta de Métrica & KPI
+Tarjeta de Acción Completa
+Minimalista Sutil
+Arquitectura Modular
+Core UI
+Módulo desacoplado listo para integrarse en cualquier proyecto con Tailwind.
+Explorar Módulo
+9 props documentadas
+Abrir en Playground →
+B
+Button
+v1.1.0
+VARIANTE:
+Primario
+Secundario
+Contorno (Outline)
+Destructivo
+Estado de Carga (Loading)
+Guardar Cambios
+Secundario
+4 props documentadas
+Abrir en Playground →
+COMPARATIVA DETALLADA DE PROPIEDADES (PROPS)
+Resalta diferencias en tipos, valores por defecto y valores en ejecución entre AccentCard y Button.
+Todas (13)
+Solo diferencias (13)
+Solo idénticas (0)
+Solo en A (8)
+Solo en B (4)
+Propiedad AccentCard (A) Estado Diff Button (B)
+accentColor
+ 
+'indigo' | 'emerald' | 'violet' | 'amber' | 'rose' | 'cyan' | 'zinc'
+def: 'indigo'
+Render: indigo
+Tono cromático del acento, indicador o resplandor ambiental.
+ 
+Solo en A
+ No presente en Button
+actionLabel
+ 
+string
+def: ''
+Render: Explorar Módulo
+Texto para el botón de acción inferior.
+ 
+Solo en A
+ No presente en Button
+badge
+ 
+string
+def: ''
+Render: Core UI
+Etiqueta o píldora de categoría en la esquina superior.
+ 
+Solo en A
+ No presente en Button
+disabled
+ No presente en AccentCard 
+Solo en B
+ 
+boolean
+def: false
+Render: false
+Inhabilita la interacción del botón.
+label
+ No presente en AccentCard 
+Solo en B
+ No presente en Button
+loading
+ No presente en AccentCard 
+Solo en B
+ 
+boolean
+def: false
+Render: false
+Muestra un spinner sutil y bloquea interacción.
+metric
+ 
+string
+def: ''
+Render: ''
+Valor numérico de impacto si la variante es métrica.
+ 
+Solo en A
+ No presente en Button
+onAction
+ 
+() => void
+def: undefined
+Render: undefined
+Callback ejecutado al hacer clic en el botón de acción.
+ 
+Solo en A
+ No presente en Button
+size
+ No presente en AccentCard 
+Solo en B
+ 
+'sm' | 'md' | 'lg'
+def: 'md'
+Render: 'md'
+Dimensiones del control táctil.
+subtitle
+ 
+string
+def: ''
+Render: Módulo desacoplado listo para integrarse en cualquier proyecto con Tailwind.
+Texto descriptivo o de apoyo.
+ 
+Solo en A
+ No presente en Button
+title
+Requerido en A
+ 
+string
+def: 'Título de la Tarjeta'
+Render: Arquitectura Modular
+Encabezado principal de la tarjeta.
+ 
+Solo en A
+ No presente en Button
+trend
+ 
+{ value: string; positive: boolean }
+def: undefined
+Render: undefined
+Indicador de tendencia porcentual o cambio temporal.
+ 
+Solo en A
+ No presente en Button
+variant
+ 
+'default' | 'accent-top' | 'accent-left' | 'ambient-glow' | 'metric' | 'actionable'
+def: 'default'
+Render: accent-top
+Estilo visual y estructura de la tarjeta.
+ 
+Diferente
+Tipo diferente: "'default' | 'accent-top' | 'accent-left' | 'ambient-glow' | 'metric' | 'actionable'" vs "'primary' | 'secondary' | 'subtle' | 'outline' | 'destructive' | 'ghost'"
+Valor por defecto: "'default'" vs "'primary'"
+Valor renderizado activo: "accent-top" vs "primary"
+ 
+'primary' | 'secondary' | 'subtle' | 'outline' | 'destructive' | 'ghost'
+def: 'primary'
+Render: primary
+Jerarquía visual de la acción.
