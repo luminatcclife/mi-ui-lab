@@ -10,6 +10,7 @@ import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
 import { IterationModal } from './components/IterationModal';
 import { ExportModal } from './components/ExportModal';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary, ScreenErrorFallback } from './components/ErrorBoundary';
 import { useCatalog, normalizeTag } from './hooks/useCatalog';
 
 function MainApp() {
@@ -156,62 +157,77 @@ function MainApp() {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
       <Header onNavigateHome={() => handleNavigate('home')} customComponentsCount={customCount} />
 
-      {screen === 'home' && (
-        <HomeScreen
-          totalComponents={components.length}
-          customCount={customCount}
-          favoritesCount={favoriteIds.length}
-          onNavigate={handleNavigate}
-        />
-      )}
+      <ErrorBoundary
+        label={`screen:${screen}`}
+        resetKeys={[screen]}
+        fallback={(error, reset) => (
+          <ScreenErrorFallback
+            error={error}
+            onRetry={reset}
+            onHome={() => {
+              reset();
+              handleNavigate('home');
+            }}
+          />
+        )}
+      >
+        {screen === 'home' && (
+          <HomeScreen
+            totalComponents={components.length}
+            customCount={customCount}
+            favoritesCount={favoriteIds.length}
+            onNavigate={handleNavigate}
+          />
+        )}
 
-      {screen === 'biblioteca' && (
-        <BibliotecaScreen
-          components={components}
-          selectedId={selectedId}
-          onSelectComponent={setSelectedId}
-          favoriteIds={favoriteIds}
-          onToggleFavorite={handleToggleFavorite}
-          onDeleteCustomComponent={handleDeleteCustomComponent}
-          activeTags={activeTags}
-          onActiveTagsChange={setActiveTags}
-          onToggleTagFilter={handleToggleTagFilter}
-          onAddTagToComponent={handleAddTagToComponent}
-          onRemoveTagFromComponent={handleRemoveTagFromComponent}
-          canvasBg={canvasBg}
-          onToast={showToast}
-          onOpenIteration={handleOpenIteration}
-          onOpenTokens={() => setIsTokensOpen(true)}
-          onOpenExport={() => setIsExportOpen(true)}
-          onOpenPaletteGenerator={handleOpenPaletteGenerator}
-          onPlayInPlayground={handlePlayInPlayground}
-          initialMode={bibliotecaInitialMode}
-        />
-      )}
+        {screen === 'biblioteca' && (
+          <BibliotecaScreen
+            components={components}
+            selectedId={selectedId}
+            onSelectComponent={setSelectedId}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+            onDeleteCustomComponent={handleDeleteCustomComponent}
+            activeTags={activeTags}
+            onActiveTagsChange={setActiveTags}
+            onToggleTagFilter={handleToggleTagFilter}
+            onAddTagToComponent={handleAddTagToComponent}
+            onRemoveTagFromComponent={handleRemoveTagFromComponent}
+            canvasBg={canvasBg}
+            onToast={showToast}
+            onOpenIteration={handleOpenIteration}
+            onOpenTokens={() => setIsTokensOpen(true)}
+            onOpenExport={() => setIsExportOpen(true)}
+            onOpenPaletteGenerator={handleOpenPaletteGenerator}
+            onPlayInPlayground={handlePlayInPlayground}
+            initialMode={bibliotecaInitialMode}
+          />
+        )}
 
-      {screen === 'laboratorio' && (
-        <LaboratorioScreen
-          components={components}
-          activeComponent={components.find((c) => c.id === selectedId)}
-          onSave={handleAddNewComponent}
-          onToast={showToast}
-        />
-      )}
+        {screen === 'laboratorio' && (
+          <LaboratorioScreen
+            components={components}
+            activeComponent={components.find((c) => c.id === selectedId)}
+            onSave={handleAddNewComponent}
+            onToast={showToast}
+          />
+        )}
 
-      {screen === 'playground' && (
-        <PlaygroundScreen
-          components={components}
-          selectedId={selectedId}
-          onSelectComponent={setSelectedId}
-          viewportMode={viewportMode}
-          onViewportChange={setViewportMode}
-          canvasBg={canvasBg}
-          onToast={showToast}
-          isFavorite={favoriteIds.includes(selectedId)}
-          onToggleFavorite={handleToggleFavorite}
-          onViewInBiblioteca={handleViewInBiblioteca}
-        />
-      )}
+        {screen === 'playground' && (
+          <PlaygroundScreen
+            components={components}
+            selectedId={selectedId}
+            onSelectComponent={setSelectedId}
+            viewportMode={viewportMode}
+            onViewportChange={setViewportMode}
+            canvasBg={canvasBg}
+            onToast={showToast}
+            isFavorite={favoriteIds.includes(selectedId)}
+            onToggleFavorite={handleToggleFavorite}
+            onViewInBiblioteca={handleViewInBiblioteca}
+          />
+        )}
+      </ErrorBoundary>
 
       {/* Design Tokens Explorer Modal */}
       <TokensPanel
@@ -270,7 +286,20 @@ function MainApp() {
 export default function App() {
   return (
     <ThemeProvider>
-      <MainApp />
+      <ErrorBoundary
+        label="app"
+        fallback={(error) => (
+          <div role="alert" style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+            <h1 style={{ fontSize: 18, fontWeight: 700 }}>mi-ui-lab ha fallado</h1>
+            <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#e11d48' }}>{error.message}</p>
+            <button type="button" onClick={() => window.location.reload()}>
+              Recargar
+            </button>
+          </div>
+        )}
+      >
+        <MainApp />
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

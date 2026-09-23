@@ -9,6 +9,7 @@ import { NotificationCallout } from './ui/NotificationCallout';
 import { ToggleSwitch } from './ui/ToggleSwitch';
 import { StepProgressCard } from './ui/StepProgressCard';
 import { CustomComponentRenderer } from './ui/CustomComponentRenderer';
+import { ErrorBoundary, PieceErrorFallback } from './ErrorBoundary';
 
 interface InteractiveComponentRendererProps {
   component: UIComponent;
@@ -20,7 +21,7 @@ interface InteractiveComponentRendererProps {
   compact?: boolean;
 }
 
-export function InteractiveComponentRenderer({
+function PieceRenderer({
   component,
   activeVariantProps = {},
   propOverrides = {},
@@ -236,5 +237,19 @@ export function InteractiveComponentRenderer({
       onToast={onToast}
       compact={compact}
     />
+  );
+}
+
+/** Cada pieza se renderiza aislada: si falla, muestra su propio aviso y el resto de la pantalla sigue viva. */
+export function InteractiveComponentRenderer(props: InteractiveComponentRendererProps) {
+  return (
+    <ErrorBoundary
+      label={props.component.id}
+      // Por contenido: los props suelen llegar como objetos literales nuevos en cada render
+      resetKeys={[props.component, JSON.stringify(props.activeVariantProps ?? {}), JSON.stringify(props.propOverrides ?? {})]}
+      fallback={(error, reset) => <PieceErrorFallback name={props.component.name} error={error} onRetry={reset} />}
+    >
+      <PieceRenderer {...props} />
+    </ErrorBoundary>
   );
 }
