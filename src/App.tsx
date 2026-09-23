@@ -1,14 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CanvasBackground, UIComponent, ViewportMode, ComponentIteration } from './types';
 import { Header } from './components/Header';
 import { HomeScreen, AppScreen } from './components/HomeScreen';
-import { BibliotecaScreen } from './components/BibliotecaScreen';
-import { LaboratorioScreen } from './components/LaboratorioScreen';
-import { PlaygroundScreen } from './components/PlaygroundScreen';
-import { TokensPanel } from './components/TokensPanel';
-import { PaletteGeneratorModal } from './components/PaletteGeneratorModal';
-import { IterationModal } from './components/IterationModal';
-import { ExportModal } from './components/ExportModal';
+
+// Pantallas y modales se cargan bajo demanda: Inicio no necesita el Inspector, el comparador
+// ni el generador de paletas, que son la mayor parte del bundle.
+const BibliotecaScreen = lazy(() => import('./components/BibliotecaScreen').then((m) => ({ default: m.BibliotecaScreen })));
+const LaboratorioScreen = lazy(() => import('./components/LaboratorioScreen').then((m) => ({ default: m.LaboratorioScreen })));
+const PlaygroundScreen = lazy(() => import('./components/PlaygroundScreen').then((m) => ({ default: m.PlaygroundScreen })));
+const TokensPanel = lazy(() => import('./components/TokensPanel').then((m) => ({ default: m.TokensPanel })));
+const PaletteGeneratorModal = lazy(() => import('./components/PaletteGeneratorModal').then((m) => ({ default: m.PaletteGeneratorModal })));
+const IterationModal = lazy(() => import('./components/IterationModal').then((m) => ({ default: m.IterationModal })));
+const ExportModal = lazy(() => import('./components/ExportModal').then((m) => ({ default: m.ExportModal })));
+
+/** true desde la primera vez que `flag` es true: el modal se carga al abrirlo y luego queda montado (conserva su estado). */
+function useLoadedOnce(flag: boolean): boolean {
+  const [loaded, setLoaded] = useState(flag);
+  if (flag && !loaded) setLoaded(true);
+  return loaded;
+}
+
+function ScreenLoading() {
+  return (
+    <div className="flex flex-1 items-center justify-center text-xs font-mono text-zinc-500" role="status">
+      Cargando…
+    </div>
+  );
+}
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary, ScreenErrorFallback } from './components/ErrorBoundary';
 import { useCatalog, normalizeTag } from './hooks/useCatalog';
@@ -28,6 +46,9 @@ function MainApp() {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isIterationOpen, setIsIterationOpen] = useState(false);
   const [iteratingComponent, setIteratingComponent] = useState<UIComponent | null>(null);
+  const tokensLoaded = useLoadedOnce(isTokensOpen);
+  const paletteLoaded = useLoadedOnce(isPaletteGeneratorOpen);
+  const exportLoaded = useLoadedOnce(isExportOpen);
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -171,6 +192,7 @@ function MainApp() {
           />
         )}
       >
+        <Suspense fallback={<ScreenLoading />}>
         {screen === 'home' && (
           <HomeScreen
             totalComponents={components.length}
@@ -227,23 +249,31 @@ function MainApp() {
             onViewInBiblioteca={handleViewInBiblioteca}
           />
         )}
+        </Suspense>
       </ErrorBoundary>
 
+      {/* Modales (lazy). Si su chunk no carga, el fallo queda aislado aquí. */}
+      <ErrorBoundary label="modals" fallback={() => null}>
+      <Suspense fallback={null}>
       {/* Design Tokens Explorer Modal */}
+      {tokensLoaded && (
       <TokensPanel
         isOpen={isTokensOpen}
         onClose={() => setIsTokensOpen(false)}
         onToast={showToast}
         onOpenPaletteGenerator={() => handleOpenPaletteGenerator()}
       />
+      )}
 
       {/* Visual Color Palette & Token Generator Modal */}
+      {paletteLoaded && (
       <PaletteGeneratorModal
         isOpen={isPaletteGeneratorOpen}
         onClose={() => setIsPaletteGeneratorOpen(false)}
         initialPrimaryHex={paletteGeneratorInitialHex}
         onToast={showToast}
       />
+      )}
 
       {/* Version Iteration Modal */}
       {iteratingComponent && (
@@ -260,6 +290,7 @@ function MainApp() {
       )}
 
       {/* Export / Import Modal */}
+      {exportLoaded && (
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
@@ -268,6 +299,9 @@ function MainApp() {
         onResetToDefaults={handleResetToDefaults}
         onToast={showToast}
       />
+      )}
+      </Suspense>
+      </ErrorBoundary>
 
       {/* Toast Notification */}
       {toastMessage && (
