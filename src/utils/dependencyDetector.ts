@@ -13,8 +13,7 @@ export interface DetectedDependency {
 }
 
 // Map of packages present in this project's package.json.
-// Keep in sync with package.json — mi-ui-lab has no Firebase/Express/Gemini
-// dependency (that Google Workspace subsystem was removed as dead code).
+// Keep in sync with package.json.
 const CURRENT_PROJECT_PACKAGES = new Set([
   'react',
   'react-dom',

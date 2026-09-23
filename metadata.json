@@ -1,6 +1,0 @@
-{
-  "name": "mi-ui-lab",
-  "description": "Biblioteca personal e independiente de componentes UI en React y Tailwind CSS, con variantes interactivas documentadas, tokens y código listo para copiar.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { UIComponent, ComponentCategory, ComponentDraft } from '../types';
+import { UIComponent } from '../types';
 import { INITIAL_COMPONENTS } from '../data/initialComponents';
 
 export interface DBFavorite {
@@ -26,7 +26,6 @@ export class MiUILabDatabase extends Dexie {
   favorites!: Table<DBFavorite, string>;
   tagOverrides!: Table<DBTagOverride, string>;
   meta!: Table<DBMeta, string>;
-  drafts!: Table<ComponentDraft, string>;
   constructor() {
     super('MiUILabDatabase');
     
@@ -45,6 +44,11 @@ export class MiUILabDatabase extends Dexie {
       tagOverrides: 'id',
       meta: 'key',
       drafts: 'id, name, category, createdAt',
+    });
+
+    // Schema version 3: se elimina `drafts` (la UI de borradores se descartó; nunca se leía)
+    this.version(3).stores({
+      drafts: null,
     });
   }
 }
@@ -323,32 +327,5 @@ export async function getDBStats(): Promise<{
       tagOverridesCount: 0,
       databaseName: 'MiUILabDatabase',
     };
-  }
-}
-/** Save or update a captured draft in Dexie */
-export async function saveDraftToDB(draft: ComponentDraft): Promise<void> {
-  try {
-    await db.drafts.put(draft);
-  } catch (err) {
-    console.error(`Error saving draft ${draft.id} to Dexie:`, err);
-  }
-}
-/** Load all captured drafts from Dexie, newest first */
-export async function loadDraftsFromDB(): Promise<ComponentDraft[]> {
-  try {
-    const all = await db.drafts.toArray();
-    return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  } catch (err) {
-    console.error('Error loading drafts from Dexie:', err);
-    return [];
-  }
-}
-
-/** Delete a captured draft from Dexie (tras "Convertir a componente" o al descartarlo) */
-export async function deleteDraftFromDB(id: string): Promise<void> {
-  try {
-    await db.drafts.delete(id);
-  } catch (err) {
-    console.error(`Error deleting draft ${id} from Dexie:`, err);
   }
 }

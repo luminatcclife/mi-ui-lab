@@ -1,5 +1,3 @@
-import { DetectedDependency } from './utils/dependencyDetector';
-
 export type ComponentCategory =
   | 'all'
   | 'favorites'
@@ -75,13 +73,4 @@ export interface ComponentConfigSnapshot {
   selectedVariantId: string;
   accentColor: AccentColor;
   propOverrides: Record<string, any>;
-}
-export interface ComponentDraft {
-  id: string;
-  name: string;
-  category: Exclude<ComponentCategory, 'all' | 'favorites'>;
-  rawHtml: string;
-  detectedDependencies: DetectedDependency[];
-  tags: string[];
-  createdAt: string;
 }
