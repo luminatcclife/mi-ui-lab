@@ -5,6 +5,8 @@
 // - DOM structure and attributes summary
 // - Technical spec sheet ready to export or inspect
 
+import { sanitizeHtml } from './sanitizeHtml';
+
 export interface TailwindCategorizedTokens {
   layout: string[];
   spacing: string[];
@@ -145,7 +147,8 @@ export function inspectElementOrHTML(
   if (typeof source === 'string') {
     sourceType = 'html-string';
     const parser = new DOMParser();
-    const doc = parser.parseFromString(source.trim(), 'text/html');
+    // Se sanea antes de montar en el documento principal: un <img onerror> se ejecutaría al insertarlo.
+    const doc = parser.parseFromString(sanitizeHtml(source.trim()), 'text/html');
     const firstEl = doc.body.firstElementChild as HTMLElement;
 
     if (!firstEl) {

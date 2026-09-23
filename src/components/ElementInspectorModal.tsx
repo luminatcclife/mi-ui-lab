@@ -49,6 +49,8 @@ import {
   renameAttributesToJsx,
   convertHtmlComments,
 } from '../utils/componentStandardizer';
+import { buildSandboxDocument, SandboxTheme } from '../utils/sandboxDocument';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import { ComponentCategory, UIComponent } from '../types';
 
 export interface ElementInspectorModalProps {
@@ -57,7 +59,7 @@ export interface ElementInspectorModalProps {
   onSaveComponent?: (component: UIComponent) => void;
 }
 
-type PreviewTheme = 'dark' | 'light' | 'checkerboard';
+type PreviewTheme = SandboxTheme;
 type ViewportSize = 'fluid' | 'tablet' | 'mobile';
 
 const SAMPLE_SNIPPETS = [
@@ -272,98 +274,15 @@ export function ${compName}() {
 }`;
   }, [techSheet, htmlInput, saveName, detectedDependencies]);
 
-  // Build isolated HTML payload for iframe srcDoc
-  const iframeSrcDoc = useMemo(() => {
-    const isDark = previewTheme === 'dark';
-    const isCheckerboard = previewTheme === 'checkerboard';
-
-    let backgroundStyles = '';
-    if (isCheckerboard) {
-      backgroundStyles = `
-        background-color: #18181b;
-        background-image: 
-          linear-gradient(45deg, #27272a 25%, transparent 25%), 
-          linear-gradient(-45deg, #27272a 25%, transparent 25%), 
-          linear-gradient(45deg, transparent 75%, #27272a 75%), 
-          linear-gradient(-45deg, transparent 75%, #27272a 75%);
-        background-size: 16px 16px;
-        background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-      `;
-    } else if (isDark) {
-      backgroundStyles = `
-        background-color: #09090b;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-        background-size: 18px 18px;
-      `;
-    } else {
-      backgroundStyles = `
-        background-color: #ffffff;
-        background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-        background-size: 18px 18px;
-      `;
-    }
-
-    const contentHtml = techSheet?.cleanHtml || htmlInput;
-
-    return `<!DOCTYPE html>
-<html lang="es" class="${isDark || isCheckerboard ? 'dark' : ''}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Tailwind Play CDN for isolated runtime styling of ANY class -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    *, ::before, ::after { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 1.5rem;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      ${backgroundStyles}
-      color: ${isDark || isCheckerboard ? '#f4f4f5' : '#18181b'};
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    #preview-root {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      max-width: 100%;
-      width: fit-content;
-      margin: auto;
-    }
-  </style>
-</head>
-<body>
-  <div id="preview-root">
-    ${contentHtml}
-  </div>
-</body>
-</html>`;
-  }, [previewTheme, techSheet, htmlInput]);
+  // Build isolated HTML payload for iframe srcDoc (HTML saneado: el crudo solo vive en el textarea)
+  const iframeSrcDoc = useMemo(
+    () =>
+      buildSandboxDocument({
+        html: techSheet?.cleanHtml || sanitizeHtml(htmlInput),
+        theme: previewTheme,
+      }),
+    [previewTheme, techSheet, htmlInput],
+  );
 
   // Save Component to Database Handler
   const handleConfirmSaveToDatabase = () => {
@@ -401,7 +320,7 @@ export function ${compName}() {
         category: saveCategory,
         tagline: saveTagline.trim(),
         description: saveDescription.trim(),
-        rawHtml: techSheet?.cleanHtml || htmlInput,
+        rawHtml: techSheet?.cleanHtml || sanitizeHtml(htmlInput),
         tokens: tokensArray,
         techSheet: techSheet,
       });
@@ -444,7 +363,7 @@ export function ${compName}() {
         tags: tagsArray.length > 0 ? tagsArray : ['custom', 'importado'],
         isCustom: true,
         createdAt: todayStr,
-        rawHtml: techSheet?.cleanHtml || htmlInput,
+        rawHtml: techSheet?.cleanHtml || sanitizeHtml(htmlInput),
       };
     }
 

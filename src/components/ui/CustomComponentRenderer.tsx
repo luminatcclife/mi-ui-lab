@@ -1,6 +1,8 @@
 // src/components/ui/CustomComponentRenderer.tsx
-import React, { useMemo } from 'react';
+import React from 'react';
 import { AccentColor, UIComponent } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
+import { SandboxedHtmlPreview } from './SandboxedHtmlPreview';
 
 interface CustomComponentRendererProps {
   component: UIComponent;
@@ -19,30 +21,12 @@ export function CustomComponentRenderer({
   onToast = () => {},
   compact = false,
 }: CustomComponentRendererProps) {
+  const { isDark } = useTheme();
   const mergedProps = { ...activeVariantProps, ...propOverrides };
   const variant = mergedProps.variant || 'default';
   const effectiveAccent = mergedProps.accentColor || accentColor;
 
-  // Render live HTML if available
-  const processedHtml = useMemo(() => {
-    if (!component.rawHtml) return null;
-
-    let html = component.rawHtml;
-
-    // Reactively replace dynamic slots if provided in props
-    if (mergedProps.title) {
-      // Find possible title match in HTML and replace if it exists
-      const titleMatch = html.match(/<(h[1-6]|p|div|span)[^>]*>(.*?)<\/\1>/i);
-      if (titleMatch && titleMatch[2]) {
-        // Only replace if the user specified a custom title
-        // html = html.replace(titleMatch[2], mergedProps.title);
-      }
-    }
-
-    return html;
-  }, [component.rawHtml, mergedProps]);
-
-  if (!processedHtml) {
+  if (!component.rawHtml) {
     // Elegant fallback card
     return (
       <div
@@ -66,36 +50,24 @@ export function CustomComponentRenderer({
     );
   }
 
-  // Variant wrapper styling
+  // Variant wrapper styling. Se aplica DENTRO del iframe, donde el Tailwind Play CDN genera en runtime
+  // también las clases dinámicas (border-${accent}-500/40), que el build de la app no podría generar.
   const wrapperClass =
     variant === 'glow'
-      ? `relative rounded-3xl border border-${effectiveAccent}-500/40 bg-zinc-950/95 p-6 shadow-[0_0_35px_rgba(99,102,241,0.18)] backdrop-blur-xl transition-all duration-300`
+      ? `relative w-full rounded-3xl border border-${effectiveAccent}-500/40 bg-zinc-950/95 p-6 shadow-[0_0_35px_rgba(99,102,241,0.18)] text-zinc-100`
       : variant === 'compact'
-      ? 'relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 p-4 shadow-md transition-all duration-300'
-      : 'relative rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 p-6 shadow-xl transition-all duration-300';
+      ? 'relative w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 p-4 shadow-md text-zinc-900 dark:text-zinc-100'
+      : 'relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 p-6 shadow-xl text-zinc-900 dark:text-zinc-100';
 
   return (
     <div className={`w-full ${compact ? 'max-w-sm' : 'max-w-lg'} mx-auto`}>
-      <div
-        className={`${wrapperClass} text-zinc-900 dark:text-zinc-100`}
-        style={{
-          // Fallback CSS variables often used in modern web components
-          ['--t1' as any]: 'currentColor',
-          ['--t2' as any]: 'rgba(161, 161, 170, 0.9)',
-          ['--t3' as any]: 'rgba(161, 161, 170, 0.7)',
-          ['--btn-bg' as any]: 'rgba(255, 255, 255, 0.08)',
-          ['--btn-text' as any]: 'currentColor',
-        }}
-        dangerouslySetInnerHTML={{ __html: processedHtml }}
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          const clickable = target.closest('button, a, [role="button"]');
-          if (clickable) {
-            e.preventDefault();
-            const label = clickable.textContent?.trim() || 'Acción';
-            onToast(`Clic en: ${label.slice(0, 25)}`);
-          }
-        }}
+      <SandboxedHtmlPreview
+        html={component.rawHtml}
+        theme={isDark ? 'dark' : 'light'}
+        wrapperClass={wrapperClass}
+        title={`Vista previa aislada: ${component.name}`}
+        minHeight={compact ? 96 : 140}
+        onClickLabel={(label) => onToast(`Clic en: ${label}`)}
       />
     </div>
   );

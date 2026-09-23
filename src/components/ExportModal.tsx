@@ -3,6 +3,8 @@ import { X, Download, Upload, Copy, Check, RefreshCw, Database, HardDrive, Shiel
 import { AnimatePresence, motion } from 'motion/react';
 import { UIComponent } from '../types';
 import { getDBStats } from '../db/db';
+import { INITIAL_COMPONENTS } from '../data/initialComponents';
+import { validateImportedCollection } from '../utils/validateImport';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ export function ExportModal({
   onToast,
 }: ExportModalProps) {
   const [importJson, setImportJson] = useState('');
+  const [importErrors, setImportErrors] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const [dbStats, setDbStats] = useState<{
     isReady: boolean;
@@ -60,17 +63,32 @@ export function ExportModal({
   };
 
   const handleImport = () => {
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(importJson);
-      if (!Array.isArray(parsed)) {
-        alert('El JSON debe ser un arreglo de componentes válido.');
-        return;
-      }
-      onImportComponents(parsed);
-      onToast(`¡Se importaron ${parsed.length} piezas a tu colección!`);
-      onClose();
+      parsed = JSON.parse(importJson);
     } catch (e) {
-      alert('Error al parsear el JSON. Verifica la sintaxis.');
+      setImportErrors(['Error al parsear el JSON. Verifica la sintaxis.']);
+      return;
+    }
+
+    const builtInIds = new Set(INITIAL_COMPONENTS.map((c) => c.id));
+    const { valid, errors } = validateImportedCollection(parsed, builtInIds);
+    setImportErrors(errors);
+
+    if (valid.length === 0) {
+      if (errors.length === 0) setImportErrors(['No hay piezas propias que importar (solo piezas base).']);
+      return;
+    }
+
+    onImportComponents(valid);
+    onToast(
+      errors.length > 0
+        ? `Se importaron ${valid.length} piezas · ${errors.length} descartadas`
+        : `¡Se importaron ${valid.length} piezas a tu colección!`,
+    );
+    if (errors.length === 0) {
+      setImportJson('');
+      onClose();
     }
   };
 
@@ -245,7 +263,10 @@ export function ExportModal({
               rows={4}
               placeholder="Pega aquí el JSON con la colección..."
               value={importJson}
-              onChange={(e) => setImportJson(e.target.value)}
+              onChange={(e) => {
+                setImportJson(e.target.value);
+                setImportErrors([]);
+              }}
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 font-mono text-[11px] text-zinc-100 placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none"
             />
             <button
@@ -257,6 +278,17 @@ export function ExportModal({
               <Upload className="h-3.5 w-3.5" />
               <span>Cargar e Integrar Piezas</span>
             </button>
+            {importErrors.length > 0 && (
+              <ul
+                id="import-validation-errors"
+                className="max-h-32 overflow-y-auto rounded-xl border border-rose-500/30 bg-rose-500/5 p-3 font-mono text-[11px] text-rose-300 space-y-1"
+              >
+                {importErrors.slice(0, 20).map((err, i) => (
+                  <li key={i}>• {err}</li>
+                ))}
+                {importErrors.length > 20 && <li>… y {importErrors.length - 20} más</li>}
+              </ul>
+            )}
           </div>
 
           <div className="h-px bg-zinc-800" />
