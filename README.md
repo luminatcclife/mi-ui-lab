@@ -43,7 +43,8 @@ src/
     *Screen.tsx            Las cuatro pantallas (Biblioteca, Laboratorio y Playground se cargan bajo demanda)
     *Modal.tsx, TokensPanel.tsx, ComparisonView.tsx, ...
     ErrorBoundary.tsx      Aislamiento de fallos de render por pieza, por pantalla y global
-    InteractiveComponentRenderer.tsx  Elige cómo renderizar cada pieza
+    InteractiveComponentRenderer.tsx  Elige cómo renderizar cada pieza (registro de piezas base o sandbox)
+    builtInRenderers.tsx   Registro id → render de las 8 piezas base
     ui/                    Las 8 piezas base + CustomComponentRenderer y SandboxedHtmlPreview
   data/                    Catálogo base (initialComponents.ts) y tokens de diseño
   utils/                   Lógica pura: inspector, estandarizador HTML→JSX, detector de dependencias,
@@ -72,7 +73,7 @@ Exportar genera un JSON con un **array de objetos `UIComponent`** (ver `src/type
 
 1. Crea el componente en `src/components/ui/`.
 2. Añade su ficha (variantes, props, snippets, tokens) a `src/data/initialComponents.ts`.
-3. Añade el caso correspondiente en `src/components/InteractiveComponentRenderer.tsx`.
+3. Añade su entrada (mismo `id`) en `BUILT_IN_RENDERERS`, en `src/components/builtInRenderers.tsx`. Un test falla si alguna pieza base no tiene renderer, y otro renderiza todas sus variantes.
 
 ## Seguridad del HTML capturado
 
