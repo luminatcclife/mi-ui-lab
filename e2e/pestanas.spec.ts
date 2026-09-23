@@ -67,4 +67,17 @@ test('Generador de paletas: las cuatro pestañas', async ({ page }) => {
     { name: 'palette-harmonies', button: page.locator('#tab-btn-harmonies') },
     { name: 'palette-export', button: page.locator('#tab-btn-export') },
   ]);
+
+  // La vista previa tiene estado interactivo propio (interruptor y campo de texto)
+  await page.locator('#tab-btn-preview').click();
+  await expect(modal.getByText('Habilitado', { exact: true })).toBeVisible();
+  await modal.getByText('Habilitado', { exact: true }).locator('xpath=preceding-sibling::button[1]').click();
+  await expect(modal.getByText('Deshabilitado', { exact: true })).toBeVisible();
+  const sample = modal
+    .locator('div', { has: page.getByText('Campo de Texto con Anillo de Foco', { exact: true }) })
+    .last()
+    .locator('input');
+  await expect(sample).toHaveValue('Texto de ejemplo...');
+  await sample.fill('Hola paleta');
+  await expect(sample).toHaveValue('Hola paleta');
 });
