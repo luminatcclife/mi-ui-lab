@@ -1,4 +1,12 @@
 import { UIComponent } from '../types';
+import accentCardSource from '../components/ui/AccentCard.tsx?raw';
+import buttonSource from '../components/ui/Button.tsx?raw';
+import statusBadgeSource from '../components/ui/StatusBadge.tsx?raw';
+import inputFieldSource from '../components/ui/InputField.tsx?raw';
+import segmentedControlSource from '../components/ui/SegmentedControl.tsx?raw';
+import notificationCalloutSource from '../components/ui/NotificationCallout.tsx?raw';
+import toggleSwitchSource from '../components/ui/ToggleSwitch.tsx?raw';
+import stepProgressCardSource from '../components/ui/StepProgressCard.tsx?raw';
 
 export const INITIAL_COMPONENTS: UIComponent[] = [
   {
@@ -260,218 +268,8 @@ export function MiSeccion() {
     </div>
   );
 }`,
-    sourceCode: `import React from 'react';
-
-export type AccentColor =
-  | 'indigo'
-  | 'emerald'
-  | 'violet'
-  | 'amber'
-  | 'rose'
-  | 'cyan'
-  | 'zinc';
-
-export type AccentCardVariant =
-  | 'default'
-  | 'accent-top'
-  | 'accent-left'
-  | 'ambient-glow'
-  | 'metric'
-  | 'actionable';
-
-export interface AccentCardProps {
-  id?: string;
-  variant?: AccentCardVariant;
-  accentColor?: AccentColor;
-  title: string;
-  subtitle?: string;
-  badge?: string;
-  metric?: string;
-  trend?: {
-    value: string;
-    positive: boolean;
-  };
-  actionLabel?: string;
-  onAction?: () => void;
-  className?: string;
-  children?: React.ReactNode;
-}
-
-const colorMap: Record<
-  AccentColor,
-  {
-    border: string;
-    glow: string;
-    badgeBg: string;
-    badgeText: string;
-    buttonBg: string;
-    buttonHover: string;
-    metricText: string;
-  }
-> = {
-  indigo: {
-    border: 'border-indigo-500',
-    glow: 'from-indigo-500/15 via-indigo-500/5 to-transparent',
-    badgeBg: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
-    buttonBg: 'bg-indigo-600 text-white',
-    buttonHover: 'hover:bg-indigo-500',
-    metricText: 'text-indigo-400',
-  },
-  emerald: {
-    border: 'border-emerald-500',
-    glow: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
-    badgeBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-    buttonBg: 'bg-emerald-600 text-white',
-    buttonHover: 'hover:bg-emerald-500',
-    metricText: 'text-emerald-400',
-  },
-  violet: {
-    border: 'border-violet-500',
-    glow: 'from-violet-500/15 via-violet-500/5 to-transparent',
-    badgeBg: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
-    buttonBg: 'bg-violet-600 text-white',
-    buttonHover: 'hover:bg-violet-500',
-    metricText: 'text-violet-400',
-  },
-  amber: {
-    border: 'border-amber-500',
-    glow: 'from-amber-500/15 via-amber-500/5 to-transparent',
-    badgeBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-    buttonBg: 'bg-amber-600 text-white',
-    buttonHover: 'hover:bg-amber-500',
-    metricText: 'text-amber-400',
-  },
-  rose: {
-    border: 'border-rose-500',
-    glow: 'from-rose-500/15 via-rose-500/5 to-transparent',
-    badgeBg: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
-    buttonBg: 'bg-rose-600 text-white',
-    buttonHover: 'hover:bg-rose-500',
-    metricText: 'text-rose-400',
-  },
-  cyan: {
-    border: 'border-cyan-500',
-    glow: 'from-cyan-500/15 via-cyan-500/5 to-transparent',
-    badgeBg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
-    buttonBg: 'bg-cyan-600 text-white',
-    buttonHover: 'hover:bg-cyan-500',
-    metricText: 'text-cyan-400',
-  },
-  zinc: {
-    border: 'border-zinc-500',
-    glow: 'from-zinc-500/10 via-zinc-500/5 to-transparent',
-    badgeBg: 'bg-zinc-500/10 border-zinc-500/20 text-zinc-300',
-    buttonBg: 'bg-zinc-800 text-zinc-100',
-    buttonHover: 'hover:bg-zinc-700',
-    metricText: 'text-zinc-200',
-  },
-};
-
-export function AccentCard({
-  id,
-  variant = 'default',
-  accentColor = 'indigo',
-  title,
-  subtitle,
-  badge,
-  metric,
-  trend,
-  actionLabel,
-  onAction,
-  className = '',
-  children,
-}: AccentCardProps) {
-  const styles = colorMap[accentColor] || colorMap.indigo;
-
-  return (
-    <div
-      id={id}
-      className={\`group relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/90 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-xl hover:shadow-black/40 \${className}\`}
-    >
-      {/* Resplandor ambiental para variante ambient-glow */}
-      {variant === 'ambient-glow' && (
-        <div
-          className={\`pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-radial \${styles.glow} blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-60\`}
-        />
-      )}
-
-      {/* Acento superior */}
-      {variant === 'accent-top' && (
-        <div
-          className={\`absolute top-0 left-0 right-0 h-1 \${styles.border.replace('border-', 'bg-')}\`}
-        />
-      )}
-
-      {/* Acento lateral */}
-      {variant === 'accent-left' && (
-        <div
-          className={\`absolute top-0 bottom-0 left-0 w-1.5 \${styles.border.replace('border-', 'bg-')}\`}
-        />
-      )}
-
-      {/* Cabecera con Badge opcional */}
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <h3 className="font-semibold text-lg text-zinc-100 tracking-tight leading-snug">
-          {title}
-        </h3>
-        {badge && (
-          <span
-            className={\`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap \${styles.badgeBg}\`}
-          >
-            {badge}
-          </span>
-        )}
-      </div>
-
-      {/* Subtítulo o descripción */}
-      {subtitle && (
-        <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-          {subtitle}
-        </p>
-      )}
-
-      {/* Variante Métrica / KPI */}
-      {variant === 'metric' && (
-        <div className="my-3 flex items-baseline gap-3">
-          {metric && (
-            <span
-              className={\`text-3xl font-bold tracking-tight \${styles.metricText}\`}
-            >
-              {metric}
-            </span>
-          )}
-          {trend && (
-            <span
-              className={\`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold \${
-                trend.positive
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-              }\`}
-            >
-              {trend.positive ? '↑' : '↓'} {trend.value}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Contenido hijo personalizado */}
-      {children && <div className="mt-4">{children}</div>}
-
-      {/* Botón de acción */}
-      {actionLabel && (
-        <div className="mt-5 pt-3 border-t border-zinc-800/60 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onAction}
-            className={\`inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer shadow-sm \${styles.buttonBg} \${styles.buttonHover}\`}
-          >
-            {actionLabel}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: accentCardSource,
   },
   {
     id: 'primary-button',
@@ -584,54 +382,8 @@ export function AccentCard({
   <Button variant="primary">Guardar</Button>
   <Button variant="secondary">Cancelar</Button>
 </div>`,
-    sourceCode: `import React from 'react';
-
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'subtle' | 'outline' | 'destructive' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
-}
-
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  loading = false,
-  disabled,
-  className = '',
-  children,
-  ...props
-}: ButtonProps) {
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-xs rounded-md',
-    md: 'px-4 py-2 text-sm rounded-lg',
-    lg: 'px-5 py-2.5 text-base rounded-xl',
-  }[size];
-
-  const variantClasses = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm border border-indigo-500/30',
-    secondary: 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700/60 shadow-sm',
-    subtle: 'bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
-    outline: 'border border-zinc-700 text-zinc-200 hover:bg-zinc-800/80 hover:text-white',
-    destructive: 'bg-rose-600 text-white hover:bg-rose-500 shadow-sm border border-rose-500/30',
-    ghost: 'text-zinc-300 hover:bg-zinc-800/60 hover:text-white',
-  }[variant];
-
-  return (
-    <button
-      disabled={disabled || loading}
-      className={\`inline-flex items-center justify-center font-medium transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98] \${sizeClasses} \${variantClasses} \${className}\`}
-      {...props}
-    >
-      {loading && (
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-        </svg>
-      )}
-      {children}
-    </button>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: buttonSource,
   },
   {
     id: 'status-badge',
@@ -723,61 +475,8 @@ export function Button({
   <StatusBadge status="success" label="Producción" withDot />
   <StatusBadge status="warning" label="En pruebas" withDot />
 </div>`,
-    sourceCode: `import React from 'react';
-
-export interface StatusBadgeProps {
-  status?: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'purple';
-  label: string;
-  withDot?: boolean;
-  className?: string;
-}
-
-const statusConfig = {
-  neutral: {
-    bg: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-    dot: 'bg-zinc-400',
-  },
-  success: {
-    bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    dot: 'bg-emerald-400',
-  },
-  warning: {
-    bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    dot: 'bg-amber-400',
-  },
-  danger: {
-    bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    dot: 'bg-rose-400',
-  },
-  info: {
-    bg: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    dot: 'bg-sky-400',
-  },
-  purple: {
-    bg: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-    dot: 'bg-violet-400',
-  },
-};
-
-export function StatusBadge({
-  status = 'neutral',
-  label,
-  withDot = true,
-  className = '',
-}: StatusBadgeProps) {
-  const config = statusConfig[status];
-
-  return (
-    <span
-      className={\`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-wide whitespace-nowrap \${config.bg} \${className}\`}
-    >
-      {withDot && (
-        <span className={\`h-1.5 w-1.5 rounded-full \${config.dot}\`} />
-      )}
-      <span>{label}</span>
-    </span>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: statusBadgeSource,
   },
   {
     id: 'input-field',
@@ -874,53 +573,8 @@ export function StatusBadge({
   placeholder="mi-organizacion/mi-web"
   helperText="Ruta donde se clonará la pieza"
 />`,
-    sourceCode: `import React from 'react';
-
-export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-}
-
-export function InputField({
-  label,
-  error,
-  helperText,
-  id,
-  className = '',
-  disabled,
-  ...props
-}: InputFieldProps) {
-  const inputId = id || React.useId();
-
-  return (
-    <div className="w-full space-y-1.5">
-      {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-xs font-medium text-zinc-300"
-        >
-          {label}
-        </label>
-      )}
-      <input
-        id={inputId}
-        disabled={disabled}
-        className={\`w-full rounded-lg border bg-zinc-900/90 px-3.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed \${
-          error
-            ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-            : 'border-zinc-700/80 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
-        } \${className}\`}
-        {...props}
-      />
-      {error ? (
-        <p className="text-xs text-rose-400">{error}</p>
-      ) : helperText ? (
-        <p className="text-xs text-zinc-500">{helperText}</p>
-      ) : null}
-    </div>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: inputFieldSource,
   },
   {
     id: 'segmented-control',
@@ -1007,50 +661,8 @@ const [tab, setTab] = useState('design');
   value={tab}
   onChange={setTab}
 />`,
-    sourceCode: `import React from 'react';
-
-export interface Option {
-  id: string;
-  label: string;
-}
-
-export interface SegmentedControlProps {
-  options: Option[];
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-}
-
-export function SegmentedControl({
-  options,
-  value,
-  onChange,
-  className = '',
-}: SegmentedControlProps) {
-  return (
-    <div
-      className={\`inline-flex items-center rounded-xl border border-zinc-800 bg-zinc-950/80 p-1 backdrop-blur-sm \${className}\`}
-    >
-      {options.map((option) => {
-        const isActive = option.id === value;
-        return (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => onChange(option.id)}
-            className={\`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer whitespace-nowrap select-none \${
-              isActive
-                ? 'bg-zinc-800 text-zinc-100 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }\`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: segmentedControlSource,
   },
   {
     id: 'notification-callout',
@@ -1145,73 +757,8 @@ export function SegmentedControl({
   title="Actualización de Tokens"
   message="La paleta cromática se ha ajustado para mayor contraste WCAG AA."
 />`,
-    sourceCode: `import React from 'react';
-
-export interface NotificationCalloutProps {
-  type?: 'info' | 'success' | 'warning' | 'alert';
-  title: string;
-  message: string;
-  onClose?: () => void;
-  className?: string;
-}
-
-const typeMap = {
-  info: {
-    container: 'bg-sky-500/10 border-sky-500/30 text-sky-200',
-    title: 'text-sky-300',
-    icon: 'ℹ',
-  },
-  success: {
-    container: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200',
-    title: 'text-emerald-300',
-    icon: '✓',
-  },
-  warning: {
-    container: 'bg-amber-500/10 border-amber-500/30 text-amber-200',
-    title: 'text-amber-300',
-    icon: '⚠',
-  },
-  alert: {
-    container: 'bg-rose-500/10 border-rose-500/30 text-rose-200',
-    title: 'text-rose-300',
-    icon: '✕',
-  },
-};
-
-export function NotificationCallout({
-  type = 'info',
-  title,
-  message,
-  onClose,
-  className = '',
-}: NotificationCalloutProps) {
-  const config = typeMap[type];
-
-  return (
-    <div
-      className={\`relative flex items-start gap-3 rounded-xl border p-4 backdrop-blur-sm \${config.container} \${className}\`}
-    >
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-bold text-xs mt-0.5">
-        {config.icon}
-      </div>
-      <div className="flex-1 min-w-0 pr-4">
-        <h4 className={\`font-semibold text-sm leading-tight \${config.title}\`}>
-          {title}
-        </h4>
-        <p className="mt-1 text-xs leading-relaxed opacity-90">{message}</p>
-      </div>
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="shrink-0 text-current opacity-60 hover:opacity-100 cursor-pointer text-sm"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: notificationCalloutSource,
   },
   {
     id: 'toggle-switch',
@@ -1289,64 +836,8 @@ const [enabled, setEnabled] = useState(false);
   onChange={setEnabled}
   label="Sincronización en segundo plano"
 />`,
-    sourceCode: `import React from 'react';
-
-export interface ToggleSwitchProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label?: string;
-  description?: string;
-  disabled?: boolean;
-  className?: string;
-}
-
-export function ToggleSwitch({
-  checked,
-  onChange,
-  label,
-  description,
-  disabled = false,
-  className = '',
-}: ToggleSwitchProps) {
-  return (
-    <label
-      className={\`flex items-start justify-between gap-4 cursor-pointer select-none \${
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } \${className}\`}
-    >
-      {(label || description) && (
-        <div className="flex-1">
-          {label && (
-            <span className="block text-sm font-medium text-zinc-200">
-              {label}
-            </span>
-          )}
-          {description && (
-            <span className="block text-xs text-zinc-400 mt-0.5">
-              {description}
-            </span>
-          )}
-        </div>
-      )}
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => !disabled && onChange(!checked)}
-        className={\`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none \${
-          checked ? 'bg-indigo-600' : 'bg-zinc-700'
-        }\`}
-      >
-        <span
-          className={\`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out \${
-            checked ? 'translate-x-5' : 'translate-x-0'
-          }\`}
-        />
-      </button>
-    </label>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: toggleSwitchSource,
   },
   {
     id: 'step-progress-card',
@@ -1489,70 +980,7 @@ export default function MiPantalla() {
     />
   );
 }`,
-    sourceCode: `import React from 'react';
-
-export interface StepItem {
-  id?: string;
-  stepNumber: number | string;
-  title: string;
-  description: string;
-  callout?: { tag: string; text: string };
-  actionLabel?: string;
-  actionUrl?: string;
-  highlightAction?: boolean;
-}
-
-export interface StepProgressCardProps {
-  variant?: 'default' | 'glow' | 'compact';
-  accentColor?: string;
-  title?: string;
-  badge?: string;
-  steps?: StepItem[];
-}
-
-export function StepProgressCard({
-  variant = 'default',
-  title = 'Android Beta',
-  badge,
-  steps = [],
-}: StepProgressCardProps) {
-  return (
-    <div className="relative h-full flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 p-6 shadow-xl">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-100">{title}</h3>
-        {badge && <span className="text-[10px] uppercase font-bold text-zinc-400">{badge}</span>}
-      </div>
-      <div className="space-y-6 flex-1">
-        {steps.map((step, idx) => (
-          <div key={idx} className="flex gap-4">
-            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
-              <span className="text-[10px] font-bold text-zinc-100">{step.stepNumber}</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-1.5 text-zinc-100">{step.title}</p>
-              {step.callout && (
-                <div className="mb-3 rounded-xl px-3.5 py-2.5 bg-fuchsia-500/15 border border-fuchsia-500/40">
-                  <p className="text-[11px] font-bold uppercase text-fuchsia-200">{step.callout.tag}</p>
-                  <p className="text-xs text-fuchsia-100 mt-1">{step.callout.text}</p>
-                </div>
-              )}
-              <p className="text-xs text-zinc-400 mb-3">{step.description}</p>
-              {step.actionLabel && (
-                <a
-                  href={step.actionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2 text-[10px] font-bold uppercase rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white"
-                >
-                  {step.actionLabel} <span>↗</span>
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}`,
+    // Código real del componente (Vite ?raw): nunca se desincroniza del archivo
+    sourceCode: stepProgressCardSource,
   },
 ];
