@@ -64,6 +64,7 @@ e2e/                       Tests E2E (Playwright) e instantáneas de texto de ca
 - Las **piezas propias**, los favoritos y las etiquetas de piezas base se guardan en IndexedDB (`MiUILabDatabase`) en tu navegador. No salen de él salvo que las exportes.
 - Registrar una iteración de una pieza base guarda tu versión en IndexedDB y la sustituye en el catálogo. "Restablecer" en el modal de exportación vuelve al estado original.
 - Si una escritura en IndexedDB falla, verás un aviso ⚠ en el toast.
+- **Haz copias.** Si se borran los datos del sitio en el navegador, tus piezas propias se pierden. Inicio te recuerda exportar la colección cuando tienes piezas propias y no la has exportado en 30 días (puedes posponerlo 7 días). Copiar o descargar el JSON cuenta como copia.
 
 ### Formato de export/import
 
@@ -94,3 +95,7 @@ El HTML que se pega en el Inspector o llega en un JSON importado se considera no
 - Sin conexión, las piezas capturadas se ven con estilos, pero con la fuente del sistema: las fuentes se cargan de Google Fonts.
 - El Inspector detecta dependencias como Flowbite o Radix, pero no las carga: el JavaScript interactivo que necesiten no funcionará en la vista previa.
 - Los E2E cubren los flujos principales (capturar, importar, editar, piezas corruptas, uso sin conexión), no cada interacción de cada pantalla.
+
+## Licencia
+
+[MIT](LICENSE) © 2026 sole fro
