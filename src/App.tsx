@@ -45,6 +45,7 @@ function MainApp() {
   const [isPaletteGeneratorOpen, setIsPaletteGeneratorOpen] = useState(false);
   const [paletteGeneratorInitialHex, setPaletteGeneratorInitialHex] = useState('#6366f1');
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [backupKey, setBackupKey] = useState(0);
   const [isIterationOpen, setIsIterationOpen] = useState(false);
   const [iteratingComponent, setIteratingComponent] = useState<UIComponent | null>(null);
   const [editingComponent, setEditingComponent] = useState<UIComponent | null>(null);
@@ -206,6 +207,8 @@ function MainApp() {
             customCount={customCount}
             favoritesCount={favoriteIds.length}
             onNavigate={handleNavigate}
+            onExport={() => setIsExportOpen(true)}
+            backupKey={backupKey}
           />
         )}
 
@@ -317,6 +320,7 @@ function MainApp() {
         onImportComponents={handleImportComponents}
         onResetToDefaults={handleResetToDefaults}
         onToast={showToast}
+        onExported={() => setBackupKey((k) => k + 1)}
       />
       )}
       </Suspense>

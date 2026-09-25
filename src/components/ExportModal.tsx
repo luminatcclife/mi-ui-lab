@@ -5,6 +5,7 @@ import { UIComponent } from '../types';
 import { getDBStats } from '../db/db';
 import { INITIAL_COMPONENTS } from '../data/initialComponents';
 import { validateImportedCollection } from '../utils/validateImport';
+import { markExported } from '../utils/backupReminder';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface ExportModalProps {
   onImportComponents: (imported: UIComponent[]) => void;
   onResetToDefaults: () => void;
   onToast: (msg: string) => void;
+  /** Se llama tras copiar o descargar la colección (cuenta como copia de seguridad). */
+  onExported?: () => void;
 }
 
 export function ExportModal({
@@ -22,6 +25,7 @@ export function ExportModal({
   onImportComponents,
   onResetToDefaults,
   onToast,
+  onExported,
 }: ExportModalProps) {
   const [importJson, setImportJson] = useState('');
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -48,6 +52,8 @@ export function ExportModal({
     navigator.clipboard.writeText(jsonString);
     setCopied(true);
     onToast('¡Colección JSON copiada al portapapeles!');
+    markExported();
+    onExported?.();
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -60,6 +66,8 @@ export function ExportModal({
     a.click();
     URL.revokeObjectURL(url);
     onToast('¡Archivo JSON descargado con éxito!');
+    markExported();
+    onExported?.();
   };
 
   const handleImport = () => {

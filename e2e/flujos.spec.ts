@@ -124,3 +124,29 @@ test('Playground carga una pieza sin errores', async ({ page }) => {
   await expect(page.locator('main')).toContainText(/Variante|Props/i);
 });
 
+
+test('aviso de copia de seguridad: aparece con piezas propias y se va al exportar o posponer', async ({ page }) => {
+  const reminder = page.locator('#backup-reminder');
+  await expect(reminder).toHaveCount(0); // sin piezas propias no hay nada que perder
+
+  await importJson(page, [piece('respaldo', 'Respaldo', '<p>x</p>')]);
+  await goHome(page);
+  await expect(reminder).toContainText('Tu pieza propia vive solo en este navegador');
+
+  // Exportar (copiar el JSON) desde el propio aviso lo oculta
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.locator('#backup-reminder-export').click();
+  await page.locator('#export-modal-container').getByRole('button', { name: /Copiar/ }).first().click();
+  await page.locator('#export-modal-container button').first().click();
+  await expect(reminder).toHaveCount(0);
+
+  // Pospuesto: tampoco se muestra aunque no haya exportación reciente
+  await page.evaluate(() => localStorage.removeItem('mi_ui_lab_last_export_at'));
+  await page.reload();
+  await expect(reminder).toBeVisible();
+  await reminder.getByRole('button', { name: 'Recordámelo en 7 días' }).click();
+  await expect(reminder).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText(/\d+ piezas · \d+ favoritas/)).toBeVisible();
+  await expect(reminder).toHaveCount(0);
+});

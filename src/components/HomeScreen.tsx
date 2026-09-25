@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers, Library, FlaskConical, Wand2, Star, Sparkles, ArrowRight } from 'lucide-react';
+import { BackupReminder } from './BackupReminder';
 
 export type AppScreen = 'home' | 'biblioteca' | 'laboratorio' | 'playground';
 
@@ -8,6 +9,9 @@ interface HomeScreenProps {
   customCount: number;
   favoritesCount: number;
   onNavigate: (screen: AppScreen) => void;
+  onExport: () => void;
+  /** Cambia tras cada exportación, para que el aviso de copia se vuelva a evaluar. */
+  backupKey: number;
 }
 
 interface DestinationCard {
@@ -24,6 +28,8 @@ export function HomeScreen({
   customCount,
   favoritesCount,
   onNavigate,
+  onExport,
+  backupKey,
 }: HomeScreenProps) {
   const cards: DestinationCard[] = [
     {
@@ -69,6 +75,8 @@ export function HomeScreen({
             Tu taller personal de interfaces. Elegí a dónde ir.
           </p>
         </div>
+
+        <BackupReminder key={backupKey} customCount={customCount} onExport={onExport} />
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
           {cards.map((card) => (
