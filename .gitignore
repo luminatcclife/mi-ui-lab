@@ -1,5 +1,8 @@
 node_modules/
-build/
+# build/ solo guarda el icono de la app de escritorio
+build/*
+!build/icon.svg
+!build/icon.png
 dist/
 coverage/
 .DS_Store
@@ -13,3 +16,6 @@ src/utils/carta.md
 # Playwright
 test-results/
 playwright-report/
+
+# App de escritorio (electron-builder)
+release/

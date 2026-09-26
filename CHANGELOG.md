@@ -17,6 +17,7 @@ Primera versión cerrada. Recoge la hoja de ruta de `docs/ESTADO_PROYECTO.md` (�
 - `ErrorBoundary` por pieza, por pantalla y global.
 - Tests: Vitest (utilidades, base de datos, hooks, componentes) y Playwright (flujos, pestañas, uso sin conexión) en CI.
 - Favicon y `engines.node >= 24`.
+- App de escritorio para macOS (Electron 44): `npm run app:build` genera `mi-ui-lab.app` y un `.dmg`. Carga el build desde `app://mi-ui-lab/`, con datos persistentes propios, una sola instancia y los enlaces externos en el navegador del sistema.
 
 ### Cambiado
 - Nuevo aspecto «papel y tinta»: fondo crema, tinta cálida, rojo teja como color de marca y verde bosque y azul mar como apoyo; Fraunces para titulares y nombres de piezas, Source Sans 3 para el resto. Sin degradados ni brillos de neón.
