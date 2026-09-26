@@ -13,10 +13,15 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText(/\d+ piezas · \d+ favoritas/)).toBeVisible();
 });
 
-/** Texto visible normalizado (sin horas, que cambian en cada ejecución). */
+/**
+ * Texto visible normalizado: sin horas, que cambian en cada ejecución, ni medidas en píxeles, que dependen
+ * de la fuente del sistema (el mismo botón mide 209 px en macOS y 232 px en el Linux de la CI). Unas medidas
+ * de 0 × 0 se dejan tal cual: son el fallo del Inspector que la instantánea debe seguir detectando.
+ */
 async function visibleText(locator: Locator): Promise<string> {
   const text = await locator.innerText();
   return text
+    .replace(/\b[1-9]\d*px × [1-9]\d*px\b/g, '<ancho>px × <alto>px')
     .replace(/\d{1,2}:\d{2}(:\d{2})?(\s?[ap]\.?\s?m\.?)?/gi, '<hora>')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{2,}/g, '\n')

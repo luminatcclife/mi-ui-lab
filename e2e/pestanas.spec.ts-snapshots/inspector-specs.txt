@@ -30,7 +30,7 @@ oklch(0.511 0.262 276.966)
 Tamaño y peso
 14px (600)
 Medidas
-209px × 40px
+<ancho>px × <alto>px
 Radio
 12px
 Relleno
@@ -81,7 +81,7 @@ Etiqueta
 Clases Tailwind
 21
 Medidas
-209px × 40px
+<ancho>px × <alto>px
 Dependencias
 1
 CORRECTO
