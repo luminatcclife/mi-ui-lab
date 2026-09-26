@@ -34,9 +34,9 @@ export function CodeViewer({
 
   return (
     <div
-      className={`relative rounded-2xl border bg-zinc-950 overflow-hidden shadow-2xl transition-all duration-300 ${
+      className={`relative rounded-2xl border bg-zinc-900 dark:bg-zinc-950 overflow-hidden transition-all duration-300 ${
         copied
-          ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30'
+          ? 'border-emerald-500/50 ring-1 ring-emerald-500/30'
           : 'border-zinc-800'
       }`}
     >
@@ -48,7 +48,7 @@ export function CodeViewer({
             animate={{ scaleX: 1, opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 via-teal-300 to-emerald-500 origin-left z-20"
+            className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-400 origin-left z-20"
           />
         )}
       </AnimatePresence>
@@ -79,7 +79,7 @@ export function CodeViewer({
             id="btn-copy-code"
             className={`relative inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-medium transition-all duration-200 cursor-pointer overflow-hidden ${
               copied
-                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
+                ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
                 : 'border-zinc-700 bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700 hover:text-white'
             }`}
           >

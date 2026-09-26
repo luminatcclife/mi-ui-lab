@@ -1,9 +1,15 @@
 {
   "name": "mi-ui-lab",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "MIT",
   "type": "module",
+  "main": "electron/main.cjs",
+  "description": "Taller personal de componentes de interfaz en React + Tailwind CSS.",
+  "author": "sole fro <sol@luminatcc.life>",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite --host=0.0.0.0",
     "build": "vite build",
@@ -12,7 +18,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "app": "vite build && electron .",
+    "app:build": "vite build && electron-builder --mac"
   },
   "dependencies": {
     "@tailwindcss/browser": "^4.3.3",
@@ -30,11 +38,43 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.4.3",
     "vitest": "^5.0.1"
+  },
+  "build": {
+    "appId": "life.luminatcc.mi-ui-lab",
+    "productName": "mi-ui-lab",
+    "copyright": "Copyright © 2026 sole fro",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dir",
+        "dmg"
+      ],
+      "icon": "build/icon.png"
+    },
+    "dmg": {
+      "title": "mi-ui-lab ${version}"
+    },
+    "electronLanguages": [
+      "es",
+      "en"
+    ]
   }
 }

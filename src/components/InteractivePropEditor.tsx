@@ -1,6 +1,6 @@
 import React from 'react';
-import { Sliders, RotateCcw, Check, Sparkles } from 'lucide-react';
-import { UIComponent, PropDoc } from '../types';
+import { RotateCcw } from 'lucide-react';
+import { UIComponent } from '../types';
 import { PropValue, PropValues } from '../utils/propValues';
 
 interface InteractivePropEditorProps {
@@ -11,6 +11,7 @@ interface InteractivePropEditorProps {
   onResetProps: () => void;
 }
 
+/** Campos para editar en vivo las props documentadas de una pieza. Se muestra en una sola columna. */
 export function InteractivePropEditor({
   component,
   activeVariantProps,
@@ -18,166 +19,116 @@ export function InteractivePropEditor({
   onPropChange,
   onResetProps,
 }: InteractivePropEditorProps) {
-  // Merge active variant props with user overrides
+  // Props de la variante activa con los cambios del usuario encima
   const effectiveProps: PropValues = {
     ...activeVariantProps,
     ...propOverrides,
   };
 
   const overrideKeys = Object.keys(propOverrides);
-
-  // Derive which props are editable based on the component's documented props
-  // or keys present in the variant
   const documentedProps = component.props || [];
 
+  if (documentedProps.length === 0) {
+    return (
+      <p id="interactive-prop-editor" className="text-sm text-zinc-600 dark:text-zinc-300">
+        Esta pieza no tiene props documentadas.
+      </p>
+    );
+  }
+
   return (
-    <div
-      id="interactive-prop-editor"
-      className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-4 shadow-xs backdrop-blur-sm"
-    >
-      <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 mb-3">
-        <div className="flex items-center gap-2">
-          <Sliders className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-            Ajuste de Propiedades en Vivo
-          </h4>
-          {overrideKeys.length > 0 && (
-            <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.2 font-mono text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-              {overrideKeys.length} personalizada(s)
-            </span>
-          )}
-        </div>
+    <div id="interactive-prop-editor" className="flex flex-col gap-5">
+      {documentedProps.map((propDoc) => {
+        const propKey = propDoc.name;
+        const currentVal =
+          effectiveProps[propKey] !== undefined ? effectiveProps[propKey] : propDoc.defaultValue || '';
+        const isOverridden = propOverrides[propKey] !== undefined;
+        const isBoolean = propDoc.type.includes('boolean') || typeof currentVal === 'boolean';
 
-        {overrideKeys.length > 0 && (
-          <button
-            type="button"
-            id="btn-reset-prop-overrides"
-            onClick={onResetProps}
-            className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-            title="Revertir modificaciones de props a los valores base de la variante"
-          >
-            <RotateCcw className="h-3 w-3" />
-            <span>Restablecer Props</span>
-          </button>
-        )}
-      </div>
+        const label = (
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-sm font-semibold">{propKey}</span>
+            {isOverridden && (
+              <span className="mono-label rounded-full bg-violet-100 dark:bg-violet-900 px-2 text-[11px] text-zinc-900 dark:text-zinc-50">
+                Cambiada
+              </span>
+            )}
+          </span>
+        );
 
-      {/* Grid of editable props */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {documentedProps.map((propDoc) => {
-          const propKey = propDoc.name;
-          const currentVal =
-            effectiveProps[propKey] !== undefined
-              ? effectiveProps[propKey]
-              : propDoc.defaultValue || '';
-          const isOverridden = propOverrides[propKey] !== undefined;
-          const isBoolean =
-            propDoc.type.includes('boolean') ||
-            typeof currentVal === 'boolean';
-
-          if (isBoolean) {
-            const checked = Boolean(currentVal);
-            return (
-              <div
-                key={propKey}
-                className={`flex items-center justify-between p-2.5 rounded-xl border transition-colors ${
-                  isOverridden
-                    ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/20'
-                    : 'border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40'
+        if (isBoolean) {
+          const checked = Boolean(currentVal);
+          return (
+            <div key={propKey} className="flex min-h-11 items-center justify-between gap-4">
+              <label htmlFor={`prop-toggle-${propKey}`} className="flex min-w-0 flex-col">
+                {label}
+                {propDoc.description && (
+                  <span className="line-clamp-1 text-sm text-zinc-600 dark:text-zinc-300">{propDoc.description}</span>
+                )}
+              </label>
+              <button
+                type="button"
+                id={`prop-toggle-${propKey}`}
+                role="switch"
+                aria-checked={checked}
+                onClick={() => {
+                  const nextVal = !checked;
+                  onPropChange(propKey, nextVal, `Cambio prop '${propKey}' a ${nextVal ? 'true' : 'false'}`);
+                }}
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border transition-colors ${
+                  checked
+                    ? 'border-violet-600 bg-violet-600 dark:border-violet-400 dark:bg-violet-400'
+                    : 'border-zinc-500 bg-zinc-200 dark:border-zinc-400 dark:bg-zinc-700'
                 }`}
               >
-                <div>
-                  <label
-                    htmlFor={`prop-input-${propKey}`}
-                    className="text-xs font-mono font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1"
-                  >
-                    <span>{propKey}</span>
-                    {isOverridden && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                    )}
-                  </label>
-                  <span className="text-[10px] text-zinc-400 line-clamp-1">
-                    {propDoc.description}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  id={`prop-toggle-${propKey}`}
-                  role="switch"
-                  aria-checked={checked}
-                  onClick={() => {
-                    const nextVal = !checked;
-                    onPropChange(
-                      propKey,
-                      nextVal,
-                      `Cambio prop '${propKey}' a ${nextVal ? 'true' : 'false'}`,
-                    );
-                  }}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    checked ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                <span
+                  className={`inline-block h-5 w-5 rounded-full bg-white shadow-[var(--app-shadow-card)] transition-transform ${
+                    checked ? 'translate-x-6' : 'translate-x-0.5'
                   }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                      checked ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-            );
-          }
-
-          // String or number inputs
-          return (
-            <div
-              key={propKey}
-              className={`p-2.5 rounded-xl border transition-colors ${
-                isOverridden
-                  ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/20'
-                  : 'border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <label
-                  htmlFor={`prop-input-${propKey}`}
-                  className="text-xs font-mono font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1"
-                >
-                  <span>{propKey}</span>
-                  {isOverridden && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  )}
-                </label>
-                <span className="text-[10px] font-mono text-zinc-400">
-                  {propDoc.type}
-                </span>
-              </div>
-
-              <input
-                id={`prop-input-${propKey}`}
-                type="text"
-                value={
-                  typeof currentVal === 'string' || typeof currentVal === 'number'
-                    ? currentVal
-                    : currentVal == null
-                      ? ''
-                      : JSON.stringify(currentVal)
-                }
-                onChange={(e) => {
-                  const val = e.target.value;
-                  onPropChange(
-                    propKey,
-                    val,
-                    `Prop '${propKey}' modificada`,
-                  );
-                }}
-                placeholder={propDoc.defaultValue || `Valor para ${propKey}`}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
-              />
+                />
+              </button>
             </div>
           );
-        })}
-      </div>
+        }
+
+        return (
+          <div key={propKey} className="flex flex-col gap-2">
+            <label htmlFor={`prop-input-${propKey}`} className="flex items-center justify-between gap-2">
+              {label}
+              <span className="truncate font-mono text-xs text-zinc-600 dark:text-zinc-300">{propDoc.type}</span>
+            </label>
+            <input
+              id={`prop-input-${propKey}`}
+              type="text"
+              value={
+                typeof currentVal === 'string' || typeof currentVal === 'number'
+                  ? currentVal
+                  : currentVal == null
+                    ? ''
+                    : JSON.stringify(currentVal)
+              }
+              onChange={(e) => onPropChange(propKey, e.target.value, `Prop '${propKey}' modificada`)}
+              placeholder={propDoc.defaultValue || `Valor para ${propKey}`}
+              className={`h-11 w-full rounded-xl border bg-white dark:bg-zinc-900 px-3.5 text-base text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 ${
+                isOverridden ? 'border-violet-600 dark:border-violet-400' : 'border-zinc-500 dark:border-zinc-400'
+              }`}
+            />
+          </div>
+        );
+      })}
+
+      {overrideKeys.length > 0 && (
+        <button
+          type="button"
+          id="btn-reset-prop-overrides"
+          onClick={onResetProps}
+          title="Volver a los valores de la variante"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-4 text-base text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Restablecer {overrideKeys.length} {overrideKeys.length === 1 ? 'prop' : 'props'}
+        </button>
+      )}
     </div>
   );
 }

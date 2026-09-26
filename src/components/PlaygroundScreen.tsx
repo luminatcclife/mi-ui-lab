@@ -1,17 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Copy,
-  Check,
-  Star,
-  Search,
-  ChevronDown,
-  Sliders,
-  Maximize2,
-  Monitor,
-  Tablet,
-  Smartphone,
-  ArrowRight,
-} from 'lucide-react';
+import { Copy, Check, Star, Search, ChevronDown, ArrowRight } from 'lucide-react';
 import { ACCENT_COLORS, AccentColor, CanvasBackground, UIComponent, ViewportMode, ComponentConfigSnapshot } from '../types';
 import { PropValue, PropValues, readOneOf } from '../utils/propValues';
 
@@ -36,6 +24,23 @@ interface PlaygroundScreenProps {
 }
 
 const accentColors: AccentColor[] = ['indigo', 'emerald', 'violet', 'amber', 'rose', 'cyan', 'zinc'];
+
+const TONE_NAMES: Record<AccentColor, string> = {
+  indigo: 'Índigo',
+  emerald: 'Esmeralda',
+  violet: 'Violeta',
+  amber: 'Ámbar',
+  rose: 'Rosa',
+  cyan: 'Cian',
+  zinc: 'Zinc',
+};
+
+const VIEWPORTS: ReadonlyArray<readonly [ViewportMode, string]> = [
+  ['responsive', 'Adaptable'],
+  ['desktop', 'Escritorio'],
+  ['tablet', 'Tablet'],
+  ['mobile', 'Móvil'],
+];
 
 const colorDotBg: Record<AccentColor, string> = {
   indigo: 'bg-indigo-500',
@@ -78,32 +83,38 @@ function ComponentSwitcher({
 
   return (
     <div ref={wrapperRef} className="relative">
-      <button
-        type="button"
-        id="playground-switcher-btn"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-xs"
-      >
-        <span className="font-mono">{selected?.name || 'Elegí una pieza'}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
-      </button>
+      <h1 className="font-display text-[32px] leading-[40px] sm:text-[40px] sm:leading-[46px]">
+        <button
+          type="button"
+          id="playground-switcher-btn"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          title="Cambiar de pieza"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="inline-flex items-center gap-2 rounded-xl text-zinc-900 dark:text-zinc-50 hover:text-indigo-700 dark:hover:text-indigo-400 cursor-pointer"
+        >
+          {selected?.name || 'Elige una pieza'}
+          <ChevronDown className="h-6 w-6 text-zinc-600 dark:text-zinc-300" />
+        </button>
+      </h1>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-20 mt-1.5 w-64 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden">
-          <div className="relative border-b border-zinc-100 dark:border-zinc-800 p-2">
-            <Search className="absolute left-4.5 top-4.5 h-3.5 w-3.5 text-zinc-400" />
+        <div className="absolute left-0 top-full z-20 mt-2 w-72 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg">
+          <div className="relative border-b border-zinc-200 dark:border-zinc-800 p-2">
+            <Search className="pointer-events-none absolute left-5 top-5 h-4 w-4 text-zinc-600 dark:text-zinc-300" />
             <input
               autoFocus
               type="text"
-              placeholder="Buscar pieza..."
+              aria-label="Buscar pieza"
+              placeholder="Buscar pieza…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-lg bg-zinc-50 dark:bg-zinc-800 pl-7 pr-2 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+              className="h-10 w-full rounded-lg border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 pl-9 pr-2 text-base text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-500"
             />
           </div>
-          <div className="max-h-64 overflow-y-auto p-1">
+          <div className="max-h-72 overflow-y-auto p-1">
             {results.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-zinc-400">Sin resultados</p>
+              <p className="px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300">Sin resultados</p>
             ) : (
               results.map((c) => (
                 <button
@@ -138,7 +149,7 @@ export function PlaygroundScreen({
   onSelectComponent,
   viewportMode,
   onViewportChange,
-  canvasBg,
+  canvasBg: _canvasBg,
   onToast,
   isFavorite = false,
   onToggleFavorite,
@@ -150,7 +161,6 @@ export function PlaygroundScreen({
   const [accentColor, setAccentColor] = useState<AccentColor>('indigo');
   const [copiedVariant, setCopiedVariant] = useState(false);
   const [propOverrides, setPropOverrides] = useState<PropValues>({});
-  const [isPropEditorOpen, setIsPropEditorOpen] = useState(false);
 
   const [history, setHistory] = useState<ComponentConfigSnapshot[]>(() => [
     {
@@ -317,92 +327,76 @@ export function PlaygroundScreen({
     mobile: 'max-w-[375px] w-full',
   }[viewportMode];
 
-  const canvasBgClass = {
-    dots: 'bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] bg-slate-100/70 dark:bg-zinc-950',
-    grid: 'bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#27272a_1px,transparent_1px),linear-gradient(to_bottom,#27272a_1px,transparent_1px)] [background-size:24px_24px] bg-slate-50 dark:bg-zinc-950',
-    dark: 'bg-zinc-950 text-zinc-100',
-    light: 'bg-white text-zinc-900',
-  }[canvasBg];
-
-  const handleCopyVariantSnippet = () => {
-    if (activeVariant?.codeSnippet) {
-      navigator.clipboard.writeText(activeVariant.codeSnippet);
+  const handleCopyVariantSnippet = async () => {
+    if (!activeVariant?.codeSnippet) return;
+    try {
+      await navigator.clipboard.writeText(activeVariant.codeSnippet);
       setCopiedVariant(true);
-      onToast('¡Snippet de la variante copiado al portapapeles!');
+      onToast('Snippet de la variante copiado');
       setTimeout(() => setCopiedVariant(false), 2000);
+    } catch {
+      onToast('No se pudo copiar al portapapeles');
     }
   };
 
   const props = { ...(activeVariant?.props || {}), ...propOverrides };
 
-  return (
-    <main className="flex-1 flex flex-col h-full overflow-y-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      {/* Toolbar */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          <ComponentSwitcher components={components} selectedId={selectedId} onSelectComponent={onSelectComponent} />
-          <span className="font-mono text-xs text-zinc-400">v{component.version || '1.0.0'}</span>
+  const overrideCount = Object.keys(propOverrides).length;
+  const segmentBtn = (active: boolean) =>
+    `min-h-9 rounded-lg px-3.5 text-sm transition-colors cursor-pointer ${
+      active
+        ? 'bg-white dark:bg-zinc-900 font-semibold text-zinc-900 dark:text-zinc-50 shadow-[var(--app-shadow-card)]'
+        : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+    }`;
 
-          {onToggleFavorite && (
+  return (
+    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 lg:flex-row lg:overflow-hidden">
+      {/* Mesa de trabajo */}
+      <section className="flex min-w-0 flex-1 flex-col gap-6 px-4 pb-12 pt-8 sm:px-8 lg:overflow-y-auto lg:px-12">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <ComponentSwitcher components={components} selectedId={selectedId} onSelectComponent={onSelectComponent} />
+            <span className="font-mono text-sm text-zinc-600 dark:text-zinc-300">v{component.version || '1.0.0'}</span>
+            {onToggleFavorite && (
+              <button
+                type="button"
+                id="playground-btn-favorite"
+                onClick={() => onToggleFavorite(component.id)}
+                aria-pressed={isFavorite}
+                aria-label={isFavorite ? 'Quitar de favoritas' : 'Añadir a favoritas'}
+                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                <Star
+                  className={`h-5 w-5 ${isFavorite ? 'fill-amber-400 text-zinc-900 dark:text-zinc-50' : 'text-zinc-500 dark:text-zinc-400'}`}
+                />
+              </button>
+            )}
             <button
               type="button"
-              id="playground-btn-favorite"
-              onClick={() => onToggleFavorite(component.id)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                isFavorite
-                  ? 'border-amber-400/40 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                  : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-amber-500'
-              }`}
+              id="playground-view-in-biblioteca"
+              onClick={() => onViewInBiblioteca(component.id)}
+              title="Ver props, código, tokens y versiones en Biblioteca"
+              className="inline-flex items-center gap-1.5 text-base text-indigo-700 dark:text-indigo-400 underline-offset-2 hover:underline cursor-pointer"
             >
-              <Star className={`h-3.5 w-3.5 ${isFavorite ? 'fill-amber-400 text-amber-500' : ''}`} />
+              Ver ficha
+              <ArrowRight className="h-4 w-4" />
             </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Viewport size */}
-          <div className="flex items-center gap-1 border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100/80 dark:bg-zinc-900/80 p-1 rounded-xl">
-            {(
-              [
-                ['responsive', Maximize2, 'Adaptable'],
-                ['desktop', Monitor, 'Escritorio'],
-                ['tablet', Tablet, 'Tablet'],
-                ['mobile', Smartphone, 'Móvil'],
-              ] as const
-            ).map(([mode, Icon, label]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => onViewportChange(mode)}
-                title={label}
-                className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer ${
-                  viewportMode === mode
-                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-              </button>
-            ))}
           </div>
 
-          <button
-            type="button"
-            id="playground-view-in-biblioteca"
-            onClick={() => onViewInBiblioteca(component.id)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-xs"
-            title="Ver props, código, tokens y versiones en Biblioteca"
-          >
-            <span>Ver ficha en Biblioteca</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Workbench */}
-      <div className="flex-1 p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/50 p-2.5 shadow-xs">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div role="group" aria-label="Tamaño de vista" className="flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+              {VIEWPORTS.map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={viewportMode === mode}
+                  onClick={() => onViewportChange(mode)}
+                  className={segmentBtn(viewportMode === mode)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <LocalHistoryControl
               history={history}
               currentIndex={historyIndex}
@@ -414,101 +408,14 @@ export function PlaygroundScreen({
               onResetToInitial={handleResetToInitial}
               onClearHistory={handleClearHistory}
             />
-            <button
-              type="button"
-              id="btn-toggle-prop-editor"
-              onClick={() => setIsPropEditorOpen(!isPropEditorOpen)}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer ${
-                isPropEditorOpen
-                  ? 'border-indigo-500/50 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : Object.keys(propOverrides).length > 0
-                  ? 'border-indigo-300 dark:border-indigo-800 bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400'
-                  : 'border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <Sliders className="h-3.5 w-3.5" />
-              <span>Ajustar Props (Live)</span>
-              {Object.keys(propOverrides).length > 0 && (
-                <span className="rounded-full bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.2">
-                  {Object.keys(propOverrides).length}
-                </span>
-              )}
-            </button>
           </div>
-
-          <div className="flex items-center justify-between sm:justify-end gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Tono:</span>
-              <div className="flex items-center gap-1">
-                {accentColors.map((col) => (
-                  <button
-                    key={col}
-                    type="button"
-                    onClick={() => handleSelectAccentColor(col)}
-                    title={`Tono ${col}`}
-                    className={`h-5 w-5 rounded-full ${colorDotBg[col]} transition-transform cursor-pointer ${
-                      accentColor === col
-                        ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900 scale-110'
-                        : 'opacity-70 hover:opacity-100'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
-            <button
-              type="button"
-              onClick={handleCopyVariantSnippet}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-            >
-              {copiedVariant ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-zinc-400" />}
-              <span className="hidden sm:inline">Copiar JSX</span>
-            </button>
-          </div>
-        </div>
-
-        {isPropEditorOpen && (
-          <InteractivePropEditor
-            component={component}
-            activeVariantProps={activeVariant?.props || {}}
-            propOverrides={propOverrides}
-            onPropChange={handlePropChange}
-            onResetProps={handleResetProps}
-          />
-        )}
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/50 p-3 shadow-xs">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mr-1">
-              Variantes:
-            </span>
-            {component.variants.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => handleSelectVariant(v.id)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer select-none ${
-                  v.id === selectedVariantId
-                    ? 'bg-indigo-600 text-white shadow-xs font-semibold'
-                    : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
-                }`}
-              >
-                {v.name}
-              </button>
-            ))}
-          </div>
-          {activeVariant?.description && (
-            <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              <strong className="text-zinc-800 dark:text-zinc-200">{activeVariant.name}:</strong> {activeVariant.description}
-            </div>
-          )}
         </div>
 
         <div
           id="live-preview-canvas"
-          className={`relative min-h-[380px] rounded-3xl border border-zinc-800 p-8 flex items-center justify-center transition-all duration-300 overflow-hidden shadow-2xl ${canvasBgClass}`}
+          className="flex min-h-[420px] flex-1 items-center justify-center overflow-hidden rounded-[20px] border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-black bg-[radial-gradient(var(--color-zinc-200)_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(var(--color-zinc-800)_1.2px,transparent_1.2px)] [background-size:20px_20px] p-8"
         >
-          <div className={`transition-all duration-300 mx-auto ${viewportWidthClass}`}>
+          <div className={`mx-auto transition-all duration-300 ${viewportWidthClass}`}>
             <InteractiveComponentRenderer
               component={component}
               activeVariantProps={activeVariant?.props || {}}
@@ -521,26 +428,82 @@ export function PlaygroundScreen({
         </div>
 
         {activeVariant?.codeSnippet && (
-          <div className="relative rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 overflow-hidden">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-mono text-zinc-400 font-semibold">
-                Snippet para copiar y pegar en tu proyecto:
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyVariantSnippet}
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
-              >
-                {copiedVariant ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedVariant ? '¡Copiado!' : 'Copiar'}</span>
-              </button>
-            </div>
-            <pre className="overflow-x-auto text-xs font-mono text-zinc-300 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800">
-              {activeVariant.codeSnippet}
-            </pre>
+          <div className="flex items-start gap-4 rounded-xl bg-zinc-900 dark:bg-black px-5 py-4 text-zinc-50">
+            <pre className="min-w-0 flex-1 overflow-x-auto font-mono text-sm leading-6">{activeVariant.codeSnippet}</pre>
+            <button
+              type="button"
+              onClick={handleCopyVariantSnippet}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-zinc-400 px-3.5 text-sm text-zinc-50 hover:bg-white/10 cursor-pointer"
+            >
+              {copiedVariant ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copiedVariant ? 'Copiado' : 'Copiar'}
+            </button>
           </div>
         )}
-      </div>
+      </section>
+
+      {/* Panel de ajustes */}
+      <aside className="flex w-full shrink-0 flex-col gap-8 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-8 sm:px-8 lg:w-[380px] lg:overflow-y-auto lg:border-l lg:border-t-0">
+        <div className="flex flex-col gap-1">
+          <span className="mono-label text-xs text-violet-600 dark:text-violet-400">Props</span>
+          <h2 className="font-display text-[22px] leading-7">Ajusta la pieza</h2>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-base font-semibold">Variante</span>
+          <div role="group" aria-label="Variante" className="flex flex-col gap-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+            {component.variants.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                aria-pressed={v.id === selectedVariantId}
+                onClick={() => handleSelectVariant(v.id)}
+                className={`${segmentBtn(v.id === selectedVariantId)} text-left`}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
+          {activeVariant?.description && (
+            <p className="text-sm leading-[21px] text-zinc-600 dark:text-zinc-300">{activeVariant.description}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-base font-semibold">Tono</span>
+          <div role="group" aria-label="Tono" className="piece-scope flex flex-wrap gap-2">
+            {accentColors.map((col) => (
+              <button
+                key={col}
+                type="button"
+                onClick={() => handleSelectAccentColor(col)}
+                aria-label={TONE_NAMES[col]}
+                aria-pressed={accentColor === col}
+                title={TONE_NAMES[col]}
+                className={`h-9 w-9 rounded-full border-[3px] cursor-pointer ${colorDotBg[col]} ${
+                  accentColor === col
+                    ? 'border-[#fffdf8] dark:border-[#2a211a] ring-2 ring-[#1d5f80] dark:ring-[#7fb8da]'
+                    : 'border-transparent'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm text-zinc-600 dark:text-zinc-300">{TONE_NAMES[accentColor]}</span>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+          <span className="text-base font-semibold">
+            Props en vivo{overrideCount > 0 && <span className="font-normal text-zinc-600 dark:text-zinc-300"> · {overrideCount} cambiada{overrideCount === 1 ? '' : 's'}</span>}
+          </span>
+          <InteractivePropEditor
+            component={component}
+            activeVariantProps={activeVariant?.props || {}}
+            propOverrides={propOverrides}
+            onPropChange={handlePropChange}
+            onResetProps={handleResetProps}
+          />
+        </div>
+      </aside>
     </main>
   );
 }

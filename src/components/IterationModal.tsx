@@ -1,14 +1,6 @@
+import { MODAL_OVERLAY_CLASS, ModalHeader, modalBtn, modalField, modalLabel, modalPanelClass } from './ModalFrame';
 import React, { useState, useEffect } from 'react';
-import {
-  X,
-  History,
-  GitCommit,
-  Sparkles,
-  ArrowUpRight,
-  Check,
-  Tag,
-  Clock,
-} from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 import { UIComponent, ComponentIteration } from '../types';
 
 interface IterationModalProps {
@@ -62,17 +54,19 @@ export function IterationModal({
     setShowCodeEditor(false);
   }, [component.id, component.version]);
 
+  const dialogRef = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!version.trim()) {
-      alert('Por favor especifica un número de versión.');
+      onToast('⚠ Indica un número de versión.');
       return;
     }
 
     if (!notes.trim()) {
-      alert('Por favor agrega una breve nota explicando los cambios de esta iteración.');
+      onToast('⚠ Añade una breve nota explicando los cambios de esta iteración.');
       return;
     }
 
@@ -111,249 +105,168 @@ export function IterationModal({
   return (
     <div
       id="iteration-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
+      className={MODAL_OVERLAY_CLASS}
     >
       <div
         id="iteration-modal-container"
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="iteration-modal-title"
+        tabIndex={-1}
+        className={modalPanelClass('max-w-2xl')}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
-              <History className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                  Registrar Nueva Iteración
-                </h2>
-                <span className="rounded-md border border-indigo-500/30 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.2 font-mono text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                  {component.name}
-                </span>
+        <ModalHeader
+          caption="Versiones"
+          title="Nueva iteración"
+          titleId="iteration-modal-title"
+          description={<>Registra un cambio de <strong className="font-semibold text-zinc-900 dark:text-zinc-50">{component.name}</strong> y lleva el control de sus versiones.</>}
+          onClose={onClose}
+        />
+
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+            <div className="flex flex-col gap-7">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className={modalLabel.replace('mb-2 block ', '')}>Nueva versión</span>
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">
+                    Ahora: <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-50">v{currentVersion}</span>
+                  </span>
+                </div>
+                <div role="group" aria-label="Incremento de versión" className="grid grid-cols-3 gap-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+                  {(
+                    [
+                      [nextVersions.patch, 'Parche'],
+                      [nextVersions.minor, 'Menor'],
+                      [nextVersions.major, 'Mayor'],
+                    ] as const
+                  ).map(([v, label]) => {
+                    const active = version === v;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setVersion(v)}
+                        className={`flex flex-col items-center rounded-lg px-2 py-2 transition-colors cursor-pointer ${
+                          active
+                            ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 shadow-[var(--app-shadow-card)]'
+                            : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+                        }`}
+                      >
+                        <span className={`text-sm ${active ? 'font-semibold' : ''}`}>{label}</span>
+                        <span className="font-mono text-sm">v{v}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <label className="flex items-center gap-3">
+                  <span className="shrink-0 text-sm text-zinc-600 dark:text-zinc-300">U otra:</span>
+                  <span className="relative flex-1">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-base text-zinc-600 dark:text-zinc-300">v</span>
+                    <input
+                      type="text"
+                      value={version}
+                      onChange={(e) => setVersion(e.target.value.replace(/^v/, ''))}
+                      placeholder="1.1.0"
+                      className={`${modalField} pl-7 font-mono`}
+                      required
+                    />
+                  </span>
+                </label>
               </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Lleva un control evolutivo y versionado de tus piezas a lo largo del tiempo.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        {/* Modal Form Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Current vs New Version Selector */}
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Versión actual:
-              </span>
-              <span className="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-200 rounded-md bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5">
-                v{currentVersion}
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Incremento Semántico Rápido
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setVersion(nextVersions.patch)}
-                  className={`rounded-xl border p-2.5 text-center transition-all cursor-pointer ${
-                    version === nextVersions.patch
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-300 font-bold shadow-xs'
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'
-                  }`}
-                >
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
-                    Parche (+0.0.1)
-                  </div>
-                  <div className="font-mono text-sm mt-0.5">v{nextVersions.patch}</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setVersion(nextVersions.minor)}
-                  className={`rounded-xl border p-2.5 text-center transition-all cursor-pointer ${
-                    version === nextVersions.minor
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-300 font-bold shadow-xs'
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'
-                  }`}
-                >
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
-                    Menor (+0.1.0)
-                  </div>
-                  <div className="font-mono text-sm mt-0.5">v{nextVersions.minor}</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setVersion(nextVersions.major)}
-                  className={`rounded-xl border p-2.5 text-center transition-all cursor-pointer ${
-                    version === nextVersions.major
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-300 font-bold shadow-xs'
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'
-                  }`}
-                >
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
-                    Mayor (+1.0.0)
-                  </div>
-                  <div className="font-mono text-sm mt-0.5">v{nextVersions.major}</div>
-                </button>
+              <div className="flex flex-col gap-2">
+                <span className={modalLabel.replace('mb-2 block ', '')}>Tipo de cambio</span>
+                <div role="group" aria-label="Tipo de cambio" className="flex flex-wrap gap-2">
+                  {([
+                    { id: 'feature', label: 'Nueva función o variante' },
+                    { id: 'enhancement', label: 'Mejora o refactor' },
+                    { id: 'style', label: 'Estilos o temas' },
+                    { id: 'fix', label: 'Corrección' },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      aria-pressed={changeTag === t.id}
+                      onClick={() => setChangeTag(t.id)}
+                      className={`min-h-10 rounded-full border px-4 text-sm transition-colors cursor-pointer ${
+                        changeTag === t.id
+                          ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                          : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Custom Version Input */}
-            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800/80">
-              <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                O introduce una versión manual personalizada:
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 font-mono text-xs text-zinc-400">
-                  v
-                </span>
-                <input
-                  type="text"
-                  value={version}
-                  onChange={(e) => setVersion(e.target.value.replace(/^v/, ''))}
-                  placeholder="1.1.0"
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-7 pr-3 py-1.5 font-mono text-xs text-zinc-900 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none"
+              <label className="flex flex-col">
+                <span className={modalLabel}>Qué ha cambiado</span>
+                <textarea
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ejemplo: añadido el modo oscuro, ajustado el relleno y nueva variante «ambient-glow»…"
+                  className={modalField}
                   required
                 />
-              </div>
-            </div>
-          </div>
+              </label>
 
-          {/* Change Category Tag */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-              Tipo de Cambio Principal
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: 'feature', label: '✨ Nueva funcionalidad / variante' },
-                { id: 'enhancement', label: '⚡ Mejora / refactor' },
-                { id: 'style', label: '🎨 Estilos / temas' },
-                { id: 'fix', label: '🐛 Corrección de bug' },
-              ] as const).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setChangeTag(t.id)}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                    changeTag === t.id
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Notes / Changelog Description */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-              Notas de la Iteración (Changelog) *
-            </label>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ejemplo: Añadido soporte para modo oscuro, optimizado padding con escala matemática y nueva variante 'ambient-glow'..."
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-indigo-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          {/* Optional Code Update Toggle */}
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 bg-zinc-50/50 dark:bg-zinc-900/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                  Actualizar Código TSX de la Pieza
-                </span>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  ¿Esta iteración incluye cambios en el código fuente del componente?
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCodeEditor(!showCodeEditor)}
-                className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-              >
-                {showCodeEditor ? 'Ocultar editor' : 'Editar código TSX'}
-              </button>
-            </div>
-
-            {showCodeEditor && (
-              <div className="mt-3">
-                <textarea
-                  rows={8}
-                  value={updatedCode}
-                  onChange={(e) => setUpdatedCode(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-950 p-3 font-mono text-xs text-zinc-200 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Existing Version History / Timeline */}
-          {component.versionHistory && component.versionHistory.length > 0 && (
-            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-              <h3 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                Historial de Iteraciones Anteriores ({component.versionHistory.length})
-              </h3>
-              <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-                {component.versionHistory.map((item, idx) => (
-                  <div
-                    key={`${item.version}-${idx}`}
-                    className="flex items-start gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 p-3 text-xs"
-                  >
-                    <span className="rounded-md bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 font-mono text-[11px] font-bold text-zinc-800 dark:text-zinc-200 shrink-0">
-                      v{item.version}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] text-zinc-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {item.date}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed">
-                        {item.notes}
-                      </p>
-                    </div>
+              <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-base font-semibold">Código TSX</span>
+                    <span className="text-sm text-zinc-600 dark:text-zinc-300">¿Esta iteración cambia el código de la pieza?</span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    aria-expanded={showCodeEditor}
+                    onClick={() => setShowCodeEditor(!showCodeEditor)}
+                    className="shrink-0 text-base font-semibold text-indigo-700 dark:text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    {showCodeEditor ? 'Ocultar' : 'Editar código'}
+                  </button>
+                </div>
+                {showCodeEditor && (
+                  <textarea
+                    rows={8}
+                    aria-label="Código TSX actualizado"
+                    spellCheck={false}
+                    value={updatedCode}
+                    onChange={(e) => setUpdatedCode(e.target.value)}
+                    className="w-full rounded-xl bg-zinc-900 dark:bg-black p-4 font-mono text-[13px] leading-5 text-zinc-50"
+                  />
+                )}
               </div>
-            </div>
-          )}
 
-          {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-800 px-4 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-            >
+              {component.versionHistory && component.versionHistory.length > 0 && (
+                <section className="flex flex-col gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+                  <h3 className="font-display text-[22px] leading-7">Versiones anteriores ({component.versionHistory.length})</h3>
+                  <ol className="flex max-h-48 flex-col gap-3 overflow-y-auto pr-1">
+                    {component.versionHistory.map((item, idx) => (
+                      <li key={`${item.version}-${idx}`} className="flex flex-col gap-0.5">
+                        <span className="flex items-baseline gap-3">
+                          <span className="font-mono text-sm font-semibold">v{item.version}</span>
+                          <span className="text-sm text-zinc-600 dark:text-zinc-300">{item.date}</span>
+                        </span>
+                        <span className="text-sm leading-[21px] text-zinc-700 dark:text-zinc-300">{item.notes}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 sm:px-8">
+            <button type="button" onClick={onClose} className={modalBtn.secondary}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-medium text-white shadow-sm hover:bg-indigo-500 transition-colors cursor-pointer"
-            >
-              <GitCommit className="h-3.5 w-3.5" />
-              <span>Guardar Iteración v{version}</span>
+            <button type="submit" className={modalBtn.primary}>
+              Guardar v{version}
             </button>
           </div>
         </form>

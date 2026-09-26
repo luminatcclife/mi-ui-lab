@@ -13,10 +13,15 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText(/\d+ piezas · \d+ favoritas/)).toBeVisible();
 });
 
-/** Texto visible normalizado (sin horas, que cambian en cada ejecución). */
+/**
+ * Texto visible normalizado: sin horas, que cambian en cada ejecución, ni medidas en píxeles, que dependen
+ * de la fuente del sistema (el mismo botón mide 209 px en macOS y 232 px en el Linux de la CI). Unas medidas
+ * de 0 × 0 se dejan tal cual: son el fallo del Inspector que la instantánea debe seguir detectando.
+ */
 async function visibleText(locator: Locator): Promise<string> {
   const text = await locator.innerText();
   return text
+    .replace(/\b[1-9]\d*px × [1-9]\d*px\b/g, '<ancho>px × <alto>px')
     .replace(/\d{1,2}:\d{2}(:\d{2})?(\s?[ap]\.?\s?m\.?)?/gi, '<hora>')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{2,}/g, '\n')
@@ -33,12 +38,12 @@ async function snapshotTabs(page: Page, container: Locator, tabs: { name: string
 
 test('Inspector: las tres pestañas del panel derecho', async ({ page }) => {
   await goTo(page, 'Laboratorio');
-  await page.getByRole('button', { name: /Analizar & Renderizar Preview/ }).click();
+  await page.getByRole('button', { name: 'Analizar y previsualizar' }).click();
   const panel = page.locator('#element-inspector-panel');
   await snapshotTabs(page, panel, [
-    { name: 'inspector-preview', button: page.getByRole('button', { name: 'Live Preview Aislado' }) },
-    { name: 'inspector-specs', button: page.getByRole('button', { name: 'Ficha Técnica & Tokens' }) },
-    { name: 'inspector-tsx', button: page.getByRole('button', { name: 'Código React TSX' }) },
+    { name: 'inspector-preview', button: page.getByRole('tab', { name: 'Vista previa' }) },
+    { name: 'inspector-specs', button: page.getByRole('tab', { name: 'Ficha técnica' }) },
+    { name: 'inspector-tsx', button: page.getByRole('tab', { name: 'Código TSX' }) },
   ]);
 });
 
@@ -74,7 +79,7 @@ test('Comparador: las tres pestañas', async ({ page }) => {
 test('Generador de paletas: las cuatro pestañas', async ({ page }) => {
   await goTo(page, 'Biblioteca');
   await page.getByRole('button', { name: /^Abrir/ }).first().click();
-  await page.getByRole('button', { name: /^Tokens/ }).last().click();
+  await page.getByRole('tab', { name: /^Tokens/ }).click();
   await page.getByRole('button', { name: 'Generar Paleta' }).click();
   const modal = page.locator('#palette-generator-container');
   await expect(modal).toBeVisible();

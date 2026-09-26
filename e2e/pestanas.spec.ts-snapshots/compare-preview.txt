@@ -1,5 +1,6 @@
-A
-PIEZA BASE (IZQUIERDA)
+COMPARAR
+AccentCard y Button
+Pieza A
 AccentCard (cards · v1.2.0)
 Button (buttons · v1.1.0)
 StatusBadge (feedback · v1.1.0)
@@ -9,8 +10,7 @@ NotificationCallout (feedback · v1.0.0)
 ToggleSwitch (inputs · v1.0.0)
 StepProgressCard (cards · v1.0.0)
 Intercambiar
-B
-PIEZA A COMPARAR (DERECHA)
+Pieza B
 AccentCard (cards · v1.2.0)
 Button (buttons · v1.1.0)
 StatusBadge (feedback · v1.1.0)
@@ -19,19 +19,18 @@ SegmentedControl (navigation · v1.0.0)
 NotificationCallout (feedback · v1.0.0)
 ToggleSwitch (inputs · v1.0.0)
 StepProgressCard (cards · v1.0.0)
-Comparaciones sugeridas:
+Prueba con:
 Botón vs Interruptor
 Tarjeta vs Callout
 AccentCard vs Stepper
 Input vs Segmented
 Badge vs Botón
-Similitud de código: 10%
-Props: 0 comunes · 1 distintas
-Renderizado y Propiedades
+Código 10% igual · Props: 0 comunes, 1 distintas
+Vista y props
 13
-Diferencias de Código TSX
-+36 / -199
-Tokens y Metadatos
+Código
++36 / −199
+Tokens y metadatos
 A
 AccentCard
 v1.2.0
@@ -61,7 +60,7 @@ Guardar Cambios
 Secundario
 4 props documentadas
 Abrir en Playground →
-COMPARATIVA DETALLADA DE PROPIEDADES (PROPS)
+Props, una a una
 Resalta diferencias en tipos, valores por defecto y valores en ejecución entre AccentCard y Button.
 Todas (13)
 Solo diferencias (13)

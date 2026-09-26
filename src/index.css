@@ -3,7 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--app-font-family, "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  --font-sans: var(--app-font-family, "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif);
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Tamaños de texto extra-pequeños usados por el Inspector de Elementos (etiquetas, badges, tokens). */
@@ -12,87 +13,122 @@
   --text-3xs: 0.625rem;
   --text-3xs--line-height: 0.875rem;
 
-  /* Infinity Signal-inspired accent remap: indigo becomes neon violet, emerald becomes neon
-     green. Every existing indigo and emerald utility class across the app picks these up for free. */
-  --color-indigo-50: #f4f2ff;
-  --color-indigo-100: #ede9fe;
-  --color-indigo-200: #ddd6fe;
-  --color-indigo-300: #c4b5fd;
-  --color-indigo-400: #a78bfa;
-  --color-indigo-500: #8b5cf6;
-  --color-indigo-600: #7c3aed;
-  --color-indigo-700: #6d28d9;
-  --color-indigo-800: #5b21b6;
-  --color-indigo-900: #4c1d95;
-  --color-indigo-950: #2e1065;
+  /* Paleta «papel y tinta»: se remapean las escalas que usa el chrome de la app, así cada
+     utilidad zinc/indigo/emerald/violet existente pasa al nuevo aspecto sin tocar clases.
+     zinc = neutros cálidos (crema → tinta), indigo = rojo teja (marca), emerald = verde bosque,
+     violet = azul mar, amber = ocre. Las piezas renderizadas recuperan la paleta original de Tailwind con
+     .piece-scope (más abajo), para que se vean como son. */
+  --color-white: #fffdf8;
+  --color-black: #17110d;
 
-  --color-emerald-50: #f1fff0;
-  --color-emerald-100: #dcffd6;
-  --color-emerald-200: #b8ffac;
-  --color-emerald-300: #8bff78;
-  --color-emerald-400: #5cff45;
-  --color-emerald-500: #39ff14;
-  --color-emerald-600: #2ee00c;
-  --color-emerald-700: #22ad09;
-  --color-emerald-800: #1a8607;
-  --color-emerald-900: #146606;
-  --color-emerald-950: #0a3803;
+  --color-zinc-50: #fbf6ec;
+  --color-zinc-100: #f1e8d6;
+  --color-zinc-200: #e2d5bf;
+  --color-zinc-300: #c9bba4;
+  --color-zinc-400: #a8977f;
+  --color-zinc-500: #76644f;
+  --color-zinc-600: #5e4e43;
+  --color-zinc-700: #4a3d31;
+  --color-zinc-800: #3a2e25;
+  --color-zinc-900: #2a211a;
+  --color-zinc-950: #1e1712;
 
-  --color-zinc-900: #0d0d12;
-  --color-zinc-950: #050609;
+  --color-indigo-50: #fbefea;
+  --color-indigo-100: #f6ddd3;
+  --color-indigo-200: #efc3b3;
+  --color-indigo-300: #f59a82;
+  --color-indigo-400: #f07a5c;
+  --color-indigo-500: #cc4a2b;
+  --color-indigo-600: #b5371e;
+  --color-indigo-700: #8f2914;
+  --color-indigo-800: #72210f;
+  --color-indigo-900: #4a2a20;
+  --color-indigo-950: #33180f;
+
+  --color-emerald-50: #eef4eb;
+  --color-emerald-100: #dce7d6;
+  --color-emerald-200: #bdd4b5;
+  --color-emerald-300: #a6d4af;
+  --color-emerald-400: #8fc79a;
+  --color-emerald-500: #4a8a58;
+  --color-emerald-600: #2f5d3a;
+  --color-emerald-700: #264c2f;
+  --color-emerald-800: #1e3c25;
+  --color-emerald-900: #22382a;
+  --color-emerald-950: #14231a;
+
+  --color-violet-50: #eef5f9;
+  --color-violet-100: #d9e8f0;
+  --color-violet-200: #b5d2e2;
+  --color-violet-300: #a3cde6;
+  --color-violet-400: #7fb8da;
+  --color-violet-500: #2f7aa0;
+  --color-violet-600: #1d5f80;
+  --color-violet-700: #174c67;
+  --color-violet-800: #123b50;
+  --color-violet-900: #1f3444;
+  --color-violet-950: #0e1f2a;
+
+  --color-amber-50: #fbf3df;
+  --color-amber-100: #f7e6be;
+  --color-amber-200: #f0d38e;
+  --color-amber-300: #e8b04a;
+  --color-amber-400: #e0a32e;
+  --color-amber-500: #c98d1c;
+  --color-amber-600: #a06d0c;
+  --color-amber-700: #7a4f00;
+  --color-amber-800: #5e3d00;
+  --color-amber-900: #453718;
+  --color-amber-950: #2c2210;
 }
 
-:root {
-  --app-font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --app-heading-font: "Plus Jakarta Sans", system-ui, sans-serif;
-  --app-bg: #050609;
-  --app-text: #f4f4f5;
-  --app-card-bg: #0d0d12;
-  --app-border: #27272a;
-  --app-bg-image: none;
-  --brand-gradient: linear-gradient(90deg, #39ff14, #22d3ee 55%, #8b5cf6 100%);
+/* Tokens del tema. «papel» es el claro (por defecto); «noche» el oscuro, para leer con poca luz. */
+:root,
+html.light, :root[data-theme="light"] {
+  --app-font-family: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --app-heading-font: "Fraunces", Georgia, "Times New Roman", serif;
+  --app-bg: #fbf6ec;
+  --app-text: #2a1f1a;
+  --app-card-bg: #fffdf8;
+  --app-border: #d9cbb2;
+  --app-line-strong: #8a7660;
+  --app-focus: #1d5f80;
+  --app-shadow-card: 0 1px 2px rgba(42, 31, 26, 0.14);
+  color-scheme: light;
 }
 
 html.dark, :root[data-theme="dark"] {
-  --app-font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --app-heading-font: "Plus Jakarta Sans", system-ui, sans-serif;
-  --app-bg: #050609;
-  --app-text: #f4f4f5;
-  --app-card-bg: #0d0d12;
-  --app-border: #27272a;
-  --app-bg-image: none;
-  --brand-gradient: linear-gradient(90deg, #39ff14, #22d3ee 55%, #8b5cf6 100%);
+  --app-bg: #1e1712;
+  --app-text: #f6eedf;
+  --app-card-bg: #2a211a;
+  --app-border: #4a3d31;
+  --app-line-strong: #9c8a73;
+  --app-focus: #7fb8da;
+  --app-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
-}
-
-html.light, :root[data-theme="light"] {
-  --app-font-family: "Outfit", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --app-heading-font: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
-  --app-bg: #f7f7fb;
-  --app-text: #0f172a;
-  --app-card-bg: #ffffff;
-  --app-border: #e2e8f0;
-  /* Soft color wash so the page doesn't read as flat gray-on-white: faint violet top-left,
-     faint green bottom-right, fixed so it doesn't scroll with content. */
-  --app-bg-image:
-    radial-gradient(at 8% 0%, rgba(139, 92, 246, 0.10) 0px, transparent 55%),
-    radial-gradient(at 100% 90%, rgba(34, 211, 238, 0.08) 0px, transparent 50%),
-    radial-gradient(at 90% 5%, rgba(57, 200, 20, 0.07) 0px, transparent 45%);
-  /* Darker, more saturated stops for legibility on a light background. */
-  --brand-gradient: linear-gradient(90deg, #16a34a, #0891b2 55%, #7c3aed 100%);
-  color-scheme: light;
 }
 
 body {
   font-family: var(--app-font-family);
   background-color: var(--app-bg);
-  background-image: var(--app-bg-image);
-  background-attachment: fixed;
   color: var(--app-text);
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--app-heading-font);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* Foco: anillo sólido de 2 px separado 2 px del control. */
+:focus-visible {
+  outline: 2px solid var(--app-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #f7e6be;
+  color: #2a1f1a;
 }
 
 /* Custom scrollbar for code blocks and component lists */
@@ -106,38 +142,31 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.2);
+  background: rgba(138, 118, 96, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.4);
+  background: rgba(138, 118, 96, 0.55);
 }
 
-/* Infinity Signal-inspired chrome utilities */
+/* Utilidades del chrome. Los nombres se conservan para no tocar cada componente;
+   su aspecto ahora es sobrio: sin degradados, brillos ni bordes de neón. */
 
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Antes un degradado de neón: ahora el nombre se compone en Fraunces, en tinta. */
 .text-brand-gradient {
-  background-image: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-family: var(--font-display);
+  color: var(--app-text);
+  text-transform: none;
+  letter-spacing: -0.005em;
 }
 
-/* Plain class (no Tailwind `dark:` prefix needed, since it isn't a Tailwind utility):
-   a pastel gradient border in light mode, a saturated neon one in dark mode. */
 .border-gradient-pill {
-  border: 1px solid transparent;
-  background:
-    linear-gradient(#fff, #fff) padding-box,
-    linear-gradient(120deg, #a78bfa, #22d3ee) border-box;
-  box-shadow: 0 2px 10px -4px rgba(139, 92, 246, 0.35);
-}
-
-:where(.dark, [data-theme="dark"]) .border-gradient-pill {
-  background:
-    linear-gradient(#000, #000) padding-box,
-    linear-gradient(120deg, #ec4899, #8b5cf6) border-box;
-  box-shadow: none;
+  border: 1px solid var(--app-border);
 }
 
 .card-hairline-top {
@@ -148,29 +177,93 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   position: absolute;
   top: 0;
-  left: 12px;
-  right: 12px;
-  height: 2px;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #39ff14, #22d3ee, #8b5cf6, #f59e0b);
-  opacity: 0.8;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  border-radius: 0 0 9999px 9999px;
+  background: #b5371e;
 }
 
+/* Etiqueta corta en mayúsculas (caption): sans 600, tracking suave. */
 .mono-label {
-  font-family: var(--font-mono);
+  font-family: var(--app-font-family);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
 }
 
 .glow-dot {
-  box-shadow: 0 0 6px 1px currentColor;
+  box-shadow: none;
 }
 
-/* Soft ambient color shadow for flat white panels in light mode (header, sidebar) so they
-   read as "designed" rather than a plain bordered rectangle. No-op in dark mode, which
-   already has its own neon glow treatment. */
-:where(.light, [data-theme="light"]) .panel-glow {
-  box-shadow: 0 1px 0 0 rgba(139, 92, 246, 0.05), 0 12px 28px -16px rgba(139, 92, 246, 0.22);
+.panel-glow {
+  box-shadow: none;
 }
 
+/* Las piezas del catálogo se muestran con la paleta original de Tailwind, no con la del chrome. */
+.piece-scope {
+  --color-white: #fff;
+  --color-black: #000;
+  --color-zinc-50: oklch(98.5% 0 none);
+  --color-zinc-100: oklch(96.7% 0.001 286.375);
+  --color-zinc-200: oklch(92% 0.004 286.32);
+  --color-zinc-300: oklch(87.1% 0.006 286.286);
+  --color-zinc-400: oklch(70.5% 0.015 286.067);
+  --color-zinc-500: oklch(55.2% 0.016 285.938);
+  --color-zinc-600: oklch(44.2% 0.017 285.786);
+  --color-zinc-700: oklch(37% 0.013 285.805);
+  --color-zinc-800: oklch(27.4% 0.006 286.033);
+  --color-zinc-900: oklch(21% 0.006 285.885);
+  --color-zinc-950: oklch(14.1% 0.005 285.823);
+  --color-indigo-50: oklch(96.2% 0.018 272.314);
+  --color-indigo-100: oklch(93% 0.034 272.788);
+  --color-indigo-200: oklch(87% 0.065 274.039);
+  --color-indigo-300: oklch(78.5% 0.115 274.713);
+  --color-indigo-400: oklch(67.3% 0.182 276.935);
+  --color-indigo-500: oklch(58.5% 0.233 277.117);
+  --color-indigo-600: oklch(51.1% 0.262 276.966);
+  --color-indigo-700: oklch(45.7% 0.24 277.023);
+  --color-indigo-800: oklch(39.8% 0.195 277.366);
+  --color-indigo-900: oklch(35.9% 0.144 278.697);
+  --color-indigo-950: oklch(25.7% 0.09 281.288);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-100: oklch(95% 0.052 163.051);
+  --color-emerald-200: oklch(90.5% 0.093 164.15);
+  --color-emerald-300: oklch(84.5% 0.143 164.978);
+  --color-emerald-400: oklch(76.5% 0.177 163.223);
+  --color-emerald-500: oklch(69.6% 0.17 162.48);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-emerald-700: oklch(50.8% 0.118 165.612);
+  --color-emerald-800: oklch(43.2% 0.095 166.913);
+  --color-emerald-900: oklch(37.8% 0.077 168.94);
+  --color-emerald-950: oklch(26.2% 0.051 172.552);
+  --color-violet-50: oklch(96.9% 0.016 293.756);
+  --color-violet-100: oklch(94.3% 0.029 294.588);
+  --color-violet-200: oklch(89.4% 0.057 293.283);
+  --color-violet-300: oklch(81.1% 0.111 293.571);
+  --color-violet-400: oklch(70.2% 0.183 293.541);
+  --color-violet-500: oklch(60.6% 0.25 292.717);
+  --color-violet-600: oklch(54.1% 0.281 293.009);
+  --color-violet-700: oklch(49.1% 0.27 292.581);
+  --color-violet-800: oklch(43.2% 0.232 292.759);
+  --color-violet-900: oklch(38% 0.189 293.745);
+  --color-violet-950: oklch(28.3% 0.141 291.089);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-200: oklch(92.4% 0.12 95.746);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-400: oklch(82.8% 0.189 84.429);
+  --color-amber-500: oklch(76.9% 0.188 70.08);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-amber-950: oklch(27.9% 0.077 45.635);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
 
+.piece-scope h1, .piece-scope h2, .piece-scope h3,
+.piece-scope h4, .piece-scope h5, .piece-scope h6 {
+  font-family: inherit;
+  letter-spacing: normal;
+}

@@ -1,5 +1,7 @@
 # INFORME DE ESTADO DEL PROYECTO: mi-ui-lab
 
+> ⚠ **Documento histórico.** Las secciones 1-7 describen el estado del 2026-09-23, antes de la hoja de ruta (p. ej. "sin `strict`", "cero tests", "~62 %"): ya no son ciertas. El estado final (v1.0.0) está en [`AUDITORIA_CIERRE.md`](AUDITORIA_CIERRE.md) y en el [`CHANGELOG`](../CHANGELOG.md).
+
 > Auditoría técnica sobre `master` @ `30cc4b4` (13 commits) + cambios sin commitear. Fecha: 2026-09-23.
 > Verificado en esta auditoría: `npm run lint` (tsc) **pasa sin errores**; `npm run build` **pasa** (bundle JS único de 837 kB / 236 kB gzip, con aviso de tamaño).
 
@@ -219,3 +221,8 @@ Estado de las pruebas: 130 tests unitarios/integración + 7 E2E, `tsc` en modo `
 - ⏸ **Persistir el historial del Playground**: no se hace. Deshacer/rehacer dentro de la sesión ya funciona; persistirlo añade estado y casos borde (piezas borradas o editadas, historial obsoleto) sin una necesidad clara. Queda como decisión abierta.
 
 Estado de las pruebas: 139 tests unitarios/integración + 11 E2E (incluido uno sin conexión), `tsc` en modo `strict` sin errores.
+
+### Añadido después (2026-09-23 → 2026-09-26)
+
+- ✅ **Recordatorio de copia de seguridad** en Inicio (`utils/backupReminder.ts`, `components/BackupReminder.tsx`), con E2E.
+- ✅ **Cierre v1.0.0**: correcciones C-1…C-3 y M-1…M-7 de `AUDITORIA_CIERRE.md`.

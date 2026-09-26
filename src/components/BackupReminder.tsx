@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { HardDriveDownload } from 'lucide-react';
 import { readBackupState, shouldShowBackupReminder, snoozeBackupReminder } from '../utils/backupReminder';
 
 interface BackupReminderProps {
@@ -7,7 +6,7 @@ interface BackupReminderProps {
   onExport: () => void;
 }
 
-/** Aviso en Inicio: tus piezas propias solo están en este navegador; exportá una copia. */
+/** Aviso en Inicio: tus piezas propias solo están en este navegador; exporta una copia. */
 export function BackupReminder({ customCount, onExport }: BackupReminderProps) {
   const [state, setState] = useState(readBackupState);
   if (!shouldShowBackupReminder(customCount, state)) return null;
@@ -18,20 +17,20 @@ export function BackupReminder({ customCount, onExport }: BackupReminderProps) {
     <div
       id="backup-reminder"
       role="status"
-      className="mb-8 flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-50 dark:bg-amber-500/5 p-4 text-left sm:flex-row sm:items-center"
+      className="flex flex-col gap-4 rounded-xl bg-amber-100 dark:bg-amber-900 px-6 py-5 text-left text-zinc-900 dark:text-zinc-50 md:flex-row md:items-center md:gap-6"
     >
-      <div className="flex items-start gap-3 flex-1">
-        <HardDriveDownload className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-        <div>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {customCount === 1 ? 'Tu pieza propia vive' : `Tus ${customCount} piezas propias viven`} solo en este navegador
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Si se borran los datos del sitio, se pierden.{' '}
-            {neverExported ? 'Todavía no exportaste ninguna copia.' : 'Tu última copia tiene más de 30 días.'} Exportá
-            tu colección a un archivo JSON para tener respaldo.
-          </p>
-        </div>
+      <span className="mono-label self-start md:self-center shrink-0 rounded-full bg-amber-400 px-3 py-1 text-xs text-[#2a1f1a]">
+        Ojo
+      </span>
+      <div className="flex-1">
+        <p className="text-base font-semibold">
+          {customCount === 1 ? 'Tu pieza propia vive' : `Tus ${customCount} piezas propias viven`} solo en este navegador
+        </p>
+        <p className="mt-0.5 text-sm leading-[21px] text-zinc-700 dark:text-zinc-300">
+          Si se borran los datos del sitio, se pierden.{' '}
+          {neverExported ? 'Todavía no has exportado ninguna copia.' : 'Tu última copia tiene más de 30 días.'} Exporta
+          tu colección a un archivo JSON para tener respaldo.
+        </p>
       </div>
       <div className="flex shrink-0 gap-2">
         <button
@@ -40,15 +39,15 @@ export function BackupReminder({ customCount, onExport }: BackupReminderProps) {
             snoozeBackupReminder();
             setState(readBackupState());
           }}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-amber-500/10 cursor-pointer"
+          className="min-h-11 rounded-full px-4 text-[15px] text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
         >
-          Recordámelo en 7 días
+          Recuérdamelo en 7 días
         </button>
         <button
           type="button"
           id="backup-reminder-export"
           onClick={onExport}
-          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 cursor-pointer"
+          className="min-h-11 rounded-full bg-zinc-900 dark:bg-zinc-50 px-5 text-[15px] font-semibold text-zinc-50 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 cursor-pointer"
         >
           Exportar ahora
         </button>

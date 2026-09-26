@@ -23,7 +23,7 @@ function useLoadedOnce(flag: boolean): boolean {
 
 function ScreenLoading() {
   return (
-    <div className="flex flex-1 items-center justify-center text-xs font-mono text-zinc-500" role="status">
+    <div className="flex flex-1 items-center justify-center text-sm text-zinc-500 dark:text-zinc-400" role="status">
       Cargando…
     </div>
   );
@@ -179,7 +179,7 @@ function MainApp() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      <Header onNavigateHome={() => handleNavigate('home')} customComponentsCount={customCount} />
+      <Header screen={screen} onNavigate={handleNavigate} customComponentsCount={customCount} />
 
       <ErrorBoundary
         label={`screen:${screen}`}
@@ -228,11 +228,12 @@ function MainApp() {
             canvasBg={canvasBg}
             onToast={showToast}
             onOpenIteration={handleOpenIteration}
-          onEditComponent={setEditingComponent}
+            onEditComponent={setEditingComponent}
             onOpenTokens={() => setIsTokensOpen(true)}
             onOpenExport={() => setIsExportOpen(true)}
             onOpenPaletteGenerator={handleOpenPaletteGenerator}
             onPlayInPlayground={handlePlayInPlayground}
+            onNewPiece={() => handleNavigate('laboratorio')}
             initialMode={bibliotecaInitialMode}
           />
         )}
@@ -330,10 +331,11 @@ function MainApp() {
       {toastMessage && (
         <div
           id="app-toast-notification"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl border border-indigo-500/30 dark:border-emerald-500/30 bg-white dark:bg-black/90 px-4 py-2.5 text-xs font-medium text-zinc-900 dark:text-zinc-100 shadow-2xl dark:shadow-[0_0_18px_-4px_rgba(57,255,20,0.4)] backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 duration-200"
+          role="status"
+          className="fixed bottom-6 right-6 z-50 flex max-w-sm items-center gap-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-5 py-3 text-[15px] text-zinc-50 dark:text-zinc-900 shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
-          <span className="glow-dot h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-          <span className="font-mono text-[11px] tracking-wide">{toastMessage}</span>
+          <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 shrink-0" />
+          <span>{toastMessage}</span>
         </div>
       )}
     </div>

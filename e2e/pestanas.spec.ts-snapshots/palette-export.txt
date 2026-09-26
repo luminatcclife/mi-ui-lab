@@ -1,14 +1,14 @@
-Generador de Paletas & Tokens Tailwind
-11 ESCALAS
-Calcula automáticamente la escala 50-950, ratios WCAG y exporta tokens CSS/Tailwind para tus componentes.
+PALETA
+Generador de paletas
+Calcula la escala del 50 al 950, revisa contrastes WCAG y exporta los tokens en CSS o Tailwind.
+Elegir color
+Color en hexadecimal
 #
-RGB(99, 102, 241)
-|
-HSL(239°, 84%, 67%)
-Aleatorio
-Prefijo Token:
+rgb(99, 102, 241) · hsl(239°, 84%, 67%)
+Al azar
+Prefijo
 Copiar 500
-PRESETS:
+EMPIEZA CON
 Indigo Eléctrico
 Esmeralda Menta
 Violeta Profundo
@@ -20,16 +20,16 @@ Naranja Fuego
 Fucsia Magenta
 Pizarra Neutro
 Lima Fresca
-Escala Tailwind (50-950)
-Vista Previa de Componente
-Armonías & Neutros
-Exportar Tokens Tailwind
+Escala 50–950
+Vista previa
+Armonías y neutros
+Exportar
 Tailwind v4 (@theme)
 Tailwind v3 (config)
 Variables CSS (:root)
 TypeScript Theme Object
 Cheat Sheet Clases
-Copiar Código
+Copiar código
 @theme {
  --color-brand-50: #e6e6f9;
  --color-brand-100: #cbccf6;
@@ -43,5 +43,6 @@ Copiar Código
  --color-brand-900: #0f1166;
  --color-brand-950: #08082b;
 }
-Color activo: #6366F1 (Tono 500)
+Tono 500:
+#6366F1
 Cerrar

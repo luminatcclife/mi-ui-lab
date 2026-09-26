@@ -21,14 +21,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (saved === 'dark' || saved === 'light') {
         return saved;
       }
-      // Check system preference
-      if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'light';
+      // «noche» solo si el sistema lo pide; «papel» es el tema de trabajo
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
       }
     } catch {
-      // fallback to dark
+      // fallback to light
     }
-    return 'dark';
+    return 'light';
   });
 
   const setTheme = (newTheme: Theme) => {
@@ -62,9 +62,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const typographyName =
-    theme === 'dark'
-      ? 'Plus Jakarta Sans (Geométrica de Estudio)'
-      : 'Outfit (Humanista de Editorial)';
+'Fraunces + Source Sans 3';
 
   return (
     <ThemeContext.Provider
