@@ -35,12 +35,19 @@ La CI (GitHub Actions) ejecuta `lint`, `test` y `build`, y en paralelo los E2E, 
 
 La primera vez, los E2E necesitan el Chromium de Playwright (`npx playwright install chromium`). Si no puedes descargarlo, usa el Chrome instalado: `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. Por defecto corren contra el servidor de desarrollo; con `E2E_PROD=1` corren contra el build de producción, que es lo que hace la CI.
 
+## Publicar
+
+Es una web estática: `npm run build` genera `dist/`, que se puede servir desde cualquier hosting estático (Vercel, Netlify, GitHub Pages…) o abrir con `npm run preview`. No necesita variables de entorno ni backend. Para probar los E2E contra una copia publicada: `E2E_BASE_URL=https://… npm run test:e2e`.
+
+Los cambios de cada versión están en el [CHANGELOG](CHANGELOG.md).
+
 ## Estructura
 
 ```
 src/
   App.tsx                  Navegación entre pantallas, modales y toasts
   hooks/useCatalog.ts      Estado del catálogo (piezas + favoritos); IndexedDB es la única fuente de verdad
+  hooks/useModalA11y.ts    Teclado y foco comunes a los modales (Escape, foco atrapado y devuelto)
   db/db.ts                 Esquema Dexie (v3), migración única desde localStorage y funciones de lectura/escritura
   components/
     *Screen.tsx            Las cuatro pantallas (Biblioteca, Laboratorio y Playground se cargan bajo demanda)
@@ -54,7 +61,8 @@ src/
   utils/                   Lógica pura: inspector, estandarizador HTML→JSX, detector de dependencias,
                            diff, búsqueda fuzzy, paletas, saneado de HTML, documento del sandbox,
                            validación de imports (cada una con su *.test.ts)
-docs/ESTADO_PROYECTO.md    Auditoría técnica y hoja de ruta
+docs/AUDITORIA_CIERRE.md   Auditoría de cierre v1.0.0: estado final y backlog
+docs/ESTADO_PROYECTO.md    Auditoría inicial y hoja de ruta (histórico)
 e2e/                       Tests E2E (Playwright) e instantáneas de texto de cada pestaña
 ```
 
@@ -75,6 +83,14 @@ Exportar genera un JSON con un **array de objetos `UIComponent`** (ver `src/type
 - todo lo importado se marca como pieza propia, y su `rawHtml` se sanea;
 - una pieza con un `id` que ya tienes la reemplaza; los elementos inválidos se listan y se descartan.
 
+**Qué no incluye la copia.** El JSON solo restaura tus **piezas propias**. Si lo importas en otro navegador (o tras borrar los datos del sitio), se pierden:
+
+- los **favoritos**;
+- las **etiquetas añadidas a piezas base**;
+- las **iteraciones registradas sobre piezas base** (viajan en el JSON, pero al importar se ignoran como cualquier pieza base, y la pieza vuelve a su versión original).
+
+"Restablecer" borra todo lo anterior y además tus piezas propias, sin posibilidad de deshacer: exporta antes una copia.
+
 ## Añadir una pieza base
 
 1. Crea el componente en `src/components/ui/`.
@@ -94,6 +110,7 @@ El HTML que se pega en el Inspector o llega en un JSON importado se considera no
 - La vista previa compila las clases con Tailwind v4. HTML escrito para Tailwind v3 puede verse ligeramente distinto en algunas utilidades que cambiaron entre versiones (p. ej. `ring`, `shadow-sm`, `bg-opacity-*`).
 - Sin conexión, las piezas capturadas se ven con estilos, pero con la fuente del sistema: las fuentes se cargan de Google Fonts.
 - El Inspector detecta dependencias como Flowbite o Radix, pero no las carga: el JavaScript interactivo que necesiten no funcionará en la vista previa.
+- La ficha técnica del Inspector (estilos computados y medidas) es **aproximada**: se calcula con el CSS de la propia app, no con el Tailwind del iframe. Las clases que la app no usa no aparecen en esos valores, aunque la vista previa sí las muestra. Si pegas varios elementos raíz, se agrupan en un `<div>`.
 - Los E2E cubren los flujos principales (capturar, importar, editar, piezas corruptas, uso sin conexión), no cada interacción de cada pantalla.
 
 ## Licencia

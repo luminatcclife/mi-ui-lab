@@ -20,10 +20,10 @@ test('capturar HTML → guardar → se ve en Biblioteca (aislado) y persiste al 
   await page
     .getByPlaceholder(/^<button class='rounded-xl/)
     .fill('<div class="p-6 rounded-2xl bg-fuchsia-600 text-white"><h3 class="font-bold">Tarjeta E2E</h3></div>');
-  await page.getByRole('button', { name: /Analizar & Renderizar Preview/ }).click();
+  await page.getByRole('button', { name: 'Analizar y previsualizar' }).click();
   await page.locator('#btn-inspector-save-to-library').click();
   await page.getByPlaceholder(/Ej: PricingCard/).fill('Tarjeta E2E');
-  await page.getByRole('button', { name: /Confirmar y Guardar en BD/ }).click();
+  await page.getByRole('button', { name: 'Guardar pieza' }).click();
 
   await goHome(page);
   await expect(page.getByText('1 piezas propias')).toBeVisible();
@@ -144,7 +144,7 @@ test('aviso de copia de seguridad: aparece con piezas propias y se va al exporta
   await page.evaluate(() => localStorage.removeItem('mi_ui_lab_last_export_at'));
   await page.reload();
   await expect(reminder).toBeVisible();
-  await reminder.getByRole('button', { name: 'Recordámelo en 7 días' }).click();
+  await reminder.getByRole('button', { name: 'Recuérdamelo en 7 días' }).click();
   await expect(reminder).toHaveCount(0);
   await page.reload();
   await expect(page.getByText(/\d+ piezas · \d+ favoritas/)).toBeVisible();

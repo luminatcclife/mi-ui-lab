@@ -1,41 +1,39 @@
-Inspector de Elementos & Live Preview Aislado
-COPIA FIEL EN IFRAME
-Captura fragmentos HTML/Tailwind, detecta dependencias requeridas (Lucide, Motion, Radix) y valida en sandbox antes de guardar
-Guardar en Base de Datos
-Pegar HTML / CSS
-Elemento en Lienzo
-Código HTML con clases Tailwind
+Pegar HTML
+Pieza del lienzo
+HTML capturado
 Ejemplos:
 Botón
 Tarjeta
 Artículo
 Badge
-Analizar & Renderizar Preview
+Se limpia antes de mostrarlo: sin scripts ni atributos peligrosos.
+Analizar y previsualizar
 Limpiar
-Análisis de Dependencias de Librerías
+Dependencias
 COMPATIBLE
 Lucide Icons
 lucide-react
-Instalada en este lab
+INSTALADA
 Se detectaron clases o marcadores de iconos Lucide (lucide, lucide-sparkles, Lucide).
-Tokens:
-lucide, lucide-sparkles
-Validación de Fidelidad Visual
-SANDBOX AISLADO
-Etiqueta Principal:
-<button>
-Tokens Tailwind Detectados:
-21 clases
-Medidas Calculadas:
-0px × 0px
-Aislamiento de Estilos:
-Iframe sandbox 100% aislado
-¿Listo para agregarlo a tu colección?
-Una vez verificado que se ve idéntico al original, guárdalo permanentemente en IndexedDB.
-Guardar en Base de Datos
-Live Preview Aislado
-Ficha Técnica & Tokens
-Código React TSX
+Vista previa
+Ficha técnica
+Código TSX
+Oscuro
+Claro
+Cuadros
+Fluido
+Tablet
+Móvil
 100%
-RENDERIZADO EN VIVO CON TAILWIND JIT COMPLETO Y CSS AISLADO
-Interactúa directamente con hover, focus y clics
+Se ve en un iframe aislado con Tailwind completo. Puedes pasar el ratón, enfocar y pulsar.
+Etiqueta
+<button>
+Clases Tailwind
+21
+Medidas
+209px × 40px
+Dependencias
+1
+CORRECTO
+Si se ve igual que el original, ya puedes guardarla.
+Guardar en la biblioteca

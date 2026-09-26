@@ -1,12 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  ArrowLeftRight,
-  Layers,
-  FileCode2,
-  Sliders,
-  Eye,
-} from 'lucide-react';
-import { motion } from 'motion/react';
+import { ArrowLeftRight } from 'lucide-react';
 import { UIComponent } from '../types';
 import { computeLineDiff, computePropDiff, computeTokenDiff } from '../utils/diffUtils';
 import type { CodeTarget } from './comparison/types';
@@ -143,194 +136,135 @@ export function ComparisonView({
       components.some((c) => c.id === p.a) && components.some((c) => c.id === p.b),
   );
 
+  const selectClass =
+    'h-11 w-full rounded-xl border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 px-3.5 text-base text-zinc-900 dark:text-zinc-50 cursor-pointer';
+  const tabs = [
+    { key: 'preview-props' as const, id: 'tab-btn-compare-preview', label: 'Vista y props', meta: `${propDiffResult.stats.total}` },
+    {
+      key: 'code-diff' as const,
+      id: 'tab-btn-compare-code',
+      label: 'Código',
+      meta: `+${lineDiffResult.stats.addedCount} / −${lineDiffResult.stats.removedCount}`,
+    },
+    { key: 'meta-matrix' as const, id: 'tab-btn-compare-meta', label: 'Tokens y metadatos', meta: '' },
+  ];
+
   return (
-    <div
-      id="comparison-view-container"
-      className="flex flex-1 flex-col overflow-y-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100"
-    >
-      {/* Top Header & Component Selector Bar */}
-      <div className="sticky top-0 z-20 border-b border-zinc-200 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-4 py-3 shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col gap-3">
-          {/* Row 1: Selectors and Swap button */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            {/* Component A Selector */}
-            <div className="flex-1 flex items-center gap-2 min-w-0">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
-                A
-              </span>
-              <div className="flex-1 min-w-0">
-                <label
-                  htmlFor="select-component-a"
-                  className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
-                >
-                  Pieza Base (Izquierda)
-                </label>
-                <select
-                  id="select-component-a"
-                  value={compAId}
-                  onChange={(e) => {
-                    setCompAId(e.target.value);
-                    setVariantAId('');
-                  }}
-                  className="w-full mt-0.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/90 px-3 py-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none cursor-pointer"
-                >
-                  {components.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.category} · v{c.version || '1.0.0'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Swap Button (⇄) */}
-            <div className="flex items-center justify-center shrink-0">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                id="btn-swap-comparison-components"
-                onClick={handleSwap}
-                title="Intercambiar pieza A y pieza B"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-200 shadow-xs hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-              >
-                <ArrowLeftRight className="h-3.5 w-3.5" />
-                <span className="text-[11px]">Intercambiar</span>
-              </motion.button>
-            </div>
-
-            {/* Component B Selector */}
-            <div className="flex-1 flex items-center gap-2 min-w-0">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
-                B
-              </span>
-              <div className="flex-1 min-w-0">
-                <label
-                  htmlFor="select-component-b"
-                  className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
-                >
-                  Pieza a Comparar (Derecha)
-                </label>
-                <select
-                  id="select-component-b"
-                  value={compBId}
-                  onChange={(e) => {
-                    setCompBId(e.target.value);
-                    setVariantBId('');
-                  }}
-                  className="w-full mt-0.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/90 px-3 py-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none cursor-pointer"
-                >
-                  {components.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.category} · v{c.version || '1.0.0'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2: Preset suggestions and quick stats overview */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
-            {/* Quick Presets */}
-            {presets.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                <span className="text-[11px] font-medium text-zinc-400">
-                  Comparaciones sugeridas:
-                </span>
-                {presets.map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => {
-                      setCompAId(preset.a);
-                      setCompBId(preset.b);
-                      setVariantAId('');
-                      setVariantBId('');
-                      onToast(`Comparando ${preset.label}`);
-                    }}
-                    className="rounded-lg bg-zinc-100 dark:bg-zinc-800/70 hover:bg-zinc-200 dark:hover:bg-zinc-700/80 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Quick Summary Pill Bar */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
-                <FileCode2 className="h-3 w-3" />
-                <span>Similitud de código: {lineDiffResult.stats.similarityPercent}%</span>
-              </span>
-
-              <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-300">
-                <Sliders className="h-3 w-3 text-zinc-500" />
-                <span>
-                  Props: {propDiffResult.stats.identical} comunes ·{' '}
-                  <strong className="text-amber-600 dark:text-amber-400">
-                    {propDiffResult.stats.different} distintas
-                  </strong>
-                </span>
-              </span>
-            </div>
-          </div>
-
-          {/* Row 3: Tab Navigation */}
-          <div className="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 -mb-3 pt-1">
-            <button
-              type="button"
-              id="tab-btn-compare-preview"
-              onClick={() => setActiveTab('preview-props')}
-              className={`inline-flex items-center gap-2 border-b-2 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'preview-props'
-                  ? 'border-indigo-600 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-              }`}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span>Renderizado y Propiedades</span>
-              <span className="rounded-full bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.2 text-[10px] font-normal">
-                {propDiffResult.stats.total}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              id="tab-btn-compare-code"
-              onClick={() => setActiveTab('code-diff')}
-              className={`inline-flex items-center gap-2 border-b-2 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'code-diff'
-                  ? 'border-indigo-600 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-              }`}
-            >
-              <FileCode2 className="h-3.5 w-3.5" />
-              <span>Diferencias de Código TSX</span>
-              <span className="rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-mono">
-                +{lineDiffResult.stats.addedCount} / -{lineDiffResult.stats.removedCount}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              id="tab-btn-compare-meta"
-              onClick={() => setActiveTab('meta-matrix')}
-              className={`inline-flex items-center gap-2 border-b-2 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === 'meta-matrix'
-                  ? 'border-indigo-600 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>Tokens y Metadatos</span>
-            </button>
-          </div>
+    <section id="comparison-view-container" className="flex flex-col gap-8 text-zinc-900 dark:text-zinc-50">
+      <header className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <span className="mono-label text-xs text-zinc-600 dark:text-zinc-300">Comparar</span>
+          <h1 className="font-display text-[40px] leading-[46px]">
+            {compA?.name} <span className="text-zinc-500 dark:text-zinc-400">y</span> {compB?.name}
+          </h1>
         </div>
-      </div>
 
-      {/* Main Content Body */}
-      <div className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+        <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <label className="flex flex-col gap-2">
+            <span className="text-base font-semibold">Pieza A</span>
+            <select
+              id="select-component-a"
+              value={compAId}
+              onChange={(e) => {
+                setCompAId(e.target.value);
+                setVariantAId('');
+              }}
+              className={selectClass}
+            >
+              {components.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.category} · v{c.version || '1.0.0'})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            id="btn-swap-comparison-components"
+            onClick={handleSwap}
+            title="Intercambiar A y B"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-4 text-base text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+            Intercambiar
+          </button>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-base font-semibold">Pieza B</span>
+            <select
+              id="select-component-b"
+              value={compBId}
+              onChange={(e) => {
+                setCompBId(e.target.value);
+                setVariantBId('');
+              }}
+              className={selectClass}
+            >
+              {components.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.category} · v{c.version || '1.0.0'})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {presets.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-zinc-600 dark:text-zinc-300">Prueba con:</span>
+              {presets.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    setCompAId(preset.a);
+                    setCompBId(preset.b);
+                    setVariantAId('');
+                    setVariantBId('');
+                    onToast(`Comparando ${preset.label}`);
+                  }}
+                  className="rounded-full border border-zinc-500 dark:border-zinc-400 px-3 py-1 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            Código <strong className="font-semibold text-zinc-900 dark:text-zinc-50">{lineDiffResult.stats.similarityPercent}%</strong> igual · Props:{' '}
+            {propDiffResult.stats.identical} comunes, <strong className="font-semibold text-zinc-900 dark:text-zinc-50">{propDiffResult.stats.different} distintas</strong>
+          </p>
+        </div>
+      </header>
+
+      <div>
+        <div role="tablist" aria-label="Qué comparar" className="flex gap-6 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
+          {tabs.map((t) => {
+            const active = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                id={t.id}
+                aria-selected={active}
+                onClick={() => setActiveTab(t.key)}
+                className={`-mb-px inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 text-base transition-colors cursor-pointer ${
+                  active
+                    ? 'border-indigo-600 dark:border-indigo-400 font-semibold text-zinc-900 dark:text-zinc-50'
+                    : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+                }`}
+              >
+                {t.label}
+                {t.meta && <span className="font-mono text-sm font-normal text-zinc-600 dark:text-zinc-300">{t.meta}</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-6 pt-8">
         {/* ======================================================== */}
         {/* TAB 1: RENDERED PREVIEW & PROPS DIFF TABLE */}
         {/* ======================================================== */}
@@ -374,7 +308,8 @@ export function ComparisonView({
             tokensDiff={tokensDiff}
           />
         )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

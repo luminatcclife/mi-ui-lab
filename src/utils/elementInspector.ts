@@ -58,6 +58,8 @@ export interface ElementTechSheet {
   analyzedAt: string;
   sourceType: 'rendered-dom' | 'html-string';
   cleanHtml: string;
+  /** true si el HTML pegado tenía varios elementos raíz y se envolvieron en un <div>. */
+  wrappedMultipleRoots?: boolean;
 }
 
 /**
@@ -141,7 +143,8 @@ export function inspectElementOrHTML(
   containerToMountIfHTML?: HTMLElement
 ): ElementTechSheet {
   let targetEl: HTMLElement;
-  let wasDynamicallyMounted = false;
+  let offscreenWrapper: HTMLElement | null = null;
+  let wrappedMultipleRoots = false;
   let sourceType: 'rendered-dom' | 'html-string' = 'rendered-dom';
 
   if (typeof source === 'string') {
@@ -149,6 +152,17 @@ export function inspectElementOrHTML(
     const parser = new DOMParser();
     // Se sanea antes de montar en el documento principal: un <img onerror> se ejecutaría al insertarlo.
     const doc = parser.parseFromString(sanitizeHtml(source.trim()), 'text/html');
+    // Varios elementos raíz (o texto suelto junto a ellos): se envuelven en un <div> para no perder nada,
+    // ya que la ficha, la vista previa y la pieza guardada parten de un único elemento.
+    const hasLooseText = Array.from(doc.body.childNodes).some(
+      (n) => n.nodeType === Node.TEXT_NODE && (n.textContent || '').trim() !== '',
+    );
+    if (doc.body.childElementCount > 1 || (doc.body.childElementCount === 1 && hasLooseText)) {
+      const group = doc.createElement('div');
+      group.append(...Array.from(doc.body.childNodes));
+      doc.body.appendChild(group);
+      wrappedMultipleRoots = true;
+    }
     const firstEl = doc.body.firstElementChild as HTMLElement;
 
     if (!firstEl) {
@@ -157,16 +171,18 @@ export function inspectElementOrHTML(
       );
     }
 
-    // Mount inside an isolated sandbox container so Tailwind and browser stylesheet can compute styles
+    // Se monta fuera de pantalla para que el navegador calcule estilos y medidas. La ocultación va en un
+    // envoltorio, no en el elemento: así su atributo style original queda intacto en la ficha y en cleanHtml.
+    // El envoltorio se ajusta al contenido (como #preview-root en la vista previa) y nunca debe quedar dentro
+    // de un display:none, o las medidas saldrían 0 × 0.
     const mountPoint = containerToMountIfHTML || document.body;
     targetEl = firstEl.cloneNode(true) as HTMLElement;
-    targetEl.setAttribute('data-inspecting-sandbox', 'true');
-    targetEl.style.visibility = 'hidden';
-    targetEl.style.position = 'absolute';
-    targetEl.style.top = '-9999px';
-    targetEl.style.left = '-9999px';
-    mountPoint.appendChild(targetEl);
-    wasDynamicallyMounted = true;
+    offscreenWrapper = document.createElement('div');
+    offscreenWrapper.setAttribute('data-inspecting-sandbox', 'true');
+    offscreenWrapper.style.cssText =
+      'position:absolute;top:0;left:-9999px;visibility:hidden;pointer-events:none;width:max-content;max-width:1024px;';
+    offscreenWrapper.appendChild(targetEl);
+    mountPoint.appendChild(offscreenWrapper);
   } else {
     targetEl = source;
   }
@@ -221,9 +237,7 @@ export function inspectElementOrHTML(
     // 3. Extract attributes
     const attributes: Record<string, string> = {};
     Array.from(targetEl.attributes).forEach((attr) => {
-      if (attr.name !== 'style' || !wasDynamicallyMounted) {
-        attributes[attr.name] = attr.value;
-      }
+      attributes[attr.name] = attr.value;
     });
 
     // 4. Summarize direct children elements
@@ -253,11 +267,10 @@ export function inspectElementOrHTML(
       childrenSummary,
       analyzedAt: new Date().toLocaleTimeString(),
       sourceType,
-      cleanHtml: targetEl.outerHTML.replace(/\s*data-inspecting-sandbox="true"/, '').replace(/\s*style="[^"]*"/, ''),
+      cleanHtml: targetEl.outerHTML,
+      wrappedMultipleRoots,
     };
   } finally {
-    if (wasDynamicallyMounted && targetEl.parentElement) {
-      targetEl.parentElement.removeChild(targetEl);
-    }
+    offscreenWrapper?.remove();
   }
 }

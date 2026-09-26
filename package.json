@@ -1,9 +1,12 @@
 {
   "name": "mi-ui-lab",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite --host=0.0.0.0",
     "build": "vite build",

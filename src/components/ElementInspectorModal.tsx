@@ -1,34 +1,7 @@
 // src/components/ElementInspectorModal.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  X,
-  Code,
-  Sparkles,
-  Copy,
-  Check,
-  Eye,
-  Sliders,
-  FileCode2,
-  Terminal,
-  MousePointerClick,
-  Info,
-  Database,
-  RefreshCw,
-  Sun,
-  Moon,
-  Grid,
-  Smartphone,
-  Tablet,
-  Laptop,
-  CheckCircle2,
-  AlertCircle,
-  AlertTriangle,
-  PackageCheck,
-  ZoomIn,
-  ZoomOut,
-  Package,
-} from 'lucide-react';
+import { X, Copy, Check, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { inspectElementOrHTML, ElementTechSheet } from '../utils/elementInspector';
 import { analyzeSnippetDependencies } from '../utils/dependencyDetector';
 import {
@@ -157,7 +130,13 @@ export function ElementInspectorModal({
       // Refresh the preview iframe to guarantee fresh rendering
       setIframeKey((prev) => prev + 1);
 
-      if (onToast) onToast('Ficha técnica y vista previa aislada generadas');
+      if (onToast) {
+        onToast(
+          sheet.wrappedMultipleRoots
+            ? 'Varios elementos raíz: se agruparon en un <div> para analizarlos juntos'
+            : 'Ficha técnica y vista previa aislada generadas',
+        );
+      }
     } catch (err) {
       setErrorMsg(errorMessage(err, 'Error al analizar el código HTML.'));
       setTechSheet(null);
@@ -208,8 +187,13 @@ export function ElementInspectorModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const copyToClipboard = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      if (onToast) onToast('⚠ No se pudo copiar al portapapeles');
+      return;
+    }
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
     if (onToast) onToast('Copiado al portapapeles');
@@ -279,7 +263,8 @@ export function ${compName}() {
   // Save Component to Database Handler
   const handleConfirmSaveToDatabase = () => {
     if (!saveName.trim()) {
-      alert('Por favor indica un nombre para el componente.');
+      if (onToast) onToast('⚠ Indica un nombre para el componente.');
+      else setErrorMsg('Indica un nombre para el componente.');
       return;
     }
 
@@ -388,832 +373,523 @@ export function ${compName}() {
   };
 
 
+  const hasMissing = missingDependencies.length > 0;
+  const rightTabs: { id: 'preview' | 'specs' | 'tsx'; label: string }[] = [
+    { id: 'preview', label: 'Vista previa' },
+    { id: 'specs', label: 'Ficha técnica' },
+    { id: 'tsx', label: 'Código TSX' },
+  ];
+  const segmentBtn = (active: boolean) =>
+    `min-h-9 rounded-lg px-3 text-sm transition-colors cursor-pointer ${
+      active
+        ? 'bg-white dark:bg-zinc-900 font-semibold text-zinc-900 dark:text-zinc-50 shadow-[var(--app-shadow-card)]'
+        : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+    }`;
+  const fieldClass =
+    'w-full rounded-xl border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 px-3.5 text-base text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-500 dark:placeholder:text-zinc-400';
+  const outlineBtn =
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-4 text-base text-zinc-900 dark:text-zinc-50 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer';
+  const primaryBtn =
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 text-base font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-400 dark:text-zinc-950 dark:hover:bg-indigo-300 cursor-pointer';
+
   return (
-    <div
-      id="element-inspector-panel"
-      className="relative flex flex-1 flex-col w-full h-full overflow-hidden bg-zinc-950 text-zinc-100"
-    >
-      {/* Hidden sandbox mount point for DOMParser style computation */}
-      <div ref={sandboxMountRef} className="hidden pointer-events-none" aria-hidden="true" />
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 px-6 py-3.5 bg-zinc-900/70">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20">
-              <Sliders className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-zinc-100">
-                  Inspector de Elementos & Live Preview Aislado
-                </h2>
-                <span className="rounded-md bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Copia Fiel en Iframe
-                </span>
-                {missingDependencies.length > 0 && (
-                  <span className="rounded-md bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-amber-300 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    {missingDependencies.length} {missingDependencies.length === 1 ? 'dependencia requerida' : 'dependencias requeridas'}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-zinc-400">
-                Captura fragmentos HTML/Tailwind, detecta dependencias requeridas (Lucide, Motion, Radix) y valida en sandbox antes de guardar
-              </p>
-            </div>
+    <div id="element-inspector-panel" className="relative flex w-full flex-col gap-8 text-zinc-900 dark:text-zinc-50">
+      {/* Punto de montaje para calcular estilos y medidas del HTML pegado. No puede ser display:none
+          (las medidas saldrían 0 × 0): es un nodo absoluto de 0 px y el contenido va fuera de pantalla.
+          piece-scope: los colores se calculan con la paleta original de Tailwind, no con la de la app. */}
+      <div ref={sandboxMountRef} className="piece-scope absolute left-0 top-0 h-0 w-0 pointer-events-none" aria-hidden="true" />
+
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        {/* Izquierda: el HTML de origen y sus dependencias */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <div role="group" aria-label="Origen" className="grid grid-cols-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+            <button type="button" aria-pressed={activeTab === 'paste'} onClick={() => setActiveTab('paste')} className={segmentBtn(activeTab === 'paste')}>
+              Pegar HTML
+            </button>
+            <button
+              type="button"
+              aria-pressed={activeTab === 'live-canvas'}
+              onClick={() => {
+                setActiveTab('live-canvas');
+                handleInspectActiveComponent();
+              }}
+              className={segmentBtn(activeTab === 'live-canvas')}
+            >
+              Pieza del lienzo
+            </button>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Direct Save Button in Header */}
-            {onSaveComponent && techSheet && (
-              <button
-                type="button"
-                id="btn-inspector-save-to-library"
-                onClick={() => setIsSavingDrawerOpen(true)}
-                className={`inline-flex items-center gap-2 rounded-xl text-white px-3.5 py-1.5 text-xs font-semibold shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer ${
-                  missingDependencies.length > 0
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-600/20'
-                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/20'
-                }`}
-              >
-                <Database className="h-3.5 w-3.5" />
-                <span>Guardar en Base de Datos</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content Layout */}
-        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
-          {/* Left Column: Code Input, Samples, Fidelity Validation & Dependencies Alert */}
-          <div className="flex flex-col w-full lg:w-[42%] border-b lg:border-b-0 lg:border-r border-zinc-800/80 bg-zinc-950/70 p-4 sm:p-5 overflow-y-auto">
-            {/* Input Origin Tabs */}
-            <div className="flex rounded-xl bg-zinc-900/90 p-1 border border-zinc-800 mb-3">
-              <button
-                type="button"
-                onClick={() => setActiveTab('paste')}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-1.5 text-xs font-medium transition-all ${
-                  activeTab === 'paste'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <FileCode2 className="h-3.5 w-3.5" />
-                <span>Pegar HTML / CSS</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('live-canvas');
-                  handleInspectActiveComponent();
-                }}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-1.5 text-xs font-medium transition-all ${
-                  activeTab === 'live-canvas'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <MousePointerClick className="h-3.5 w-3.5" />
-                <span>Elemento en Lienzo</span>
-              </button>
-            </div>
-
-            {activeTab === 'paste' ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <Code className="h-3.5 w-3.5 text-indigo-400" />
-                    Código HTML con clases Tailwind
-                  </label>
-                  <div className="flex items-center gap-1 text-2xs text-zinc-400 overflow-x-auto">
-                    <span className="hidden sm:inline">Ejemplos:</span>
-                    {SAMPLE_SNIPPETS.map((snip, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          setHtmlInput(snip.code);
-                          setTimeout(handleAnalyzeHtml, 50);
-                        }}
-                        className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-zinc-300 hover:border-indigo-500/50 hover:text-white transition-colors cursor-pointer shrink-0"
-                      >
-                        {snip.name.split(' ')[0]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <textarea
-                  value={htmlInput}
-                  onChange={(e) => setHtmlInput(e.target.value)}
-                  placeholder="<button class='rounded-xl bg-indigo-600 px-4 py-2 text-white font-medium shadow-lg hover:bg-indigo-500'>Click me</button>"
-                  rows={7}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 font-mono text-xs text-zinc-200 placeholder-zinc-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none resize-none leading-relaxed"
-                />
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAnalyzeHtml}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-4 text-xs transition-colors shadow-xs cursor-pointer"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    <span>Analizar & Renderizar Preview</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHtmlInput('');
-                      setTechSheet(null);
-                    }}
-                    className="rounded-xl border border-zinc-800 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-300">
-                  <div className="flex items-center gap-2 font-semibold mb-1">
-                    <Info className="h-4 w-4 text-blue-400" />
-                    Inspección del DOM activo en el lienzo
-                  </div>
-                  <p className="text-zinc-400 leading-relaxed">
-                    Extrae el elemento renderizado en la pestaña activa del lienzo (
-                    <span className="font-semibold text-zinc-200">
-                      {activeComponent?.name || 'Componente actual'}
-                    </span>
-                    ) y transfiere sus clases y estructura al sandbox aislado.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleInspectActiveComponent}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-4 text-xs transition-colors shadow-xs cursor-pointer"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>Re-inspeccionar Lienzo Activo</span>
-                </button>
-              </div>
-            )}
-
-            {/* Dependency Analysis & Requirements Warning */}
-            <div className="mt-4 pt-4 border-t border-zinc-800/80">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <Package className="h-3.5 w-3.5 text-indigo-400" />
-                  Análisis de Dependencias de Librerías
-                </span>
-                {missingDependencies.length > 0 ? (
-                  <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider text-amber-300 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Requiere Paquetes
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
-                    <Check className="h-3 w-3" />
-                    Compatible
-                  </span>
-                )}
-              </div>
-
-              {detectedDependencies.length > 0 ? (
-                <div className="flex flex-col gap-2.5">
-                  {detectedDependencies.map((dep) => (
-                    <div
-                      key={dep.id}
-                      className={`rounded-xl border p-3 text-xs flex flex-col gap-2 ${
-                        dep.isInstalledInCurrentApp
-                          ? 'border-emerald-500/20 bg-emerald-500/5'
-                          : 'border-amber-500/30 bg-amber-500/10'
-                      }`}
+          {activeTab === 'paste' ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor="inspector-html-input" className="text-base font-semibold">
+                  HTML capturado
+                </label>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">Ejemplos:</span>
+                  {SAMPLE_SNIPPETS.map((snip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      title={snip.name}
+                      onClick={() => {
+                        setHtmlInput(snip.code);
+                        setTimeout(handleAnalyzeHtml, 50);
+                      }}
+                      className="rounded-full border border-zinc-500 dark:border-zinc-400 px-2.5 py-0.5 text-sm text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          {dep.isInstalledInCurrentApp ? (
-                            <PackageCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                          )}
-                          <div>
-                            <span className="font-semibold text-zinc-100 block">
-                              {dep.name}
-                            </span>
-                            <span className="text-3xs font-mono text-zinc-400">
-                              {dep.packageName}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`rounded-md px-2 py-0.5 text-3xs font-semibold border ${
-                            dep.isInstalledInCurrentApp
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                              : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                          }`}
-                        >
-                          {dep.isInstalledInCurrentApp ? 'Instalada en este lab' : 'No instalada'}
-                        </span>
-                      </div>
-
-                      <p className="text-2xs text-zinc-300 leading-relaxed">
-                        {dep.reason}
-                      </p>
-
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-800/60">
-                        <div className="flex items-center gap-1 text-3xs text-zinc-400">
-                          <span>Tokens:</span>
-                          <span className="font-mono text-zinc-300 bg-zinc-800/80 px-1.5 py-0.5 rounded">
-                            {dep.matchedTokens.slice(0, 2).join(', ')}
-                          </span>
-                        </div>
-
-                        {!dep.isInstalledInCurrentApp && (
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(dep.installCommand, `cmd-${dep.id}`)}
-                            className="inline-flex items-center gap-1 rounded-md bg-zinc-900 border border-zinc-700 px-2 py-1 font-mono text-3xs text-zinc-200 hover:text-white hover:border-amber-500/60 transition-colors cursor-pointer"
-                            title="Copiar comando npm"
-                          >
-                            <Terminal className="h-3 w-3 text-amber-400" />
-                            <span>{dep.installCommand}</span>
-                            {copiedKey === `cmd-${dep.id}` ? (
-                              <Check className="h-3 w-3 text-emerald-400" />
-                            ) : (
-                              <Copy className="h-3 w-3 opacity-60" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                      {snip.name.split(' ')[0]}
+                    </button>
                   ))}
                 </div>
-              ) : (
-                <div className="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-3 text-2xs text-zinc-400 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>
-                    No se detectaron librerías externas (Framer Motion, Lucide, Radix). El componente es 100% Tailwind CSS nativo.
-                  </span>
-                </div>
-              )}
+              </div>
+
+              <textarea
+                id="inspector-html-input"
+                value={htmlInput}
+                onChange={(e) => setHtmlInput(e.target.value)}
+                placeholder="<button class='rounded-xl bg-indigo-600 px-4 py-2 text-white font-medium shadow-lg hover:bg-indigo-500'>Click me</button>"
+                rows={10}
+                spellCheck={false}
+                className="w-full resize-y rounded-xl border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 p-4 font-mono text-sm leading-[22px] text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-500"
+              />
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">Se limpia antes de mostrarlo: sin scripts ni atributos peligrosos.</p>
+
+              <div className="flex gap-2">
+                <button type="button" onClick={handleAnalyzeHtml} className={`${primaryBtn} flex-1`}>
+                  Analizar y previsualizar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHtmlInput('');
+                    setTechSheet(null);
+                  }}
+                  className={outlineBtn}
+                >
+                  Limpiar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 rounded-xl bg-violet-100 dark:bg-violet-900 px-5 py-4">
+                <span className="mono-label text-xs text-violet-700 dark:text-violet-300">Nota</span>
+                <p className="text-base leading-[26px]">
+                  Tomamos la pieza que está en el lienzo (
+                  <strong className="font-semibold">{activeComponent?.name || 'la pieza actual'}</strong>) y pasamos sus clases y su estructura a la vista previa aislada.
+                </p>
+              </div>
+              <button type="button" onClick={handleInspectActiveComponent} className={outlineBtn}>
+                Volver a inspeccionar
+              </button>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div role="alert" className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-indigo-700 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-5 py-4">
+              <span className="mono-label text-xs text-indigo-700 dark:text-indigo-400">Revisa</span>
+              <span className="text-base">{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Dependencias */}
+          <section className="flex flex-col gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display text-[22px] leading-7">Dependencias</h3>
+              <span className={`mono-label text-xs ${hasMissing ? 'text-amber-700 dark:text-amber-300' : 'text-violet-600 dark:text-violet-400'}`}>
+                {hasMissing ? 'Faltan paquetes' : 'Compatible'}
+              </span>
             </div>
 
-            {/* Validation & Verification Checklist Card */}
-            <div className="mt-4 pt-4 border-t border-zinc-800/80">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  Validación de Fidelidad Visual
-                </span>
-                <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-3xs font-semibold uppercase tracking-wider text-emerald-300">
-                  Sandbox Aislado
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-zinc-800/90 bg-zinc-900/50 p-3 flex flex-col gap-2 text-xs">
-                <div className="flex items-center justify-between text-zinc-300">
-                  <span className="text-zinc-400">Etiqueta Principal:</span>
-                  <span className="font-mono font-semibold text-indigo-400">
-                    &lt;{techSheet?.tagName || 'esperando...'}&gt;
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-300">
-                  <span className="text-zinc-400">Tokens Tailwind Detectados:</span>
-                  <span className="font-mono text-zinc-200">
-                    {techSheet ? `${techSheet.totalClassesCount} clases` : '0 clases'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-300">
-                  <span className="text-zinc-400">Medidas Calculadas:</span>
-                  <span className="font-mono text-zinc-200">
-                    {techSheet
-                      ? `${techSheet.computedStyles.dimensions.width}px × ${techSheet.computedStyles.dimensions.height}px`
-                      : '---'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-300">
-                  <span className="text-zinc-400">Aislamiento de Estilos:</span>
-                  <span className="text-emerald-400 font-medium flex items-center gap-1">
-                    <Check className="h-3 w-3" />
-                    Iframe sandbox 100% aislado
-                  </span>
-                </div>
-              </div>
-
-              {/* Quick Save CTA */}
-              {techSheet && onSaveComponent && (
-                <div
-                  className={`mt-4 rounded-xl border p-3.5 flex flex-col gap-2 ${
-                    missingDependencies.length > 0
-                      ? 'border-amber-500/30 bg-amber-500/10'
-                      : 'border-emerald-500/30 bg-emerald-500/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-xs font-semibold flex items-center gap-1.5 ${
-                        missingDependencies.length > 0 ? 'text-amber-300' : 'text-emerald-300'
-                      }`}
-                    >
-                      {missingDependencies.length > 0 ? (
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                      ) : (
-                        <Database className="h-3.5 w-3.5" />
-                      )}
-                      ¿Listo para agregarlo a tu colección?
-                    </span>
-                  </div>
-                  <p className="text-2xs text-zinc-400 leading-relaxed">
-                    {missingDependencies.length > 0
-                      ? 'Puedes guardarlo ahora; se adjuntará el aviso de dependencias externas requeridas.'
-                      : 'Una vez verificado que se ve idéntico al original, guárdalo permanentemente en IndexedDB.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsSavingDrawerOpen(true)}
-                    className={`w-full flex items-center justify-center gap-2 rounded-lg text-white font-medium py-2 px-3 text-xs transition-colors shadow-xs cursor-pointer mt-1 ${
-                      missingDependencies.length > 0
-                        ? 'bg-amber-600 hover:bg-amber-500'
-                        : 'bg-emerald-600 hover:bg-emerald-500'
+            {detectedDependencies.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {detectedDependencies.map((dep) => (
+                  <li
+                    key={dep.id}
+                    className={`flex flex-col gap-2 rounded-xl border px-4 py-3 ${
+                      dep.isInstalledInCurrentApp
+                        ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                        : 'border-2 border-dashed border-amber-600 dark:border-amber-300 bg-amber-50 dark:bg-amber-900'
                     }`}
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Guardar en Base de Datos</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {errorMsg && (
-              <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
-              </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="block text-base font-semibold">{dep.name}</span>
+                        <span className="font-mono text-[13px] text-zinc-600 dark:text-zinc-300">{dep.packageName}</span>
+                      </div>
+                      <span className="mono-label shrink-0 text-xs text-zinc-600 dark:text-zinc-300">
+                        {dep.isInstalledInCurrentApp ? 'Instalada' : 'Sin instalar'}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-[21px] text-zinc-700 dark:text-zinc-300">{dep.reason}</p>
+                    {!dep.isInstalledInCurrentApp && (
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(dep.installCommand, `cmd-${dep.id}`)}
+                        title="Copiar comando npm"
+                        className="inline-flex items-center gap-2 self-start rounded-lg bg-zinc-900 dark:bg-black px-3 py-1.5 font-mono text-[13px] text-zinc-50 hover:bg-zinc-800 cursor-pointer"
+                      >
+                        {dep.installCommand}
+                        {copiedKey === `cmd-${dep.id}` ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-70" />}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-base text-zinc-600 dark:text-zinc-300">
+                No usa librerías externas (Motion, Lucide, Radix): es Tailwind puro.
+              </p>
             )}
+          </section>
+        </div>
+
+        {/* Derecha: lo que hemos encontrado */}
+        <div className="flex min-w-0 flex-col gap-5">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800">
+            <div role="tablist" aria-label="Resultado" className="flex gap-6">
+              {rightTabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={rightPanelTab === t.id}
+                  onClick={() => setRightPanelTab(t.id)}
+                  className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-base transition-colors cursor-pointer ${
+                    rightPanelTab === t.id
+                      ? 'border-indigo-600 dark:border-indigo-400 font-semibold text-zinc-900 dark:text-zinc-50'
+                      : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Right Column: Live Preview Sandbox, Specs & TSX */}
-          <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950">
-            {/* Right Tabs Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800/80 px-4 py-2.5 bg-zinc-900/40">
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setRightPanelTab('preview')}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                    rightPanelTab === 'preview'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>Live Preview Aislado</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRightPanelTab('specs')}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                    rightPanelTab === 'specs'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <Sliders className="h-3.5 w-3.5" />
-                  <span>Ficha Técnica & Tokens</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRightPanelTab('tsx')}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                    rightPanelTab === 'tsx'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <Code className="h-3.5 w-3.5" />
-                  <span>Código React TSX</span>
-                </button>
-              </div>
-
-              {/* Viewport & Theme Controls for Preview */}
-              {rightPanelTab === 'preview' && (
-                <div className="flex items-center gap-2">
-                  {/* Theme Switcher */}
-                  <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/80 p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewTheme('dark')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        previewTheme === 'dark'
-                          ? 'bg-zinc-800 text-zinc-100'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Fondo Oscuro (Dark)"
-                    >
-                      <Moon className="h-3.5 w-3.5" />
+          {rightPanelTab === 'preview' && (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div role="group" aria-label="Fondo de la vista previa" className="flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+                  {(
+                    [
+                      ['dark', 'Oscuro'],
+                      ['light', 'Claro'],
+                      ['checkerboard', 'Cuadros'],
+                    ] as const
+                  ).map(([theme, label]) => (
+                    <button key={theme} type="button" aria-pressed={previewTheme === theme} onClick={() => setPreviewTheme(theme)} className={segmentBtn(previewTheme === theme)}>
+                      {label}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewTheme('light')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        previewTheme === 'light'
-                          ? 'bg-zinc-200 text-zinc-900'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Fondo Claro (Light)"
-                    >
-                      <Sun className="h-3.5 w-3.5" />
+                  ))}
+                </div>
+                <div role="group" aria-label="Ancho de la vista previa" className="hidden sm:flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+                  {(
+                    [
+                      ['fluid', 'Fluido'],
+                      ['tablet', 'Tablet'],
+                      ['mobile', 'Móvil'],
+                    ] as const
+                  ).map(([size, label]) => (
+                    <button key={size} type="button" aria-pressed={viewportSize === size} onClick={() => setViewportSize(size)} className={segmentBtn(viewportSize === size)}>
+                      {label}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewTheme('checkerboard')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        previewTheme === 'checkerboard'
-                          ? 'bg-indigo-600 text-white'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Fondo Transparente / Cuadriculado (Checkerboard)"
-                    >
-                      <Grid className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Responsive Viewport Mode */}
-                  <div className="hidden sm:flex items-center rounded-lg border border-zinc-800 bg-zinc-900/80 p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setViewportSize('fluid')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        viewportSize === 'fluid'
-                          ? 'bg-zinc-800 text-zinc-100'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Ancho Fluido (100%)"
-                    >
-                      <Laptop className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewportSize('tablet')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        viewportSize === 'tablet'
-                          ? 'bg-zinc-800 text-zinc-100'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Tablet (640px)"
-                    >
-                      <Tablet className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewportSize('mobile')}
-                      className={`rounded-md p-1.5 text-xs transition-colors ${
-                        viewportSize === 'mobile'
-                          ? 'bg-zinc-800 text-zinc-100'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      title="Móvil (375px)"
-                    >
-                      <Smartphone className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Zoom Controls */}
-                  <div className="hidden md:flex items-center gap-1 text-2xs text-zinc-400">
-                    <button
-                      type="button"
-                      onClick={() => setZoomScale((prev) => Math.max(0.75, prev - 0.25))}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                      title="Reducir zoom"
-                    >
-                      <ZoomOut className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="font-mono w-9 text-center">{Math.round(zoomScale * 100)}%</span>
-                    <button
-                      type="button"
-                      onClick={() => setZoomScale((prev) => Math.min(1.5, prev + 0.25))}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                      title="Aumentar zoom"
-                    >
-                      <ZoomIn className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Refresh Iframe */}
+                  ))}
+                </div>
+                <div className="ml-auto flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale((prev) => Math.max(0.75, prev - 0.25))}
+                    aria-label="Reducir zoom"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </button>
+                  <span className="w-11 text-center font-mono text-sm text-zinc-600 dark:text-zinc-300">{Math.round(zoomScale * 100)}%</span>
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale((prev) => Math.min(1.5, prev + 0.25))}
+                    aria-label="Aumentar zoom"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIframeKey((prev) => prev + 1)}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-                    title="Recargar vista previa aislada"
+                    aria-label="Recargar la vista previa"
+                    title="Recargar la vista previa"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                   >
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className="h-4 w-4" />
                   </button>
-                </div>
-              )}
-            </div>
-
-            {/* Right Tab 1: Live Preview Iframe */}
-            {rightPanelTab === 'preview' && (
-              <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-hidden bg-zinc-950/90">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xs font-semibold uppercase tracking-wider text-zinc-400">
-                    Renderizado en vivo con Tailwind JIT completo y CSS aislado
-                  </span>
-                  <span className="text-2xs text-zinc-500">
-                    Interactúa directamente con hover, focus y clics
-                  </span>
-                </div>
-
-                <div className="flex-1 flex items-center justify-center rounded-2xl border border-zinc-800/90 bg-zinc-900/30 p-2 sm:p-4 overflow-auto">
-                  <div
-                    style={{
-                      width:
-                        viewportSize === 'mobile'
-                          ? '375px'
-                          : viewportSize === 'tablet'
-                          ? '640px'
-                          : '100%',
-                      transform: `scale(${zoomScale})`,
-                      transformOrigin: 'center center',
-                      transition: 'width 0.25s ease, transform 0.2s ease',
-                    }}
-                    className="h-full flex flex-col rounded-xl overflow-hidden shadow-2xl border border-zinc-800"
-                  >
-                    <iframe
-                      key={iframeKey}
-                      title="Isolated Live Preview"
-                      srcDoc={iframeSrcDoc}
-                      sandbox="allow-scripts"
-                      className="w-full h-full min-h-[350px] border-0"
-                    />
-                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Right Tab 2: Technical Specs & Tokens */}
-            {rightPanelTab === 'specs' && (
-              <InspectorSpecsTab
-                techSheet={techSheet}
-                copiedKey={copiedKey}
-                copyToClipboard={copyToClipboard}
-              />
-            )}
+              <div className="flex min-h-[380px] items-center justify-center overflow-auto rounded-[20px] border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-black p-4">
+                <div
+                  style={{
+                    width: viewportSize === 'mobile' ? '375px' : viewportSize === 'tablet' ? '640px' : '100%',
+                    transform: `scale(${zoomScale})`,
+                    transformOrigin: 'center center',
+                    transition: 'width 0.25s ease, transform 0.2s ease',
+                  }}
+                  className="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800"
+                >
+                  <iframe
+                    key={iframeKey}
+                    title="Isolated Live Preview"
+                    srcDoc={iframeSrcDoc}
+                    sandbox="allow-scripts"
+                    className="h-full min-h-[350px] w-full border-0"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">Se ve en un iframe aislado con Tailwind completo. Puedes pasar el ratón, enfocar y pulsar.</p>
+            </div>
+          )}
 
-            {/* Right Tab 3: React TSX Code */}
-            {rightPanelTab === 'tsx' && (
-              <InspectorTsxTab
-                generatedTsxCode={generatedTsxCode}
-                missingDependencies={missingDependencies}
-                copiedKey={copiedKey}
-                copyToClipboard={copyToClipboard}
-                isSavingDrawerOpen={isSavingDrawerOpen}
-                setIsSavingDrawerOpen={setIsSavingDrawerOpen}
-              />
-            )}
-          </div>
+          {rightPanelTab === 'specs' && (
+            <InspectorSpecsTab techSheet={techSheet} copiedKey={copiedKey} copyToClipboard={copyToClipboard} />
+          )}
 
-          {/* Integrated Save to Database Drawer */}
-          <AnimatePresence>
-            {isSavingDrawerOpen && (
-              <motion.div
-                initial={{ opacity: 0, x: 300 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 300 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-                className="absolute inset-y-0 right-0 w-full sm:w-[480px] bg-zinc-950/95 border-l border-zinc-800 backdrop-blur-xl shadow-2xl z-30 flex flex-col"
+          {rightPanelTab === 'tsx' && (
+            <InspectorTsxTab
+              generatedTsxCode={generatedTsxCode}
+              missingDependencies={missingDependencies}
+              copiedKey={copiedKey}
+              copyToClipboard={copyToClipboard}
+              isSavingDrawerOpen={isSavingDrawerOpen}
+              setIsSavingDrawerOpen={setIsSavingDrawerOpen}
+            />
+          )}
+
+          {/* Resumen del análisis */}
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              ['Etiqueta', techSheet ? `<${techSheet.tagName}>` : '—'],
+              ['Clases Tailwind', techSheet ? String(techSheet.totalClassesCount) : '0'],
+              [
+                'Medidas',
+                techSheet
+                  ? `${techSheet.computedStyles.dimensions.width}px × ${techSheet.computedStyles.dimensions.height}px`
+                  : '—',
+              ],
+              ['Dependencias', String(detectedDependencies.length)],
+            ].map(([label, value]) => (
+              <div key={label} className="flex flex-col-reverse gap-0.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-3">
+                <dt className="text-sm text-zinc-600 dark:text-zinc-300">{label}</dt>
+                <dd className="truncate font-display text-[20px] leading-7">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {techSheet && onSaveComponent && (
+            <div
+              className={`flex flex-col gap-4 rounded-xl px-5 py-4 sm:flex-row sm:items-center ${
+                hasMissing ? 'bg-amber-100 dark:bg-amber-900' : 'bg-violet-100 dark:bg-violet-900'
+              }`}
+            >
+              <span
+                className={`mono-label self-start rounded-full px-3 py-1 text-xs sm:self-center ${
+                  hasMissing ? 'bg-amber-400 text-zinc-900' : 'bg-violet-600 text-white dark:bg-violet-400 dark:text-zinc-950'
+                }`}
               >
-                <div className="flex items-center justify-between border-b border-zinc-800/80 px-5 py-4 bg-zinc-900/50">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-emerald-400" />
-                    <h3 className="text-sm font-bold text-zinc-100">
-                      Guardar en Base de Datos
-                    </h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsSavingDrawerOpen(false)}
-                    className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-                  {/* Missing Dependencies Warning Block */}
-                  {missingDependencies.length > 0 ? (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-200 flex flex-col gap-2.5">
-                      <div className="flex items-center gap-2 font-semibold text-amber-300">
-                        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
-                        <span>Advertencia de Dependencias Adicionales</span>
-                      </div>
-                      <p className="text-zinc-300 text-2xs leading-relaxed">
-                        Este componente utiliza clases o atributos asociados a librerías externas que no están instaladas en este proyecto. Para que funcione con fidelidad plena al integrarlo, instala los paquetes requeridos:
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {missingDependencies.map((dep) => (
-                          <div
-                            key={dep.id}
-                            className="rounded-lg bg-zinc-900/80 border border-zinc-800 p-2.5 flex items-center justify-between gap-2"
-                          >
-                            <div>
-                              <span className="font-semibold text-zinc-100 text-xs block">
-                                {dep.name}
-                              </span>
-                              <span className="text-3xs font-mono text-zinc-400">
-                                {dep.packageName}
-                              </span>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                copyToClipboard(dep.installCommand, `save-dep-${dep.id}`)
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-3xs text-zinc-200 hover:text-white hover:border-amber-500/50 transition-colors cursor-pointer"
-                              title="Copiar comando npm"
-                            >
-                              {copiedKey === `save-dep-${dep.id}` ? (
-                                <Check className="h-3 w-3 text-emerald-400" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                              <span>Copiar npm</span>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-3xs text-zinc-400">
-                        Puedes guardarlo ahora en la base de datos; la nota de dependencias quedará registrada en el historial del componente.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                      <span className="text-2xs">
-                        Todas las dependencias detectadas están disponibles en este proyecto.
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Gold Standard UIComponent Switch & Summary */}
-                  <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-3.5 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-indigo-400 shrink-0" />
-                        <span className="text-xs font-bold text-zinc-100">
-                          Modelo Estándar AccentCard
-                        </span>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={useGoldStandard}
-                          onChange={(e) => setUseGoldStandard(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                      </label>
-                    </div>
-
-                    {useGoldStandard ? (
-                      <div className="space-y-1.5 text-2xs text-zinc-300">
-                        <p className="text-zinc-400 leading-relaxed">
-                          Convierte este HTML en una pieza de alta fidelidad con 3 variantes interactivas y documentación de props:
-                        </p>
-                        <div className="grid grid-cols-2 gap-1.5 pt-1">
-                          <div className="rounded-lg bg-zinc-900/80 border border-zinc-800 p-2">
-                            <span className="text-indigo-400 font-semibold block">3 Variantes</span>
-                            <span className="text-zinc-400 text-3xs">Estándar, Ambient Glow, Compacto</span>
-                          </div>
-                          <div className="rounded-lg bg-zinc-900/80 border border-zinc-800 p-2">
-                            <span className="text-emerald-400 font-semibold block">Props Tipadas</span>
-                            <span className="text-zinc-400 text-3xs">variant, accentColor, title, acción</span>
-                          </div>
-                        </div>
-
-                        {(semanticSlots.title || semanticSlots.actionLabel) && (
-                          <div className="pt-1 border-t border-zinc-800/80 text-3xs flex flex-wrap gap-1.5 text-zinc-400">
-                            {semanticSlots.title && (
-                              <span className="inline-flex items-center gap-1 rounded bg-zinc-800/90 px-1.5 py-0.5 border border-zinc-700/60 text-zinc-300">
-                                🏷️ Título: <strong className="text-zinc-100 truncate max-w-[120px]">{semanticSlots.title}</strong>
-                              </span>
-                            )}
-                            {semanticSlots.actionLabel && (
-                              <span className="inline-flex items-center gap-1 rounded bg-zinc-800/90 px-1.5 py-0.5 border border-zinc-700/60 text-zinc-300">
-                                🔘 Botón: <strong className="text-zinc-100 truncate max-w-[120px]">{semanticSlots.actionLabel}</strong>
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-2xs text-zinc-400">
-                        Guardado básico como componente estático sin variantes ni tabla de props.
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Nombre del Componente
-                    </label>
-                    <input
-                      type="text"
-                      value={saveName}
-                      onChange={(e) => setSaveName(e.target.value)}
-                      placeholder="Ej: PricingCard, PrimaryGlowButton..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Categoría en la Biblioteca
-                    </label>
-                    <select
-                      value={saveCategory}
-                      onChange={(e) => setSaveCategory(e.target.value as Exclude<ComponentCategory, 'all' | 'favorites'>)}
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-xs text-zinc-100 focus:border-indigo-500 focus:outline-none"
-                    >
-                      <option value="buttons">Botones (buttons)</option>
-                      <option value="cards">Tarjetas (cards)</option>
-                      <option value="inputs">Formularios & Inputs (inputs)</option>
-                      <option value="feedback">Feedback & Alertas (feedback)</option>
-                      <option value="navigation">Navegación (navigation)</option>
-                      <option value="data">Visualización de Datos (data)</option>
-                      <option value="custom">General / Custom (custom)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Subtítulo o Tagline
-                    </label>
-                    <input
-                      type="text"
-                      value={saveTagline}
-                      onChange={(e) => setSaveTagline(e.target.value)}
-                      placeholder="Breve frase de descripción..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Descripción extendida
-                    </label>
-                    <textarea
-                      value={saveDescription}
-                      onChange={(e) => setSaveDescription(e.target.value)}
-                      rows={3}
-                      placeholder="Detalles sobre variantes, efectos y compatibilidad..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Etiquetas (Tags)
-                    </label>
-                    <input
-                      type="text"
-                      value={saveTags}
-                      onChange={(e) => setSaveTags(e.target.value)}
-                      placeholder="separadas por coma..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t border-zinc-800/80 p-4 bg-zinc-900/60 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsSavingDrawerOpen(false)}
-                    className="rounded-xl border border-zinc-800 px-4 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirmSaveToDatabase}
-                    className={`inline-flex items-center gap-2 rounded-xl text-white font-semibold px-5 py-2 text-xs shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer ${
-                      missingDependencies.length > 0
-                        ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
-                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25'
-                    }`}
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>Confirmar y Guardar en BD</span>
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {hasMissing ? 'Ojo' : 'Correcto'}
+              </span>
+              <p className="flex-1 text-base">
+                {hasMissing
+                  ? 'Puedes guardarla ya; quedará anotado qué paquetes necesita.'
+                  : 'Si se ve igual que el original, ya puedes guardarla.'}
+              </p>
+              <button type="button" id="btn-inspector-save-to-library" onClick={() => setIsSavingDrawerOpen(true)} className={primaryBtn}>
+                Guardar en la biblioteca
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Panel lateral para guardar la pieza */}
+      <AnimatePresence>
+        {isSavingDrawerOpen && (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Cerrar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSavingDrawerOpen(false)}
+              className="fixed inset-0 z-40 bg-zinc-950/40 cursor-default"
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="inspector-save-title"
+              initial={{ opacity: 0, x: 300 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 300 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 shadow-lg sm:w-[480px]"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-5">
+                <div className="flex flex-col gap-0.5">
+                  <span className="mono-label text-xs text-indigo-700 dark:text-indigo-400">Guardar</span>
+                  <h3 id="inspector-save-title" className="font-display text-[22px] leading-7">
+                    Nueva pieza
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSavingDrawerOpen(false)}
+                  aria-label="Cerrar"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-6">
+                {hasMissing ? (
+                  <div className="flex flex-col gap-3 rounded-xl bg-amber-100 dark:bg-amber-900 px-5 py-4">
+                    <span className="mono-label text-xs text-amber-700 dark:text-amber-300">Ojo</span>
+                    <p className="text-base leading-[26px]">
+                      Usa librerías que este proyecto no tiene. Para que se vea igual donde la uses, instala:
+                    </p>
+                    <ul className="flex flex-col gap-2">
+                      {missingDependencies.map((dep) => (
+                        <li key={dep.id} className="flex items-center justify-between gap-2 rounded-lg bg-white dark:bg-zinc-900 px-3 py-2">
+                          <div>
+                            <span className="block text-sm font-semibold">{dep.name}</span>
+                            <span className="font-mono text-[13px] text-zinc-600 dark:text-zinc-300">{dep.packageName}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(dep.installCommand, `save-dep-${dep.id}`)}
+                            title="Copiar comando npm"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-zinc-500 dark:border-zinc-400 px-3 text-sm cursor-pointer"
+                          >
+                            {copiedKey === `save-dep-${dep.id}` ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                            Copiar npm
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-base text-zinc-600 dark:text-zinc-300">Todas sus dependencias están disponibles en este proyecto.</p>
+                )}
+
+                <label className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-4 cursor-pointer">
+                  <span className="flex flex-col gap-1">
+                    <span className="text-base font-semibold">Convertir en pieza completa</span>
+                    <span className="text-sm leading-[21px] text-zinc-600 dark:text-zinc-300">
+                      {useGoldStandard
+                        ? 'Con 3 variantes (estándar, con brillo y compacta) y props documentadas: variant, accentColor, title y acción.'
+                        : 'Se guarda como pieza estática, sin variantes ni tabla de props.'}
+                    </span>
+                    {useGoldStandard && (semanticSlots.title || semanticSlots.actionLabel) && (
+                      <span className="flex flex-wrap gap-1.5 pt-1 text-sm">
+                        {semanticSlots.title && (
+                          <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5">
+                            Título: <strong className="font-semibold">{semanticSlots.title}</strong>
+                          </span>
+                        )}
+                        {semanticSlots.actionLabel && (
+                          <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5">
+                            Botón: <strong className="font-semibold">{semanticSlots.actionLabel}</strong>
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={useGoldStandard}
+                    onChange={(e) => setUseGoldStandard(e.target.checked)}
+                    className="mt-1 h-5 w-5 shrink-0 accent-[#1d5f80] cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-base font-semibold">Nombre</span>
+                  <input
+                    type="text"
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    placeholder="Ej: PricingCard, PrimaryGlowButton..."
+                    className={`${fieldClass} h-11`}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-base font-semibold">Categoría</span>
+                  <select
+                    value={saveCategory}
+                    onChange={(e) => setSaveCategory(e.target.value as Exclude<ComponentCategory, 'all' | 'favorites'>)}
+                    className={`${fieldClass} h-11`}
+                  >
+                    <option value="buttons">Botones</option>
+                    <option value="cards">Tarjetas</option>
+                    <option value="inputs">Entradas</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="navigation">Navegación</option>
+                    <option value="data">Datos</option>
+                    <option value="custom">Otra</option>
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-base font-semibold">Subtítulo</span>
+                  <input
+                    type="text"
+                    value={saveTagline}
+                    onChange={(e) => setSaveTagline(e.target.value)}
+                    placeholder="Una frase que la describa"
+                    className={`${fieldClass} h-11`}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-base font-semibold">Descripción</span>
+                  <textarea
+                    value={saveDescription}
+                    onChange={(e) => setSaveDescription(e.target.value)}
+                    rows={3}
+                    placeholder="Variantes, efectos, dónde usarla…"
+                    className={`${fieldClass} resize-none py-3`}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-base font-semibold">Etiquetas</span>
+                  <input
+                    type="text"
+                    value={saveTags}
+                    onChange={(e) => setSaveTags(e.target.value)}
+                    placeholder="separadas por comas"
+                    className={`${fieldClass} h-11`}
+                  />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4">
+                <button type="button" onClick={() => setIsSavingDrawerOpen(false)} className={outlineBtn}>
+                  Cancelar
+                </button>
+                <button type="button" onClick={handleConfirmSaveToDatabase} className={primaryBtn}>
+                  <Check className="h-4 w-4" />
+                  Guardar pieza
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
