@@ -18,15 +18,15 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
   return (
     <div className="space-y-5">
       {/* Format selection buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800/80 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={() => setExportFormat('tailwind-v4')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${
               exportFormat === 'tailwind-v4'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
             Tailwind v4 (@theme)
@@ -35,10 +35,10 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
           <button
             type="button"
             onClick={() => setExportFormat('tailwind-v3')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${
               exportFormat === 'tailwind-v3'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
             Tailwind v3 (config)
@@ -47,10 +47,10 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
           <button
             type="button"
             onClick={() => setExportFormat('css-vars')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${
               exportFormat === 'css-vars'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
             Variables CSS (:root)
@@ -59,10 +59,10 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
           <button
             type="button"
             onClick={() => setExportFormat('ts-theme')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${
               exportFormat === 'ts-theme'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
             TypeScript Theme Object
@@ -71,10 +71,10 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
           <button
             type="button"
             onClick={() => setExportFormat('classes')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${
               exportFormat === 'classes'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
             Cheat Sheet Clases
@@ -92,19 +92,19 @@ export function PaletteExportTab({ exportFormat, setExportFormat, formattedCode,
               '¡Tokens de Tailwind copiados al portapapeles!',
             )
           }
-          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-4 text-base text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
         >
           {copiedKey === 'all-code' ? (
-            <Check className="h-3.5 w-3.5 text-white" />
+            <Check className="h-4 w-4" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
-          <span>{copiedKey === 'all-code' ? '¡Copiado!' : 'Copiar Código'}</span>
+          <span>{copiedKey === 'all-code' ? '¡Copiado!' : 'Copiar código'}</span>
         </button>
       </div>
 
       {/* Code display block */}
-      <div className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-950 text-zinc-200 p-4 font-mono text-xs overflow-x-auto shadow-inner">
+      <div className="relative overflow-x-auto rounded-xl bg-zinc-900 dark:bg-black p-5 font-mono text-sm text-zinc-50">
         <pre className="leading-relaxed whitespace-pre font-mono">
           {formattedCode}
         </pre>

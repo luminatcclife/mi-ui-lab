@@ -1,6 +1,7 @@
+import { MODAL_OVERLAY_CLASS, ModalHeader, modalBtn, modalField, modalPanelClass } from './ModalFrame';
 import React, { useState, useEffect } from 'react';
-import { X, Download, Upload, Copy, Check, RefreshCw, Database, HardDrive, ShieldCheck } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { useModalA11y } from '../hooks/useModalA11y';
+import { Download, Upload, Copy, Check, RefreshCw } from 'lucide-react';
 import { UIComponent } from '../types';
 import { getDBStats } from '../db/db';
 import { INITIAL_COMPONENTS } from '../data/initialComponents';
@@ -44,12 +45,20 @@ export function ExportModal({
     }
   }, [isOpen, components]);
 
+  const dialogRef = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const jsonString = JSON.stringify(components, null, 2);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(jsonString);
+  const handleCopy = async () => {
+    // Solo cuenta como copia de seguridad si el portapapeles aceptó el texto
+    try {
+      await navigator.clipboard.writeText(jsonString);
+    } catch {
+      onToast('⚠ No se pudo copiar al portapapeles: usa "Descargar .json"');
+      return;
+    }
     setCopied(true);
     onToast('¡Colección JSON copiada al portapapeles!');
     markExported();
@@ -103,241 +112,151 @@ export function ExportModal({
   return (
     <div
       id="export-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
+      className={MODAL_OVERLAY_CLASS}
     >
       <div
         id="export-modal-container"
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-modal-title"
+        tabIndex={-1}
+        className={modalPanelClass('max-w-2xl')}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 bg-zinc-900/60 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
-              <Download className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-zinc-100 tracking-tight">
-                Exportar & Respaldar mi-ui-lab
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Lleva tus componentes y tokens contigo a cualquier repositorio o equipo.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <ModalHeader
+          caption="Copia de seguridad"
+          title="Exportar e importar"
+          titleId="export-modal-title"
+          description="Lleva tus piezas propias a otro navegador o a otro equipo."
+          onClose={onClose}
+        />
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
-          {/* IndexedDB Dexie.js Live Status Card */}
-          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-4 relative overflow-hidden">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 shrink-0">
-                  <Database className="h-4 w-4" />
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+          <div className="flex flex-col gap-8">
+            {/* Estado de la base de datos local */}
+            <dl className="grid grid-cols-3 gap-2">
+              {[
+                [String(components.length), 'piezas en total'],
+                [String(dbStats?.customCount ?? 0), 'propias'],
+                [String(dbStats?.favoritesCount ?? 0), 'favoritas'],
+              ].map(([value, label]) => (
+                <div key={label} className="flex flex-col-reverse gap-0.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-3">
+                  <dt className="text-sm text-zinc-600 dark:text-zinc-300">{label}</dt>
+                  <dd className="font-display text-[28px] leading-[34px]">{value}</dd>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-zinc-200">Base de Datos Local (IndexedDB)</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Dexie.js Activo
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Almacenamiento persistente en tu navegador sin límite de 5MB y 100% privado en tu equipo.
-                  </p>
+              ))}
+            </dl>
+            <p className="-mt-5 text-sm leading-[21px] text-zinc-600 dark:text-zinc-300">
+              Se guardan en este navegador (IndexedDB{dbStats?.isReady ? ', activa' : ''}). No salen de aquí salvo que las exportes.
+            </p>
+
+            {/* Exportar */}
+            <section className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="font-display text-[22px] leading-7">Exportar la colección</h3>
+                <div className="flex gap-2">
+                  <button type="button" onClick={handleCopy} className={modalBtn.secondary}>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? 'Copiado' : 'Copiar JSON'}
+                  </button>
+                  <button type="button" onClick={handleDownload} className={modalBtn.primary}>
+                    <Download className="h-4 w-4" />
+                    Descargar .json
+                  </button>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-3 text-[11px] font-mono text-zinc-400 bg-zinc-900/80 px-3 py-1.5 rounded-xl border border-zinc-800 shrink-0">
-                <span className="flex items-center gap-1">
-                  <HardDrive className="h-3 w-3 text-indigo-400" />
-                  {dbStats?.customCount || 0} personalizadas
-                </span>
-                <span className="text-zinc-700">|</span>
-                <span>{components.length} en catálogo</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Export section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-zinc-200">
-                1. Exportar Colección Actual ({components.length} piezas)
-              </h3>
-              <div className="flex items-center gap-2">
-                <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  type="button"
-                  onClick={handleCopy}
-                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-all duration-200 cursor-pointer ${
-                    copied
-                      ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-semibold ring-1 ring-emerald-500/30'
-                      : 'border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
-                  }`}
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    {copied ? (
-                      <motion.span
-                        key="check"
-                        initial={{ scale: 0.6, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0.6 }}
-                        className="inline-flex items-center gap-1.5 text-emerald-400"
-                      >
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-                        <span>¡Copiado!</span>
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key="copy"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="inline-flex items-center gap-1.5"
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copiar JSON</span>
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-500 transition-colors cursor-pointer"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>Descargar .json</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="relative">
-              <AnimatePresence>
-                {copied && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.92 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.92 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    className="absolute top-2 right-2 z-20 flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-zinc-900/95 px-2.5 py-1 text-xs text-emerald-300 shadow-xl backdrop-blur-md ring-1 ring-emerald-500/20"
-                  >
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400"
-                    >
-                      <Check className="h-2.5 w-2.5 stroke-[3]" />
-                    </motion.span>
-                    <span className="font-semibold text-emerald-300 text-[10px]">
-                      ¡JSON copiado!
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
               <textarea
                 readOnly
                 rows={5}
+                aria-label="Colección en JSON"
                 value={jsonString}
-                className={`w-full rounded-xl border p-3 font-mono text-[11px] text-zinc-400 focus:outline-none select-all transition-all duration-300 ${
-                  copied
-                    ? 'border-emerald-500/50 bg-zinc-900 ring-1 ring-emerald-500/30'
-                    : 'border-zinc-800 bg-zinc-900/80'
-                }`}
+                className="w-full rounded-xl bg-zinc-900 dark:bg-black p-4 font-mono text-[13px] leading-5 text-zinc-50 select-all"
               />
-            </div>
-          </div>
+              <div className="flex gap-3 rounded-xl bg-amber-100 dark:bg-amber-900 px-4 py-3">
+                <span className="mono-label mt-0.5 h-fit shrink-0 rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] text-zinc-900">Ojo</span>
+                <p id="export-scope-note" className="text-sm leading-[21px]">
+                  La copia restaura tus <strong className="font-semibold">piezas propias</strong>. No incluye tus favoritos, las etiquetas que
+                  añadiste a las piezas base ni las iteraciones que registraste sobre ellas: al importarla en otro
+                  navegador, las piezas base vuelven a su estado original.
+                </p>
+              </div>
+            </section>
 
-          <div className="h-px bg-zinc-800" />
-
-          {/* Import section */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-zinc-200">
-              2. Importar o Sincronizar Colección Externa
-            </h3>
-            <p className="text-zinc-400">
-              Pega un JSON exportado previamente para sincronizar tus piezas creadas en otro equipo o proyecto.
-            </p>
-            <textarea
-              rows={4}
-              placeholder="Pega aquí el JSON con la colección..."
-              value={importJson}
-              onChange={(e) => {
-                setImportJson(e.target.value);
-                setImportErrors([]);
-              }}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 font-mono text-[11px] text-zinc-100 placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={!importJson.trim()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              <span>Cargar e Integrar Piezas</span>
-            </button>
-            {importErrors.length > 0 && (
-              <ul
-                id="import-validation-errors"
-                className="max-h-32 overflow-y-auto rounded-xl border border-rose-500/30 bg-rose-500/5 p-3 font-mono text-[11px] text-rose-300 space-y-1"
-              >
-                {importErrors.slice(0, 20).map((err, i) => (
-                  <li key={i}>• {err}</li>
-                ))}
-                {importErrors.length > 20 && <li>… y {importErrors.length - 20} más</li>}
-              </ul>
-            )}
-          </div>
-
-          <div className="h-px bg-zinc-800" />
-
-          {/* Reset section */}
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              <h4 className="text-xs font-semibold text-zinc-300">
-                Restablecer a Componentes de Fábrica
-              </h4>
-              <p className="text-[11px] text-zinc-500">
-                Restaura los componentes predeterminados incluyendo AccentCard y StepProgressCard con todas sus variantes.
+            {/* Importar */}
+            <section className="flex flex-col gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-8">
+              <h3 className="font-display text-[22px] leading-7">Importar una colección</h3>
+              <p className="text-base leading-[26px] text-zinc-600 dark:text-zinc-300">
+                Pega un JSON exportado para añadir las piezas que creaste en otro navegador o equipo. Las piezas con el mismo id se
+                reemplazan; el resto de tu colección no se toca.
               </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (
-                  confirm(
-                    '¿Restablecer la biblioteca a las piezas iniciales de mi-ui-lab?',
-                  )
-                ) {
-                  onResetToDefaults();
-                  onClose();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
-            >
-              <RefreshCw className="h-3 w-3" />
-              <span>Restablecer</span>
-            </button>
+              <textarea
+                rows={4}
+                aria-label="JSON a importar"
+                placeholder="Pega aquí el JSON con la colección..."
+                value={importJson}
+                onChange={(e) => {
+                  setImportJson(e.target.value);
+                  setImportErrors([]);
+                }}
+                className={`${modalField} font-mono text-[13px] leading-5`}
+              />
+              <button type="button" onClick={handleImport} disabled={!importJson.trim()} className={`${modalBtn.ink} self-start`}>
+                <Upload className="h-4 w-4" />
+                Cargar e integrar piezas
+              </button>
+              {importErrors.length > 0 && (
+                <div className="flex flex-col gap-2 rounded-xl border-2 border-dashed border-indigo-700 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-4 py-3">
+                  <span className="mono-label text-xs text-indigo-700 dark:text-indigo-400">Revisa</span>
+                  <ul id="import-validation-errors" className="max-h-32 space-y-1 overflow-y-auto font-mono text-[13px]">
+                    {importErrors.slice(0, 20).map((err, i) => (
+                      <li key={i}>· {err}</li>
+                    ))}
+                    {importErrors.length > 20 && <li>… y {importErrors.length - 20} más</li>}
+                  </ul>
+                </div>
+              )}
+            </section>
+
+            {/* Restablecer */}
+            <section className="flex flex-col gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-8 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-display text-[22px] leading-7">Volver al principio</h3>
+                <p className="text-sm leading-[21px] text-zinc-600 dark:text-zinc-300">
+                  Deja solo las 8 piezas base. Borra tus piezas propias, favoritos, etiquetas e iteraciones.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const customCount = components.filter((c) => c.isCustom).length;
+                  const piecesLine =
+                    customCount === 0
+                      ? 'No tienes piezas propias, pero'
+                      : customCount === 1
+                      ? 'Se borrará definitivamente tu pieza propia. Además,'
+                      : `Se borrarán definitivamente tus ${customCount} piezas propias. Además,`;
+                  if (
+                    confirm(
+                      `¿Restablecer la biblioteca a las piezas iniciales de mi-ui-lab?\n\n` +
+                        `${piecesLine} se perderán las iteraciones de las piezas base, tus favoritos y tus etiquetas.\n\n` +
+                        'Esta acción no se puede deshacer. Si no has exportado una copia, cancela y descárgala primero.',
+                    )
+                  ) {
+                    onResetToDefaults();
+                    onClose();
+                  }
+                }}
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border-2 border-indigo-700 dark:border-indigo-400 px-4 text-base font-semibold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950 cursor-pointer sm:self-center"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Restablecer
+              </button>
+            </section>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-zinc-800 bg-zinc-950 px-6 py-3 text-right">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer"
-          >
+        <div className="flex shrink-0 justify-end border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 sm:px-8">
+          <button type="button" onClick={onClose} className={modalBtn.secondary}>
             Cerrar
           </button>
         </div>

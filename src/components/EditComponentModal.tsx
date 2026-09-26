@@ -1,5 +1,6 @@
+import { MODAL_OVERLAY_CLASS, ModalHeader, modalBtn, modalField, modalLabel, modalPanelClass } from './ModalFrame';
 import React, { useState } from 'react';
-import { PenLine, X } from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
 import { ComponentCategory, UIComponent } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { SandboxedHtmlPreview } from './ui/SandboxedHtmlPreview';
@@ -27,10 +28,9 @@ const CATEGORIES: { id: Exclude<ComponentCategory, 'all' | 'favorites'>; label: 
   { id: 'custom', label: 'Custom' },
 ];
 
-const labelClass = 'block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5';
-const inputClass =
-  'w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none';
-const codeClass = `${inputClass} font-mono text-[11px] leading-relaxed`;
+const labelClass = modalLabel;
+const inputClass = modalField;
+const codeClass = `${modalField} font-mono text-[13px] leading-5`;
 
 /**
  * Edita metadatos y código de una pieza propia. La versión y el changelog van por "Nueva Iteración",
@@ -41,6 +41,7 @@ export function EditComponentModal({ component, onClose, onSave, onToast }: Edit
   const [form, setForm] = useState<ComponentEditForm>(() => formFromComponent(component));
   const [error, setError] = useState<string | null>(null);
   const isCaptured = component.rawHtml !== undefined;
+  const dialogRef = useModalA11y(true, onClose);
 
   const set = <K extends keyof ComponentEditForm>(key: K, value: ComponentEditForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -63,41 +64,26 @@ export function EditComponentModal({ component, onClose, onSave, onToast }: Edit
   return (
     <div
       id="edit-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
+      className={MODAL_OVERLAY_CLASS}
     >
       <div
         id="edit-modal-container"
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-modal-title"
-        className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        className={modalPanelClass('max-w-3xl')}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
-              <PenLine className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 id="edit-modal-title" className="text-base font-bold tracking-tight">
-                Editar pieza
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {isCaptured ? 'Pieza capturada: el HTML se sanea al guardar.' : 'Pieza documentada a mano.'} La versión se
-                cambia con "Nueva Iteración".
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <ModalHeader
+          caption="Editar"
+          title="Editar pieza"
+          titleId="edit-modal-title"
+          description={`${isCaptured ? 'Pieza capturada: el HTML se limpia al guardar.' : 'Pieza documentada a mano.'} La versión se cambia con «Nueva iteración».`}
+          onClose={onClose}
+        />
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-6 sm:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="edit-name" className={labelClass}>
@@ -168,7 +154,7 @@ export function EditComponentModal({ component, onClose, onSave, onToast }: Edit
               </div>
               <div>
                 <span className={labelClass}>Vista previa</span>
-                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-2">
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 p-2">
                   <SandboxedHtmlPreview
                     html={form.rawHtml ?? ''}
                     theme={isDark ? 'dark' : 'light'}
@@ -209,7 +195,7 @@ export function EditComponentModal({ component, onClose, onSave, onToast }: Edit
           </div>
 
           {error && (
-            <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
+            <p role="alert" className="rounded-xl border-2 border-dashed border-indigo-700 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-4 py-3 text-base">
               {error}
             </p>
           )}
@@ -218,14 +204,14 @@ export function EditComponentModal({ component, onClose, onSave, onToast }: Edit
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className={modalBtn.secondary}
             >
               Cancelar
             </button>
             <button
               type="submit"
               id="btn-save-edit"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 cursor-pointer"
+              className={modalBtn.primary}
             >
               Guardar cambios
             </button>

@@ -15,7 +15,7 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
   return (
     <div className="space-y-6">
       {/* Visual Strip Panorama */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="grid grid-cols-11 h-14 sm:h-18">
           {shades.map((shade) => {
             const isAnchor = shade.step === '500';
@@ -34,10 +34,10 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
                 title={`${tokenPrefix}-${shade.step}: ${shade.hex} (Clic para copiar)`}
               >
                 {isAnchor && (
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-xs" />
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40" />
                 )}
                 <span
-                  className="font-mono text-[10px] sm:text-xs font-bold transition-opacity opacity-70 group-hover:opacity-100"
+                  className="font-mono text-sm sm:text-xs font-semibold transition-opacity opacity-70 group-hover:opacity-100"
                   style={{ color: shade.recommendedTextColor }}
                 >
                   {shade.step}
@@ -60,9 +60,9 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
             <div
               key={shade.step}
               id={`shade-card-${shade.step}`}
-              className={`relative flex flex-col rounded-2xl border p-4 transition-all duration-200 bg-white dark:bg-zinc-900/60 shadow-2xs hover:shadow-md ${
+              className={`relative flex flex-col rounded-xl border p-4 transition-all duration-200 bg-white dark:bg-zinc-900 ${
                 isAnchor
-                  ? 'border-indigo-500/80 ring-2 ring-indigo-500/20'
+                  ? 'border-2 border-violet-600 dark:border-violet-400'
                   : 'border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700'
               }`}
             >
@@ -70,7 +70,7 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="h-10 w-10 rounded-xl border border-black/10 shadow-xs shrink-0 flex items-center justify-center font-mono text-xs font-bold"
+                    className="h-10 w-10 rounded-xl border border-black/10 shrink-0 flex items-center justify-center font-mono text-sm font-semibold"
                     style={{
                       backgroundColor: shade.hex,
                       color: shade.recommendedTextColor,
@@ -80,16 +80,16 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                      <span className="font-mono text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                         {tokenPrefix}-{shade.step}
                       </span>
                       {isAnchor && (
-                        <span className="rounded bg-indigo-100 dark:bg-indigo-950/80 px-1 py-0.2 font-mono text-[9px] font-bold text-indigo-600 dark:text-indigo-400">
+                        <span className="rounded bg-indigo-100 dark:bg-indigo-950/80 px-1 py-0.2 font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                           Base
                         </span>
                       )}
                     </div>
-                    <span className="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span className="font-mono text-[13px] text-zinc-500 dark:text-zinc-400">
                       {shade.hex.toUpperCase()}
                     </span>
                   </div>
@@ -97,7 +97,7 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
 
                 {/* WCAG AA indicator badge */}
                 <div
-                  className="rounded-lg px-2 py-0.5 text-[10px] font-semibold border flex items-center gap-1"
+                  className="rounded-lg px-2 py-0.5 text-sm font-semibold border flex items-center gap-1"
                   style={{
                     backgroundColor: shade.isLight ? '#f4f4f5' : '#27272a',
                     color: shade.isLight ? '#18181b' : '#fafafa',
@@ -115,7 +115,7 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
               </div>
 
               {/* HSL specs */}
-              <div className="text-[10px] font-mono text-zinc-400 flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/60 mb-3">
+              <div className="text-sm font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/60 mb-3">
                 <span>H: {shade.hsl.h}°</span>
                 <span>S: {shade.hsl.s}%</span>
                 <span>L: {shade.hsl.l}%</span>
@@ -132,12 +132,12 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
                       `HEX ${shade.hex} copiado`,
                     )
                   }
-                  className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 px-2 py-1.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                  className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-500 dark:border-zinc-400 px-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   {copiedKey === copyHexKey ? (
                     <Check className="h-3 w-3 text-emerald-500" />
                   ) : (
-                    <Copy className="h-3 w-3 text-zinc-400" />
+                    <Copy className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
                   )}
                   <span>HEX</span>
                 </button>
@@ -151,12 +151,12 @@ export function PaletteShadesTab({ shades, tokenPrefix, copiedKey, handleCopy }:
                       `Clase bg-${tokenPrefix}-${shade.step} copiada`,
                     )
                   }
-                  className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 px-2 py-1.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                  className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-500 dark:border-zinc-400 px-2 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 >
                   {copiedKey === copyClassKey ? (
                     <Check className="h-3 w-3 text-emerald-500" />
                   ) : (
-                    <Copy className="h-3 w-3 text-zinc-400" />
+                    <Copy className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
                   )}
                   <span>Tailwind</span>
                 </button>

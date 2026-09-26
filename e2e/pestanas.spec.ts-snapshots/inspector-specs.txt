@@ -1,71 +1,51 @@
-Inspector de Elementos & Live Preview Aislado
-COPIA FIEL EN IFRAME
-Captura fragmentos HTML/Tailwind, detecta dependencias requeridas (Lucide, Motion, Radix) y valida en sandbox antes de guardar
-Guardar en Base de Datos
-Pegar HTML / CSS
-Elemento en Lienzo
-Código HTML con clases Tailwind
+Pegar HTML
+Pieza del lienzo
+HTML capturado
 Ejemplos:
 Botón
 Tarjeta
 Artículo
 Badge
-Analizar & Renderizar Preview
+Se limpia antes de mostrarlo: sin scripts ni atributos peligrosos.
+Analizar y previsualizar
 Limpiar
-Análisis de Dependencias de Librerías
+Dependencias
 COMPATIBLE
 Lucide Icons
 lucide-react
-Instalada en este lab
+INSTALADA
 Se detectaron clases o marcadores de iconos Lucide (lucide, lucide-sparkles, Lucide).
-Tokens:
-lucide, lucide-sparkles
-Validación de Fidelidad Visual
-SANDBOX AISLADO
-Etiqueta Principal:
-<button>
-Tokens Tailwind Detectados:
-21 clases
-Medidas Calculadas:
-0px × 0px
-Aislamiento de Estilos:
-Iframe sandbox 100% aislado
-¿Listo para agregarlo a tu colección?
-Una vez verificado que se ve idéntico al original, guárdalo permanentemente en IndexedDB.
-Guardar en Base de Datos
-Live Preview Aislado
-Ficha Técnica & Tokens
-Código React TSX
-<button>
-• 21 clases Tailwind
-• <hora>
+Vista previa
+Ficha técnica
+Código TSX
+<button> · 21 clases · <hora>
 Copiar JSON
-Copiar Clases
-ESTILOS COMPUTADOS EN PANTALLA (WINDOW.GETCOMPUTEDSTYLE)
-Valores reales en runtime
-Color de Texto
+Copiar clases
+Estilos calculados
+Valores reales en el navegador
+Color de texto
 rgb(255, 255, 255)
-Fondo (Background)
-rgb(124, 58, 237)
-Tipografía / Tamaño
+Fondo
+oklch(0.511 0.262 276.966)
+Tamaño y peso
 14px (600)
-Dimensiones Reales
-0px × 0px
-Radio de Borde
+Medidas
+<ancho>px × <alto>px
+Radio
 12px
-Relleno (Padding)
+Relleno
 10px 20px 10px 20px
-Fuente (Font Family)
-Outfit
-Sombra (Box Shadow)
-rgba(0, 0, 0, 0) 0px 0px ...
-TOKENS DE DISEÑO TAILWIND CLASIFICADOS
-Haz clic en cualquier token para copiar
-Colores & Superficie
+Fuente
+system-ui
+Sombra
+rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.585 0.0288678 -0.231205 / 0.25) 0px 10px 15px -3px, oklab(0.585 0.0288678 -0.231205 / 0.25) 0px 4px 6px -4px
+Clases por grupo
+Pulsa una clase para copiarla
+Color y superficie
 2 clases
 bg-indigo-600
 text-white
-Espaciado & Medidas
+Espaciado y medidas
 3 clases
 gap-2
 px-5
@@ -74,20 +54,20 @@ Tipografía
 2 clases
 text-sm
 font-semibold
-Bordes & Radios
+Bordes y radios
 1 clase
 rounded-xl
-Layout & Flex/Grid
+Layout (flex y grid)
 3 clases
 inline-flex
 items-center
 justify-center
-Efectos & Sombras
+Efectos y sombras
 3 clases
 shadow-lg
 shadow-indigo-500/25
 transition-all
-Estados (hover/focus)
+Estados (hover, focus)
 7 clases
 hover:bg-indigo-500
 hover:shadow-indigo-500/40
@@ -96,3 +76,14 @@ active:translate-y-0
 focus:ring-2
 focus:ring-indigo-400
 focus:outline-none
+Etiqueta
+<button>
+Clases Tailwind
+21
+Medidas
+<ancho>px × <alto>px
+Dependencias
+1
+CORRECTO
+Si se ve igual que el original, ya puedes guardarla.
+Guardar en la biblioteca

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Icono de la app de escritorio: mismo motivo que public/favicon.svg, con el margen de los iconos de macOS -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#4f46e5"/>
+  <rect x="306" y="306" width="186" height="186" rx="46" fill="#fff"/>
+  <rect x="532" y="306" width="186" height="186" rx="46" fill="#fff" fill-opacity=".55"/>
+  <rect x="306" y="532" width="186" height="186" rx="46" fill="#fff" fill-opacity=".55"/>
+  <rect x="532" y="532" width="186" height="186" rx="93" fill="#34d399"/>
+</svg>

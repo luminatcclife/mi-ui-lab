@@ -20,10 +20,10 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
       {/* Color Harmonies Grid */}
       <div className="space-y-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Armonías Cromáticas Derivadas
+          <h3 className="font-display text-lg text-zinc-900 dark:text-zinc-100">
+            Armonías
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Colores complementarios, análogos y triádicos calculados en el círculo cromático respecto a tu color primario.
           </p>
         </div>
@@ -36,26 +36,26 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
             return (
               <div
                 key={harm.name}
-                className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 transition-all flex flex-col justify-between"
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2.5">
                     <div
-                      className="h-9 w-9 rounded-xl border border-black/10 shadow-xs shrink-0"
+                      className="h-9 w-9 rounded-xl border border-black/10 shrink-0"
                       style={{ backgroundColor: harm.hex }}
                     />
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                      <h4 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
                         {harm.name}
                       </h4>
-                      <span className="font-mono text-[11px] text-zinc-500">
+                      <span className="font-mono text-[13px] text-zinc-600 dark:text-zinc-400">
                         {harm.hex.toUpperCase()} ({harm.angle > 0 ? `+${harm.angle}` : harm.angle}°)
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
                   {harm.description}
                 </p>
 
@@ -63,10 +63,10 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
                   <button
                     type="button"
                     onClick={() => handleHexChange(harm.hex)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-2 py-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-colors cursor-pointer"
+                    className="inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-500 dark:border-zinc-400 px-3 text-sm text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                     title="Establecer como nuevo color primario del generador"
                   >
-                    <span>Usar como Primario</span>
+                    <span>Usar como base</span>
                   </button>
 
                   <button
@@ -78,7 +78,7 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
                         `HEX ${harm.hex} copiado`,
                       )
                     }
-                    className="p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors cursor-pointer"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                     title="Copiar HEX"
                   >
                     {isCopied ? (
@@ -97,10 +97,10 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
       {/* Tinted Neutrals Scale */}
       <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Neutros Tintados con el Tono Primario ({tokenPrefix}-slate)
+          <h3 className="font-display text-lg text-zinc-900 dark:text-zinc-100">
+            Neutros teñidos ({tokenPrefix}-slate)
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Grises sofisticados tintados sutilmente con el matiz de tu color primario (~7% saturación). Diseñados para fondos, bordes y superficies en armonía visual perfecta.
           </p>
         </div>
@@ -119,14 +119,14 @@ export function PaletteHarmoniesTab({ harmonies, tintedNeutrals, tokenPrefix, co
               className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-2.5 bg-white dark:bg-zinc-900/60 cursor-pointer hover:border-indigo-400 transition-all group"
             >
               <div
-                className="h-8 rounded-lg mb-2 shadow-2xs border border-black/5"
+                className="h-8 rounded-lg mb-2 border border-black/5"
                 style={{ backgroundColor: nShade.hex }}
               />
-              <div className="flex items-center justify-between text-[10px] font-mono">
-                <span className="font-bold text-zinc-700 dark:text-zinc-300">
+              <div className="flex items-center justify-between text-sm font-mono">
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
                   {nShade.step}
                 </span>
-                <span className="text-zinc-400">{nShade.hex.toUpperCase()}</span>
+                <span className="text-zinc-600 dark:text-zinc-400">{nShade.hex.toUpperCase()}</span>
               </div>
             </div>
           ))}

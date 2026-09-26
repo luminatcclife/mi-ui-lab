@@ -17,6 +17,7 @@ Taller personal de componentes de interfaz en React + Tailwind CSS. Funciona **1
 - Dexie 4 (IndexedDB) para la persistencia local
 - DOMPurify + iframe aislado (`sandbox="allow-scripts"`) con `@tailwindcss/browser` servido por la propia app para mostrar en vivo el HTML capturado
 - Vitest 5 + jsdom + fake-indexeddb para los tests; Playwright para los E2E (`e2e/`)
+- Electron 44 + electron-builder para la app de escritorio (`electron/`)
 
 ## Ejecutar en local
 
@@ -35,12 +36,37 @@ La CI (GitHub Actions) ejecuta `lint`, `test` y `build`, y en paralelo los E2E, 
 
 La primera vez, los E2E necesitan el Chromium de Playwright (`npx playwright install chromium`). Si no puedes descargarlo, usa el Chrome instalado: `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. Por defecto corren contra el servidor de desarrollo; con `E2E_PROD=1` corren contra el build de producción, que es lo que hace la CI.
 
+## App de escritorio (macOS)
+
+mi-ui-lab también se empaqueta como aplicación de escritorio con Electron. Se abre como cualquier otra app, con su propia ventana y sin servidor ni navegador.
+
+```bash
+npm run app:build  # build + release/mac/mi-ui-lab.app y release/mi-ui-lab-1.0.0.dmg
+npm run app        # build + abre la app sin empaquetar (para probar cambios)
+```
+
+- Para instalarla, abre el `.dmg` y arrastra **mi-ui-lab** a Aplicaciones.
+- La app no está firmada (no hay certificado "Developer ID" de Apple). Si la copias a otro Mac, la primera vez ábrela con clic derecho → **Abrir**.
+- La app carga el build desde un protocolo propio (`app://mi-ui-lab/`), así que IndexedDB, el iframe aislado y el Tailwind sin conexión funcionan igual que en la web. Solo las fuentes necesitan conexión.
+- **Sus datos van aparte de los del navegador:** se guardan en `~/Library/Application Support/mi-ui-lab`. Para pasar una colección de la web a la app (o al revés), usa Exportar/Importar.
+- Solo se abre una ventana a la vez, para que dos instancias no escriban en la misma base de datos.
+- El proceso principal está en `electron/main.cjs` y el icono en `build/icon.svg` (`build/icon.png` se genera a partir de él).
+- Si `npm` o `electron-builder` fallan con `unable to get local issuer certificate`, pásale a Node las raíces de confianza del sistema sin desactivar TLS:
+  `security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain > ~/macos-roots.pem` y luego `NODE_EXTRA_CA_CERTS=~/macos-roots.pem npm run app:build`.
+
+## Publicar
+
+Es una web estática: `npm run build` genera `dist/`, que se puede servir desde cualquier hosting estático (Vercel, Netlify, GitHub Pages…) o abrir con `npm run preview`. No necesita variables de entorno ni backend. Para probar los E2E contra una copia publicada: `E2E_BASE_URL=https://… npm run test:e2e`.
+
+Los cambios de cada versión están en el [CHANGELOG](CHANGELOG.md).
+
 ## Estructura
 
 ```
 src/
   App.tsx                  Navegación entre pantallas, modales y toasts
   hooks/useCatalog.ts      Estado del catálogo (piezas + favoritos); IndexedDB es la única fuente de verdad
+  hooks/useModalA11y.ts    Teclado y foco comunes a los modales (Escape, foco atrapado y devuelto)
   db/db.ts                 Esquema Dexie (v3), migración única desde localStorage y funciones de lectura/escritura
   components/
     *Screen.tsx            Las cuatro pantallas (Biblioteca, Laboratorio y Playground se cargan bajo demanda)
@@ -54,7 +80,10 @@ src/
   utils/                   Lógica pura: inspector, estandarizador HTML→JSX, detector de dependencias,
                            diff, búsqueda fuzzy, paletas, saneado de HTML, documento del sandbox,
                            validación de imports (cada una con su *.test.ts)
-docs/ESTADO_PROYECTO.md    Auditoría técnica y hoja de ruta
+electron/main.cjs          Proceso principal de la app de escritorio (protocolo app://, ventana)
+build/                     Icono de la app de escritorio (icon.svg → icon.png)
+docs/AUDITORIA_CIERRE.md   Auditoría de cierre v1.0.0: estado final y backlog
+docs/ESTADO_PROYECTO.md    Auditoría inicial y hoja de ruta (histórico)
 e2e/                       Tests E2E (Playwright) e instantáneas de texto de cada pestaña
 ```
 
@@ -75,6 +104,14 @@ Exportar genera un JSON con un **array de objetos `UIComponent`** (ver `src/type
 - todo lo importado se marca como pieza propia, y su `rawHtml` se sanea;
 - una pieza con un `id` que ya tienes la reemplaza; los elementos inválidos se listan y se descartan.
 
+**Qué no incluye la copia.** El JSON solo restaura tus **piezas propias**. Si lo importas en otro navegador (o tras borrar los datos del sitio), se pierden:
+
+- los **favoritos**;
+- las **etiquetas añadidas a piezas base**;
+- las **iteraciones registradas sobre piezas base** (viajan en el JSON, pero al importar se ignoran como cualquier pieza base, y la pieza vuelve a su versión original).
+
+"Restablecer" borra todo lo anterior y además tus piezas propias, sin posibilidad de deshacer: exporta antes una copia.
+
 ## Añadir una pieza base
 
 1. Crea el componente en `src/components/ui/`.
@@ -94,6 +131,7 @@ El HTML que se pega en el Inspector o llega en un JSON importado se considera no
 - La vista previa compila las clases con Tailwind v4. HTML escrito para Tailwind v3 puede verse ligeramente distinto en algunas utilidades que cambiaron entre versiones (p. ej. `ring`, `shadow-sm`, `bg-opacity-*`).
 - Sin conexión, las piezas capturadas se ven con estilos, pero con la fuente del sistema: las fuentes se cargan de Google Fonts.
 - El Inspector detecta dependencias como Flowbite o Radix, pero no las carga: el JavaScript interactivo que necesiten no funcionará en la vista previa.
+- La ficha técnica del Inspector (estilos computados y medidas) es **aproximada**: se calcula con el CSS de la propia app, no con el Tailwind del iframe. Las clases que la app no usa no aparecen en esos valores, aunque la vista previa sí las muestra. Si pegas varios elementos raíz, se agrupan en un `<div>`.
 - Los E2E cubren los flujos principales (capturar, importar, editar, piezas corruptas, uso sin conexión), no cada interacción de cada pantalla.
 
 ## Licencia

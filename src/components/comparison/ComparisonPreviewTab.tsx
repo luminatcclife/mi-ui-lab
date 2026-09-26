@@ -83,18 +83,18 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
         {/* Left Column: Component A */}
         <div
           id="compare-pane-a"
-          className="flex flex-col rounded-3xl border border-indigo-200 dark:border-indigo-900/40 bg-white dark:bg-zinc-900/60 shadow-lg overflow-hidden transition-all"
+          className="flex flex-col rounded-[20px] border border-indigo-200 dark:border-indigo-900/40 bg-white dark:bg-zinc-900/60 overflow-hidden transition-all"
         >
           {/* Pane Header A */}
           <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-indigo-50/50 dark:bg-indigo-950/20 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-600 text-white font-bold text-[10px]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-600 text-white font-semibold text-sm">
                 A
               </span>
-              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate">
+              <span className="font-mono font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate">
                 {compA?.name}
               </span>
-              <span className="rounded bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.2 text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+              <span className="rounded bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.2 text-sm font-mono text-zinc-600 dark:text-zinc-400">
                 v{compA?.version || '1.0.0'}
               </span>
             </div>
@@ -118,8 +118,8 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
           </div>
 
           {/* Variants selector A */}
-          <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-[10px] uppercase font-bold text-zinc-400">
+          <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center gap-1.5 text-sm">
+            <span className="text-sm uppercase font-semibold text-zinc-600 dark:text-zinc-400">
               Variante:
             </span>
             {compA?.variants.map((v) => (
@@ -127,9 +127,9 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                 key={v.id}
                 type="button"
                 onClick={() => setVariantAId(v.id)}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                className={`rounded-md px-2 py-0.5 text-[13px] font-medium transition-colors cursor-pointer ${
                   (activeVariantA?.id || compA.variants[0]?.id) === v.id
-                    ? 'bg-indigo-600 text-white font-semibold shadow-xs'
+                    ? 'bg-indigo-600 text-white font-semibold'
                     : 'bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
                 }`}
               >
@@ -150,7 +150,7 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
           </div>
 
           {/* Footer info A */}
-          <div className="border-t border-zinc-200 dark:border-zinc-800 px-4 py-2 bg-white dark:bg-zinc-900 flex items-center justify-between text-[11px] text-zinc-500">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 px-4 py-2 bg-white dark:bg-zinc-900 flex items-center justify-between text-[13px] text-zinc-600 dark:text-zinc-400">
             <span>{compA?.props?.length || 0} props documentadas</span>
             {onSelectComponentForPlayground && (
               <button
@@ -167,18 +167,18 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
         {/* Right Column: Component B */}
         <div
           id="compare-pane-b"
-          className="flex flex-col rounded-3xl border border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-zinc-900/60 shadow-lg overflow-hidden transition-all"
+          className="flex flex-col rounded-[20px] border border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-zinc-900/60 overflow-hidden transition-all"
         >
           {/* Pane Header B */}
           <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-emerald-50/50 dark:bg-emerald-950/20 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 text-white font-bold text-[10px]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 text-white font-semibold text-sm">
                 B
               </span>
-              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate">
+              <span className="font-mono font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate">
                 {compB?.name}
               </span>
-              <span className="rounded bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.2 text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+              <span className="rounded bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.2 text-sm font-mono text-zinc-600 dark:text-zinc-400">
                 v{compB?.version || '1.0.0'}
               </span>
             </div>
@@ -202,8 +202,8 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
           </div>
 
           {/* Variants selector B */}
-          <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-[10px] uppercase font-bold text-zinc-400">
+          <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center gap-1.5 text-sm">
+            <span className="text-sm uppercase font-semibold text-zinc-600 dark:text-zinc-400">
               Variante:
             </span>
             {compB?.variants.map((v) => (
@@ -211,9 +211,9 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                 key={v.id}
                 type="button"
                 onClick={() => setVariantBId(v.id)}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                className={`rounded-md px-2 py-0.5 text-[13px] font-medium transition-colors cursor-pointer ${
                   (activeVariantB?.id || compB.variants[0]?.id) === v.id
-                    ? 'bg-emerald-600 text-white font-semibold shadow-xs'
+                    ? 'bg-emerald-600 text-white font-semibold'
                     : 'bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
                 }`}
               >
@@ -234,7 +234,7 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
           </div>
 
           {/* Footer info B */}
-          <div className="border-t border-zinc-200 dark:border-zinc-800 px-4 py-2 bg-white dark:bg-zinc-900 flex items-center justify-between text-[11px] text-zinc-500">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 px-4 py-2 bg-white dark:bg-zinc-900 flex items-center justify-between text-[13px] text-zinc-600 dark:text-zinc-400">
             <span>{compB?.props?.length || 0} props documentadas</span>
             {onSelectComponentForPlayground && (
               <button
@@ -252,16 +252,15 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
       {/* Properties Diff Section */}
       <div
         id="props-diff-section"
-        className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 p-5 sm:p-6 shadow-xl"
+        className="rounded-[20px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 p-5 sm:p-6"
       >
         {/* Header and filters */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800 mb-4">
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <Sliders className="h-4 w-4 text-indigo-500" />
-              <span>Comparativa Detallada de Propiedades (Props)</span>
+            <h3 className="font-display text-[22px] leading-7 text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+              <span>Props, una a una</span>
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
               Resalta diferencias en tipos, valores por defecto y valores en ejecución entre {compA?.name} y {compB?.name}.
             </p>
           </div>
@@ -269,20 +268,20 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
           {/* Filter and search */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-400" />
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
               <input
                 type="text"
                 placeholder="Buscar propiedad..."
                 value={propSearchQuery}
                 onChange={(e) => setPropSearchQuery(e.target.value)}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 pl-8 pr-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none"
+                className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 pl-8 pr-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
             <select
               value={propFilterStatus}
               onChange={(e) => setPropFilterStatus(e.target.value)}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
+              className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
             >
               <option value="all">Todas ({propDiffResult.stats.total})</option>
               <option value="diffs">
@@ -297,10 +296,10 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
 
         {/* Props Diff Table */}
         {filteredProps.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+            <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 font-mono text-[13px]">
                   <th className="px-4 py-3 font-semibold">Propiedad</th>
                   <th className="px-4 py-3 font-semibold text-indigo-600 dark:text-indigo-400">
                     {compA?.name} (A)
@@ -332,7 +331,7 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                           {item.name}
                         </span>
                         {(item.propA?.required || item.propB?.required) && (
-                          <span className="inline-block w-fit rounded bg-rose-500/10 border border-rose-500/30 px-1 py-0.2 text-[9px] text-rose-500 font-sans">
+                          <span className="inline-block w-fit rounded bg-rose-500/10 border border-rose-500/30 px-1 py-0.2 text-sm text-rose-500 font-sans">
                             {item.propA?.required && item.propB?.required
                               ? 'Requerido en ambos'
                               : item.propA?.required
@@ -348,29 +347,29 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                       {item.propA ? (
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[11px] font-mono text-violet-600 dark:text-violet-300">
+                            <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[13px] font-mono text-violet-600 dark:text-violet-300">
                               {item.propA.type}
                             </span>
                             {item.propA.defaultValue && (
-                              <span className="text-[10px] text-zinc-400 font-mono">
+                              <span className="text-sm text-zinc-600 dark:text-zinc-400 font-mono">
                                 def: {item.propA.defaultValue}
                               </span>
                             )}
                           </div>
                           {item.renderedValueA !== undefined && (
-                            <div className="text-[11px] text-zinc-600 dark:text-zinc-400">
-                              <span className="text-zinc-400 text-[10px]">Render: </span>
+                            <div className="text-[13px] text-zinc-600 dark:text-zinc-400">
+                              <span className="text-zinc-600 dark:text-zinc-400 text-sm">Render: </span>
                               <code className="font-semibold text-zinc-800 dark:text-zinc-200">
                                 {String(item.renderedValueA)}
                               </code>
                             </div>
                           )}
-                          <p className="text-[11px] text-zinc-500 leading-snug line-clamp-2">
+                          <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-snug line-clamp-2">
                             {item.propA.description}
                           </p>
                         </div>
                       ) : (
-                        <span className="text-xs text-zinc-400 italic">
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400 italic">
                           No presente en {compA?.name}
                         </span>
                       )}
@@ -379,7 +378,7 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                     {/* Diff Status Badge */}
                     <td className="px-4 py-3 align-top text-center">
                       {item.status === 'identical' && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-1 text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
                           <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                           <span>Idéntica</span>
                         </span>
@@ -387,14 +386,14 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
 
                       {item.status === 'different' && (
                         <div className="inline-flex flex-col items-center gap-1">
-                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[13px] font-semibold text-amber-600 dark:text-amber-400">
                             <AlertCircle className="h-3 w-3" />
                             <span>Diferente</span>
                           </span>
                           {item.differences.map((diff, i) => (
                             <span
                               key={i}
-                              className="text-[10px] text-amber-700 dark:text-amber-300 max-w-[140px] leading-tight"
+                              className="text-sm text-amber-700 dark:text-amber-300 max-w-[140px] leading-tight"
                             >
                               {diff}
                             </span>
@@ -403,14 +402,14 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                       )}
 
                       {item.status === 'only_a' && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 text-[13px] font-semibold text-indigo-600 dark:text-indigo-400">
                           <MinusCircle className="h-3 w-3" />
                           <span>Solo en A</span>
                         </span>
                       )}
 
                       {item.status === 'only_b' && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 text-[13px] font-semibold text-emerald-600 dark:text-emerald-400">
                           <PlusCircle className="h-3 w-3" />
                           <span>Solo en B</span>
                         </span>
@@ -422,29 +421,29 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
                       {item.propB ? (
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                            <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[13px] font-mono text-emerald-600 dark:text-emerald-400">
                               {item.propB.type}
                             </span>
                             {item.propB.defaultValue && (
-                              <span className="text-[10px] text-zinc-400 font-mono">
+                              <span className="text-sm text-zinc-600 dark:text-zinc-400 font-mono">
                                 def: {item.propB.defaultValue}
                               </span>
                             )}
                           </div>
                           {item.renderedValueB !== undefined && (
-                            <div className="text-[11px] text-zinc-600 dark:text-zinc-400">
-                              <span className="text-zinc-400 text-[10px]">Render: </span>
+                            <div className="text-[13px] text-zinc-600 dark:text-zinc-400">
+                              <span className="text-zinc-600 dark:text-zinc-400 text-sm">Render: </span>
                               <code className="font-semibold text-zinc-800 dark:text-zinc-200">
                                 {String(item.renderedValueB)}
                               </code>
                             </div>
                           )}
-                          <p className="text-[11px] text-zinc-500 leading-snug line-clamp-2">
+                          <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-snug line-clamp-2">
                             {item.propB.description}
                           </p>
                         </div>
                       ) : (
-                        <span className="text-xs text-zinc-400 italic">
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400 italic">
                           No presente en {compB?.name}
                         </span>
                       )}
@@ -455,7 +454,7 @@ export function ComparisonPreviewTab({ compA, compB, activeVariantA, activeVaria
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-zinc-400 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">
+          <div className="p-8 text-center text-sm text-zinc-600 dark:text-zinc-400 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-xl">
             No se encontraron propiedades que coincidan con el filtro actual.
           </div>
         )}

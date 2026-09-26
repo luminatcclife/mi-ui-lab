@@ -54,7 +54,10 @@ export function InteractiveComponentRenderer(props: InteractiveComponentRenderer
       resetKeys={[props.component, JSON.stringify(props.activeVariantProps ?? {}), JSON.stringify(props.propOverrides ?? {})]}
       fallback={(error, reset) => <PieceErrorFallback name={props.component.name} error={error} onRetry={reset} />}
     >
-      <PieceRenderer {...props} />
+      {/* piece-scope: la pieza se pinta con la paleta original de Tailwind, no con la del chrome */}
+      <div className="piece-scope contents">
+        <PieceRenderer {...props} />
+      </div>
     </ErrorBoundary>
   );
 }

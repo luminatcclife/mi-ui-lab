@@ -1,27 +1,10 @@
 import React, { useState } from 'react';
-import {
-  Copy,
-  Check,
-  Code2,
-  FileText,
-  Palette,
-  History,
-  GitCommit,
-  PenLine,
-  Clock,
-  Star,
-  Tag,
-  Plus,
-  X,
-  ArrowLeftRight,
-  Eye,
-  Wand2,
-  ArrowRight,
-} from 'lucide-react';
+import { Copy, Check, Star, Plus, X, ArrowRight } from 'lucide-react';
 import { UIComponent } from '../types';
 import { InteractiveComponentRenderer } from './InteractiveComponentRenderer';
 import { CodeViewer } from './CodeViewer';
 import { PropsTable } from './PropsTable';
+import { CATEGORY_LABELS } from './libraryCategories';
 
 type DetailTab = 'resumen' | 'code' | 'props' | 'tokens' | 'versions';
 
@@ -42,10 +25,20 @@ interface ComponentDetailPanelProps {
   onOpenPaletteGenerator?: (primaryHex?: string) => void;
 }
 
+const outlineBtn =
+  'inline-flex min-h-11 items-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-4 text-base text-zinc-900 dark:text-zinc-50 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer';
+
+const segmentBtn = (active: boolean) =>
+  `min-h-9 rounded-lg px-3.5 text-sm transition-colors cursor-pointer ${
+    active
+      ? 'bg-white dark:bg-zinc-900 font-semibold text-zinc-900 dark:text-zinc-50 shadow-[var(--app-shadow-card)]'
+      : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+  }`;
+
 /**
  * Ficha de referencia de UNA pieza ya guardada: resumen visual de sus
  * variantes, código, props, tokens y versiones. A diferencia del
- * Playground, acá no hay edición en vivo de props — es la "hoja técnica"
+ * Playground, aquí no hay edición en vivo de props — es la "hoja técnica"
  * de la pieza; para jugar con ella de verdad está el botón
  * "Probar en Playground".
  */
@@ -70,465 +63,361 @@ export function ComponentDetailPanel({
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTagText, setNewTagText] = useState('');
 
-  const copy = (text: string, key: string, toastMsg: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    onToast(toastMsg);
-    setTimeout(() => setCopiedKey((prev) => (prev === key ? null : prev)), 2000);
+  const copy = async (text: string, key: string, toastMsg: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      onToast(toastMsg);
+      setTimeout(() => setCopiedKey((prev) => (prev === key ? null : prev)), 2000);
+    } catch {
+      onToast('No se pudo copiar al portapapeles');
+    }
   };
 
-  const tabs: { id: DetailTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'resumen', label: 'Resumen', icon: <Eye className="h-3.5 w-3.5" /> },
-    { id: 'code', label: 'Código Fuente', icon: <Code2 className="h-3.5 w-3.5" /> },
-    { id: 'props', label: 'Props & Tipos', icon: <FileText className="h-3.5 w-3.5" /> },
-    {
-      id: 'tokens',
-      label: `Tokens (${component.tokensUsed.length})`,
-      icon: <Palette className="h-3.5 w-3.5" />,
-    },
-    {
-      id: 'versions',
-      label: `Versiones (${component.versionHistory?.length || 1})`,
-      icon: <History className="h-3.5 w-3.5" />,
-    },
+  const confirmNewTag = () => {
+    const clean = newTagText.trim().toLowerCase().replace(/^#/, '');
+    if (clean && onAddTagToComponent) onAddTagToComponent(component.id, clean);
+    setIsAddingTag(false);
+    setNewTagText('');
+  };
+
+  const versionCount = component.versionHistory?.length || 1;
+  const tabs: { id: DetailTab; label: string }[] = [
+    { id: 'resumen', label: 'Variantes' },
+    { id: 'code', label: 'Código' },
+    { id: 'props', label: 'Props' },
+    { id: 'tokens', label: `Tokens (${component.tokensUsed.length})` },
+    { id: 'versions', label: `Versiones (${versionCount})` },
   ];
 
+  const history =
+    component.versionHistory && component.versionHistory.length > 0
+      ? component.versionHistory
+      : [
+          {
+            version: component.version || '1.0.0',
+            date: component.createdAt?.split('T')[0] || '2026-09-15',
+            notes: 'Versión base inicial registrada en la biblioteca.',
+            changes: ['Lanzamiento inicial de la pieza'],
+          },
+        ];
+
   return (
-    <main
-      id="component-detail-panel"
-      className="flex-1 flex flex-col h-full overflow-y-auto bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-200"
-    >
-      {/* Header */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 px-6 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white font-mono">
-                {component.name}
-              </h1>
-              <span className="rounded-md border border-indigo-500/30 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                v{component.version || '1.0.0'}
-              </span>
-              <span className="rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 capitalize">
-                {component.category}
-              </span>
-              {component.isCustom && (
-                <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                  Pieza Personal
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
-              {component.description}
-            </p>
+    <section id="component-detail-panel" className="flex flex-col gap-8 text-zinc-900 dark:text-zinc-50">
+      {/* Cabecera */}
+      <header className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <span className="mono-label text-xs text-zinc-600 dark:text-zinc-300">
+            {CATEGORY_LABELS[component.category]} · <span className="font-mono normal-case tracking-normal">v{component.version || '1.0.0'}</span>
+            {component.isCustom && <span className="text-emerald-600 dark:text-emerald-400"> · Propia</span>}
+          </span>
+          <h1 className="font-display text-[40px] leading-[46px]">{component.name}</h1>
+          <p className="max-w-3xl text-[19px] leading-[30px] text-zinc-600 dark:text-zinc-300">{component.description}</p>
+        </div>
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 flex items-center gap-1">
-                <Tag className="h-3 w-3 text-indigo-500" />
-                <span>Palabras clave:</span>
-              </span>
-              {component.tags.map((tag) => {
-                const isTagActive = activeTags.includes(tag.toLowerCase());
-                return (
-                  <span
-                    key={tag}
-                    onClick={() => onToggleTagFilter?.(tag)}
-                    title={onToggleTagFilter ? `${isTagActive ? 'Quitar filtro' : 'Filtrar por'} #${tag}` : `#${tag}`}
-                    className={`group/tag inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-all cursor-pointer ${
-                      isTagActive
-                        ? 'bg-indigo-600 text-white shadow-xs font-semibold'
-                        : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 text-zinc-700 dark:text-zinc-300'
-                    }`}
-                  >
-                    <span>#{tag}</span>
-                    {onRemoveTagFromComponent && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveTagFromComponent(component.id, tag);
-                        }}
-                        className="opacity-0 group-hover/tag:opacity-100 hover:text-rose-600 ml-0.5 cursor-pointer"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    )}
-                  </span>
-                );
-              })}
-              {onAddTagToComponent &&
-                (!isAddingTag ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingTag(true);
-                      setNewTagText('');
-                    }}
-                    className="inline-flex items-center gap-1 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>Añadir</span>
-                  </button>
-                ) : (
-                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-400 bg-white dark:bg-zinc-900 px-2 py-0.5 shadow-2xs">
-                    <input
-                      autoFocus
-                      type="text"
-                      value={newTagText}
-                      onChange={(e) => setNewTagText(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const clean = newTagText.trim().toLowerCase().replace(/^#/, '');
-                          if (clean) {
-                            onAddTagToComponent(component.id, clean);
-                            setIsAddingTag(false);
-                          }
-                        } else if (e.key === 'Escape') {
-                          setIsAddingTag(false);
-                        }
-                      }}
-                      className="w-24 text-[11px] bg-transparent text-zinc-900 dark:text-zinc-100 focus:outline-none"
-                    />
-                    <button type="button" onClick={() => setIsAddingTag(false)} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {onToggleFavorite && (
-              <button
-                type="button"
-                id="btn-toggle-favorite-detail"
-                onClick={() => onToggleFavorite(component.id)}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-xs ${
-                  isFavorite
-                    ? 'border-amber-400/40 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-amber-500'
+        <div className="flex flex-wrap items-center gap-2">
+          {component.tags.map((tag) => {
+            const isTagActive = activeTags.includes(tag.toLowerCase());
+            return (
+              <span
+                key={tag}
+                className={`inline-flex items-center rounded-full border text-sm ${
+                  isTagActive
+                    ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                    : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100'
                 }`}
               >
-                <Star className={`h-3.5 w-3.5 ${isFavorite ? 'fill-amber-400 text-amber-500' : ''}`} />
-                <span>{isFavorite ? 'En Favoritos' : 'Favorito'}</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              id="btn-iterate-version-detail"
-              onClick={() => onOpenIteration?.(component)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer shadow-xs"
-              title="Registrar nueva iteración o versión"
-            >
-              <GitCommit className="h-3.5 w-3.5" />
-              <span>Nueva Iteración</span>
-            </button>
-
-            {component.isCustom && onEditComponent && (
+                <button
+                  type="button"
+                  onClick={() => onToggleTagFilter?.(tag)}
+                  aria-pressed={isTagActive}
+                  title={`${isTagActive ? 'Quitar filtro' : 'Filtrar por'} #${tag}`}
+                  className={`py-1 pl-3 cursor-pointer ${onRemoveTagFromComponent ? 'pr-1' : 'pr-3'}`}
+                >
+                  #{tag}
+                </button>
+                {onRemoveTagFromComponent && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveTagFromComponent(component.id, tag)}
+                    aria-label={`Quitar la etiqueta #${tag}`}
+                    className="mr-1 flex h-6 w-6 items-center justify-center rounded-full opacity-60 hover:opacity-100 cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+          {onAddTagToComponent &&
+            (!isAddingTag ? (
               <button
                 type="button"
-                id="btn-edit-component-detail"
-                onClick={() => onEditComponent(component)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-xs"
-                title="Editar nombre, descripción, categoría y código"
+                onClick={() => {
+                  setIsAddingTag(true);
+                  setNewTagText('');
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-zinc-500 dark:border-zinc-400 px-3 py-1 text-sm text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50 cursor-pointer"
               >
-                <PenLine className="h-3.5 w-3.5 text-indigo-500" />
-                <span>Editar</span>
+                <Plus className="h-3.5 w-3.5" />
+                Añadir etiqueta
               </button>
-            )}
-
-            {onOpenCompare && (
-              <button
-                type="button"
-                id="btn-open-compare-from-detail"
-                onClick={() => onOpenCompare(component.id)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-xs"
-              >
-                <ArrowLeftRight className="h-3.5 w-3.5 text-indigo-500" />
-                <span>Comparar</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              id="btn-play-in-playground"
-              onClick={() => onPlayInPlayground(component.id)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors cursor-pointer"
-              title="Abrir esta pieza en el Playground para interactuar en vivo"
-            >
-              <Wand2 className="h-3.5 w-3.5" />
-              <span>Probar en Playground</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full border border-violet-600 dark:border-violet-400 bg-white dark:bg-zinc-900 py-0.5 pl-3 pr-1">
+                <input
+                  autoFocus
+                  type="text"
+                  aria-label="Nueva etiqueta"
+                  placeholder="nueva etiqueta"
+                  value={newTagText}
+                  onChange={(e) => setNewTagText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      confirmNewTag();
+                    } else if (e.key === 'Escape') {
+                      setIsAddingTag(false);
+                    }
+                  }}
+                  className="w-32 bg-transparent text-sm text-zinc-900 dark:text-zinc-50 outline-none"
+                />
+                <button type="button" onClick={confirmNewTag} aria-label="Añadir" className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={() => setIsAddingTag(false)} aria-label="Cancelar" className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
         </div>
 
-        {/* Tabs */}
-        <div className="mt-5 flex gap-2 border-b border-zinc-200 dark:border-zinc-800/80 -mb-4 overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            id="btn-play-in-playground"
+            onClick={() => onPlayInPlayground(component.id)}
+            title="Abrir esta pieza en el Playground para interactuar en vivo"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-indigo-600 px-5 text-base font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-400 dark:text-zinc-950 dark:hover:bg-indigo-300 cursor-pointer"
+          >
+            Probar en Playground
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          {onToggleFavorite && (
             <button
-              key={tab.id}
               type="button"
-              id={`detail-tab-btn-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center gap-2 border-b-2 px-3 py-2 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-indigo-600 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-              }`}
+              id="btn-toggle-favorite-detail"
+              onClick={() => onToggleFavorite(component.id)}
+              aria-pressed={isFavorite}
+              className={outlineBtn}
             >
-              {tab.icon}
-              <span>{tab.label}</span>
+              <Star className={`h-4 w-4 ${isFavorite ? 'fill-amber-400' : ''}`} />
+              {isFavorite ? 'Favorita' : 'Añadir a favoritas'}
             </button>
-          ))}
+          )}
+          <button
+            type="button"
+            id="btn-iterate-version-detail"
+            onClick={() => onOpenIteration?.(component)}
+            title="Registrar una nueva iteración o versión"
+            className={outlineBtn}
+          >
+            Nueva iteración
+          </button>
+          {component.isCustom && onEditComponent && (
+            <button
+              type="button"
+              id="btn-edit-component-detail"
+              onClick={() => onEditComponent(component)}
+              title="Editar nombre, descripción, categoría y código"
+              className={outlineBtn}
+            >
+              Editar
+            </button>
+          )}
+          {onOpenCompare && (
+            <button type="button" id="btn-open-compare-from-detail" onClick={() => onOpenCompare(component.id)} className={outlineBtn}>
+              Comparar
+            </button>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="flex-1 p-6 space-y-6">
-        {activeTab === 'resumen' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {component.variants.map((variant) => {
-              const isCopied = copiedKey === `snippet-${variant.id}`;
-              return (
-                <div
-                  key={variant.id}
-                  className="flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 p-5"
-                >
-                  <div className="mb-3">
-                    <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
-                      {variant.name}
-                    </h4>
-                    <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-snug">
-                      {variant.description}
-                    </p>
-                  </div>
-                  <div className="my-2 flex-1 flex items-center justify-center rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 p-4 shadow-inner min-h-[140px]">
-                    <InteractiveComponentRenderer
-                      component={component}
-                      activeVariantProps={variant.props}
-                      onToast={onToast}
-                      compact
-                    />
-                  </div>
-                  <div className="relative mt-3 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-900 p-2.5">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-mono uppercase text-zinc-400 font-medium">
-                        JSX Snippet
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => copy(variant.codeSnippet, `snippet-${variant.id}`, `¡Snippet de ${variant.name} copiado!`)}
-                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
-                      >
-                        {isCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                        <span>{isCopied ? 'Copiado' : 'Copiar'}</span>
-                      </button>
-                    </div>
-                    <pre className="overflow-x-auto text-[11px] font-mono text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                      {variant.codeSnippet}
-                    </pre>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {activeTab === 'code' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCodeType('implementation')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                    codeType === 'implementation'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  Implementación Completa ({component.name}.tsx)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCodeType('usage')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                    codeType === 'usage'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  Ejemplo de Uso
-                </button>
-              </div>
-              <span className="text-xs text-zinc-500 font-mono">Cero librerías externas · 100% Tailwind</span>
-            </div>
-            <CodeViewer
-              code={codeType === 'implementation' ? component.sourceCode : component.usageSnippet}
-              title={
-                codeType === 'implementation'
-                  ? `src/components/${component.name}.tsx`
-                  : 'Uso en tu proyecto'
-              }
-              onCopySuccess={onToast}
-            />
-          </div>
-        )}
-
-        {activeTab === 'props' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-              Props y Configuración de {component.name}
-            </h3>
-            <PropsTable props={component.props} />
-          </div>
-        )}
-
-        {activeTab === 'tokens' && (
-          <div className="space-y-4">
-            <div className="border-b border-zinc-200 dark:border-zinc-800/80 pb-3">
-              <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                Tokens Tailwind Utilizados en {component.name}
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                Haz clic en cualquier clase para copiarla a tu portapapeles.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {component.tokensUsed.map((token) => (
-                <button
-                  key={token}
-                  type="button"
-                  onClick={() => copy(token, `token-${token}`, `Token copiado: ${token}`)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 px-3 py-1.5 font-mono text-xs text-indigo-600 dark:text-indigo-300 hover:border-indigo-500/40 transition-colors cursor-pointer"
-                >
-                  <span>{token}</span>
-                  <Copy className="h-3 w-3 text-zinc-400 dark:text-zinc-500" />
-                </button>
-              ))}
-            </div>
-            {onOpenPaletteGenerator && (
-              <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                    <Palette className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                      ¿Necesitas una paleta de tokens personalizada?
-                    </h4>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                      Calculá tonos 50-950, contrastes WCAG y exportá tokens CSS/Tailwind.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onOpenPaletteGenerator()}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
-                >
-                  <Palette className="h-3.5 w-3.5" />
-                  <span>Generar Paleta</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'versions' && (
-          <div className="space-y-6 max-w-4xl">
-            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                    Versión actual:
-                  </span>
-                  <span className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-500/30 px-2.5 py-0.5">
-                    v{component.version || '1.0.0'}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-                  Historial de iteraciones y changelog documentado.
-                </p>
-              </div>
+      {/* Pestañas */}
+      <div>
+        <div role="tablist" aria-label="Secciones de la ficha" className="flex gap-6 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
+          {tabs.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
               <button
+                key={tab.id}
                 type="button"
-                onClick={() => onOpenIteration?.(component)}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 transition-colors shadow-sm cursor-pointer shrink-0"
+                role="tab"
+                aria-selected={active}
+                id={`detail-tab-btn-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-base transition-colors cursor-pointer ${
+                  active
+                    ? 'border-indigo-600 dark:border-indigo-400 font-semibold text-zinc-900 dark:text-zinc-50'
+                    : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+                }`}
               >
-                <GitCommit className="h-3.5 w-3.5" />
-                <span>Registrar Nueva Iteración</span>
+                {tab.label}
               </button>
-            </div>
+            );
+          })}
+        </div>
 
-            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
-              {(component.versionHistory && component.versionHistory.length > 0
-                ? component.versionHistory
-                : [
-                    {
-                      version: component.version || '1.0.0',
-                      date: component.createdAt?.split('T')[0] || '2026-09-15',
-                      notes: 'Versión base inicial registrada en la biblioteca.',
-                      changes: ['Lanzamiento inicial de la pieza'],
-                    },
-                  ]
-              ).map((iter, idx) => {
-                const isLatest = idx === 0;
+        <div role="tabpanel" aria-labelledby={`detail-tab-btn-${activeTab}`} className="pt-8">
+          {activeTab === 'resumen' && (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              {component.variants.map((variant) => {
+                const isCopied = copiedKey === `snippet-${variant.id}`;
                 return (
-                  <div key={`${iter.version}-${idx}`} className="relative">
-                    <div
-                      className={`absolute -left-6 top-1.5 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                        isLatest
-                          ? 'border-indigo-600 bg-indigo-600 text-white'
-                          : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900'
-                      }`}
-                    >
-                      <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                  <article
+                    key={variant.id}
+                    className="flex flex-col overflow-hidden rounded-[20px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-[var(--app-shadow-card)]"
+                  >
+                    <div className="flex min-h-[180px] items-center justify-center border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 bg-[radial-gradient(var(--color-zinc-200)_1px,transparent_1px)] dark:bg-[radial-gradient(var(--color-zinc-800)_1px,transparent_1px)] [background-size:18px_18px] p-6">
+                      <InteractiveComponentRenderer component={component} activeVariantProps={variant.props} onToast={onToast} compact />
                     </div>
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 shadow-xs">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                            v{iter.version}
-                          </span>
-                          {isLatest && (
-                            <span className="rounded-md bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                              Versión Activa
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-zinc-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {iter.date}
-                        </span>
+                    <div className="flex flex-1 flex-col gap-3 px-6 py-5">
+                      <div>
+                        <h3 className="font-display text-[22px] leading-7">{variant.name}</h3>
+                        {variant.description && (
+                          <p className="mt-1 text-sm leading-[21px] text-zinc-600 dark:text-zinc-300">{variant.description}</p>
+                        )}
                       </div>
-                      <p className="mt-2 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
-                        {iter.notes}
-                      </p>
-                      {iter.changes && iter.changes.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800/60">
-                          {iter.changes.map((change, cIdx) => (
-                            <span
-                              key={cIdx}
-                              className="rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] text-zinc-600 dark:text-zinc-400"
-                            >
-                              {change}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <div className="mt-auto flex items-start gap-3 rounded-xl bg-zinc-900 dark:bg-black px-4 py-3 text-zinc-50">
+                        <pre className="min-w-0 flex-1 overflow-x-auto font-mono text-[13px] leading-5">{variant.codeSnippet}</pre>
+                        <button
+                          type="button"
+                          onClick={() => copy(variant.codeSnippet, `snippet-${variant.id}`, `Snippet de ${variant.name} copiado`)}
+                          className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-zinc-400 px-3 text-sm hover:bg-white/10 cursor-pointer"
+                        >
+                          {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          {isCopied ? 'Copiado' : 'Copiar'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+
+          {activeTab === 'code' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div role="group" aria-label="Qué código ver" className="flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+                  <button type="button" aria-pressed={codeType === 'implementation'} onClick={() => setCodeType('implementation')} className={segmentBtn(codeType === 'implementation')}>
+                    Implementación ({component.name}.tsx)
+                  </button>
+                  <button type="button" aria-pressed={codeType === 'usage'} onClick={() => setCodeType('usage')} className={segmentBtn(codeType === 'usage')}>
+                    Ejemplo de uso
+                  </button>
+                </div>
+                <span className="text-sm text-zinc-600 dark:text-zinc-300">Sin librerías externas · solo Tailwind</span>
+              </div>
+              <CodeViewer
+                code={codeType === 'implementation' ? component.sourceCode : component.usageSnippet}
+                title={codeType === 'implementation' ? `src/components/${component.name}.tsx` : 'Uso en tu proyecto'}
+                onCopySuccess={onToast}
+              />
+            </div>
+          )}
+
+          {activeTab === 'props' && <PropsTable props={component.props} />}
+
+          {activeTab === 'tokens' && (
+            <div className="flex flex-col gap-6">
+              <p className="text-base text-zinc-600 dark:text-zinc-300">Pulsa una clase para copiarla.</p>
+              <div className="flex flex-wrap gap-2">
+                {component.tokensUsed.map((token) => {
+                  const isCopied = copiedKey === `token-${token}`;
+                  return (
+                    <button
+                      key={token}
+                      type="button"
+                      onClick={() => copy(token, `token-${token}`, `Token copiado: ${token}`)}
+                      className="inline-flex items-center gap-2 rounded-full border border-zinc-500 dark:border-zinc-400 px-3.5 py-1.5 font-mono text-[13px] text-zinc-900 dark:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    >
+                      {token}
+                      {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+              {onOpenPaletteGenerator && (
+                <div className="flex flex-col gap-4 rounded-xl bg-violet-100 dark:bg-violet-900 px-6 py-5 sm:flex-row sm:items-center">
+                  <span className="mono-label self-start sm:self-center rounded-full bg-violet-600 dark:bg-violet-400 px-3 py-1 text-xs text-white dark:text-zinc-950">
+                    Nota
+                  </span>
+                  <p className="flex-1 text-base">
+                    ¿Necesitas tu propia paleta? Calcula tonos del 50 al 950, revisa contrastes y exporta los tokens.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPaletteGenerator()}
+                    className="min-h-11 shrink-0 rounded-full bg-zinc-900 dark:bg-zinc-50 px-5 text-base font-semibold text-zinc-50 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 cursor-pointer"
+                  >
+                    Generar Paleta
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'versions' && (
+            <div className="flex max-w-3xl flex-col gap-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <p className="text-base text-zinc-600 dark:text-zinc-300">
+                  Versión actual <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-50">v{component.version || '1.0.0'}</span>
+                </p>
+                <button type="button" onClick={() => onOpenIteration?.(component)} className={outlineBtn}>
+                  Registrar nueva iteración
+                </button>
+              </div>
+
+              <ol className="flex flex-col">
+                {history.map((iter, idx) => {
+                  const isLatest = idx === 0;
+                  const isLast = idx === history.length - 1;
+                  return (
+                    <li key={`${iter.version}-${idx}`} className="grid grid-cols-[24px_minmax(0,1fr)] gap-4">
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 ${
+                            isLatest ? 'border-indigo-600 bg-indigo-600 dark:border-indigo-400 dark:bg-indigo-400' : 'border-zinc-500 bg-zinc-50 dark:border-zinc-400 dark:bg-zinc-950'
+                          }`}
+                        />
+                        {!isLast && <span className="w-px flex-1 bg-zinc-300 dark:bg-zinc-700" />}
+                      </div>
+                      <div className={`flex flex-col gap-2 ${isLast ? '' : 'pb-8'}`}>
+                        <div className="flex flex-wrap items-baseline gap-3">
+                          <span className="font-display text-[22px] leading-7">v{iter.version}</span>
+                          {isLatest && <span className="mono-label text-xs text-indigo-700 dark:text-indigo-400">Activa</span>}
+                          <span className="text-sm text-zinc-600 dark:text-zinc-300">{iter.date}</span>
+                        </div>
+                        <p className="text-base leading-[26px]">{iter.notes}</p>
+                        {iter.changes && iter.changes.length > 0 && (
+                          <ul className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
+                            {iter.changes.map((change, cIdx) => (
+                              <li key={cIdx} className="flex gap-2">
+                                <span aria-hidden="true">·</span>
+                                {change}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+        </div>
       </div>
-    </main>
+    </section>
   );
 }

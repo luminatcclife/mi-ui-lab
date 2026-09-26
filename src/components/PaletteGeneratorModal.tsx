@@ -1,18 +1,7 @@
+import { MODAL_OVERLAY_CLASS, ModalHeader, modalBtn, modalPanelClass } from './ModalFrame';
 import React, { useState, useMemo } from 'react';
-import {
-  X,
-  Copy,
-  Check,
-  Sparkles,
-  Dices,
-  Eye,
-  Code2,
-  Sliders,
-  Palette,
-  Sun,
-  Moon,
-  Info,
-} from 'lucide-react';
+import { useModalA11y } from '../hooks/useModalA11y';
+import { Copy, Check, Dices } from 'lucide-react';
 
 import {
   generateTailwindShades,
@@ -151,6 +140,8 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
     }
   }, [exportFormat, tokenPrefix, shades]);
 
+  const dialogRef = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   // Dynamic styling helper for live preview
@@ -160,166 +151,109 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
   return (
     <div
       id="palette-generator-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/75 p-3 sm:p-6 backdrop-blur-md animate-in fade-in duration-200"
+      className={MODAL_OVERLAY_CLASS}
     >
       <div
         id="palette-generator-container"
-        className="relative flex h-full max-h-[92vh] w-full max-w-5xl flex-col rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden text-zinc-900 dark:text-zinc-100"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="palette-modal-title"
+        tabIndex={-1}
+        className={modalPanelClass('max-w-5xl', 'h-full')}
       >
-        {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 px-6 py-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border shadow-xs transition-colors duration-300"
-              style={{
-                backgroundColor: shade500,
-                borderColor: shade600,
-                color: primaryShade.recommendedTextColor,
-              }}
+        <ModalHeader
+          caption="Paleta"
+          title="Generador de paletas"
+          titleId="palette-modal-title"
+          description="Calcula la escala del 50 al 950, revisa contrastes WCAG y exporta los tokens en CSS o Tailwind."
+          onClose={onClose}
+          closeButtonId="close-palette-generator-btn"
+          leading={
+            <span
+              aria-hidden="true"
+              className="mt-1 hidden h-12 w-12 shrink-0 rounded-xl border sm:block"
+              style={{ backgroundColor: shade500, borderColor: shade600 }}
+            />
+          }
+        />
+
+        {/* Color de partida */}
+        <div className="flex shrink-0 flex-col gap-4 border-b border-zinc-200 dark:border-zinc-800 px-6 py-5 sm:px-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <label
+              htmlFor="primary-color-picker-input"
+              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2"
+              style={{ backgroundColor: primaryShade.hex, borderColor: primaryShade.isLight ? '#8a7660' : '#2a1f1a' }}
+              title="Abrir el selector de color"
             >
-              <Palette className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight font-mono">
-                  Generador de Paletas & Tokens Tailwind
-                </h2>
-                <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">
-                  11 Escalas
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Calcula automáticamente la escala 50-950, ratios WCAG y exporta tokens CSS/Tailwind para tus componentes.
-              </p>
-            </div>
-          </div>
+              <span className="sr-only">Elegir color</span>
+              <input
+                type="color"
+                id="primary-color-picker-input"
+                value={primaryShade.hex}
+                onChange={(e) => handleHexChange(e.target.value)}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+            </label>
 
-          <button
-            type="button"
-            id="close-palette-generator-btn"
-            onClick={onClose}
-            className="rounded-xl p-2 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-            title="Cerrar generador de paletas"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+            <label className="relative flex items-center">
+              <span className="sr-only">Color en hexadecimal</span>
+              <span className="pointer-events-none absolute left-3.5 font-mono text-base text-zinc-600 dark:text-zinc-300">#</span>
+              <input
+                type="text"
+                id="primary-hex-text-input"
+                value={hexInput.replace(/^#/, '')}
+                onChange={(e) => handleHexChange('#' + e.target.value)}
+                maxLength={7}
+                placeholder="6366F1"
+                className="h-11 w-32 rounded-xl border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 pl-7 pr-3 font-mono text-base uppercase text-zinc-900 dark:text-zinc-50"
+              />
+            </label>
 
-        {/* Primary Color Controls Bar */}
-        <div className="border-b border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 sm:p-5 shrink-0">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-            {/* Left: Input, Picker & Randomizer (7 cols) */}
-            <div className="lg:col-span-7 flex flex-wrap items-center gap-3">
-              {/* Native Color Picker Circle */}
-              <div className="relative flex items-center">
-                <label
-                  htmlFor="primary-color-picker-input"
-                  className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border-2 shadow-xs transition-transform hover:scale-105"
-                  style={{
-                    backgroundColor: primaryShade.hex,
-                    borderColor: primaryShade.isLight ? '#cbd5e1' : '#475569',
-                  }}
-                  title="Haz clic para abrir el selector de color nativo"
-                >
-                  <input
-                    type="color"
-                    id="primary-color-picker-input"
-                    value={primaryShade.hex}
-                    onChange={(e) => handleHexChange(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <Sliders
-                    className="h-4 w-4 drop-shadow-sm"
-                    style={{ color: primaryShade.recommendedTextColor }}
-                  />
-                </label>
-              </div>
+            <span className="hidden font-mono text-sm text-zinc-600 dark:text-zinc-300 md:inline">
+              rgb({primaryShade.rgb.r}, {primaryShade.rgb.g}, {primaryShade.rgb.b}) · hsl({primaryShade.hsl.h}°, {primaryShade.hsl.s}%, {primaryShade.hsl.l}%)
+            </span>
 
-              {/* Hex Code Input */}
-              <div className="relative flex items-center">
-                <span className="absolute left-3 font-mono text-xs font-bold text-zinc-400">#</span>
-                <input
-                  type="text"
-                  id="primary-hex-text-input"
-                  value={hexInput.replace(/^#/, '')}
-                  onChange={(e) => handleHexChange('#' + e.target.value)}
-                  maxLength={7}
-                  placeholder="6366F1"
-                  className="h-10 w-28 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-7 pr-3 font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
+            <button
+              type="button"
+              id="btn-random-primary-color"
+              onClick={handleRandomizeColor}
+              title="Probar un color al azar"
+              className={modalBtn.secondary}
+            >
+              <Dices className="h-4 w-4" />
+              Al azar
+            </button>
 
-              {/* HSL and RGB indicators */}
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/60 px-2.5 py-2 rounded-xl border border-zinc-200/80 dark:border-zinc-700/60">
-                <span>RGB({primaryShade.rgb.r}, {primaryShade.rgb.g}, {primaryShade.rgb.b})</span>
-                <span className="text-zinc-300 dark:text-zinc-600">|</span>
-                <span>HSL({primaryShade.hsl.h}°, {primaryShade.hsl.s}%, {primaryShade.hsl.l}%)</span>
-              </div>
-
-              {/* Random Color Button */}
-              <button
-                type="button"
-                id="btn-random-primary-color"
-                onClick={handleRandomizeColor}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer shadow-2xs"
-                title="Generar un color primario aleatorio para inspirarte"
-              >
-                <Dices className="h-4 w-4 text-indigo-500" />
-                <span className="hidden sm:inline">Aleatorio</span>
-              </button>
-            </div>
-
-            {/* Right: Token Name Prefix & Quick Copy (5 cols) */}
-            <div className="lg:col-span-5 flex items-center justify-start lg:justify-end gap-3">
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="token-prefix-input"
-                  className="text-xs font-medium text-zinc-500 dark:text-zinc-400 shrink-0"
-                >
-                  Prefijo Token:
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="token-prefix-input"
-                    value={tokenPrefix}
-                    onChange={(e) => setTokenPrefix(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
-                    placeholder="brand"
-                    maxLength={14}
-                    className="h-9 w-24 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Copy Primary 500 */}
+            <div className="ml-auto flex items-center gap-2">
+              <label htmlFor="token-prefix-input" className="text-sm text-zinc-600 dark:text-zinc-300">
+                Prefijo
+              </label>
+              <input
+                type="text"
+                id="token-prefix-input"
+                value={tokenPrefix}
+                onChange={(e) => setTokenPrefix(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
+                placeholder="brand"
+                maxLength={14}
+                className="h-11 w-28 rounded-xl border border-zinc-500 dark:border-zinc-400 bg-white dark:bg-zinc-900 px-3 font-mono text-base text-zinc-900 dark:text-zinc-50"
+              />
               <button
                 type="button"
                 id="btn-copy-primary-hex"
-                onClick={() =>
-                  handleCopy(
-                    primaryShade.hex,
-                    'primary-hex',
-                    `HEX ${primaryShade.hex} copiado al portapapeles`,
-                  )
-                }
-                className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/40 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                title="Copiar el código HEX del color primario"
+                onClick={() => handleCopy(primaryShade.hex, 'primary-hex', `HEX ${primaryShade.hex} copiado al portapapeles`)}
+                title="Copiar el HEX del tono 500"
+                className={modalBtn.secondary}
               >
-                {copiedKey === 'primary-hex' ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                <span>{copiedKey === 'primary-hex' ? '¡Copiado!' : 'Copiar 500'}</span>
+                {copiedKey === 'primary-hex' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copiedKey === 'primary-hex' ? 'Copiado' : 'Copiar 500'}
               </button>
             </div>
           </div>
 
-          {/* Quick Presets Swatches */}
-          <div className="mt-3.5 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider shrink-0 mr-1">
-              Presets:
-            </span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="mono-label shrink-0 text-xs text-zinc-600 dark:text-zinc-300">Empieza con</span>
             {PRESET_PRIMARIES.map((preset) => {
               const isCurrent = primaryShade.hex.toLowerCase() === preset.hex.toLowerCase();
               return (
@@ -328,125 +262,82 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
                   type="button"
                   id={`preset-${preset.hex.replace('#', '')}`}
                   onClick={() => handleHexChange(preset.hex)}
+                  aria-pressed={isCurrent}
                   title={`${preset.name} (${preset.hex})`}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-medium transition-all cursor-pointer shrink-0 ${
+                  className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors cursor-pointer ${
                     isCurrent
-                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-semibold shadow-xs'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                      ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900'
+                      : 'border-zinc-500 dark:border-zinc-400 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full ring-1 ring-black/10 shrink-0"
-                    style={{ backgroundColor: preset.hex }}
-                  />
-                  <span>{preset.name}</span>
+                  <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/15" style={{ backgroundColor: preset.hex }} />
+                  {preset.name}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Navigation Tabs Header */}
-        <div className="border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/70 dark:bg-zinc-900/30 px-6 py-2.5 flex items-center justify-between gap-4 shrink-0">
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            <button
-              type="button"
-              id="tab-btn-shades"
-              onClick={() => setActiveTab('shades')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'shades'
-                  ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700/80'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              <Palette className="h-3.5 w-3.5" />
-              <span>Escala Tailwind (50-950)</span>
-            </button>
-
-            <button
-              type="button"
-              id="tab-btn-preview"
-              onClick={() => setActiveTab('preview')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'preview'
-                  ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700/80'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span>Vista Previa de Componente</span>
-            </button>
-
-            <button
-              type="button"
-              id="tab-btn-harmonies"
-              onClick={() => setActiveTab('harmonies')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'harmonies'
-                  ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700/80'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Armonías & Neutros</span>
-            </button>
-
-            <button
-              type="button"
-              id="tab-btn-export"
-              onClick={() => setActiveTab('export')}
-              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === 'export'
-                  ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700/80'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              <Code2 className="h-3.5 w-3.5" />
-              <span>Exportar Tokens Tailwind</span>
-            </button>
+        {/* Pestañas */}
+        <div className="flex shrink-0 flex-wrap items-end justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 px-6 sm:px-8">
+          <div role="tablist" aria-label="Secciones de la paleta" className="flex gap-6 overflow-x-auto">
+            {(
+              [
+                ['shades', 'Escala 50–950'],
+                ['preview', 'Vista previa'],
+                ['harmonies', 'Armonías y neutros'],
+                ['export', 'Exportar'],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`tab-btn-${id}`}
+                aria-selected={activeTab === id}
+                onClick={() => setActiveTab(id)}
+                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-base transition-colors cursor-pointer ${
+                  activeTab === id
+                    ? 'border-indigo-600 dark:border-indigo-400 font-semibold text-zinc-900 dark:text-zinc-50'
+                    : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Tab-specific info or actions */}
-          <div className="hidden md:flex items-center gap-2 text-xs text-zinc-500">
-            {activeTab === 'shades' && (
-              <span className="text-[11px] text-zinc-400 flex items-center gap-1">
-                <Info className="h-3 w-3" />
-                Haz clic en cualquier tono para copiar su valor
-              </span>
-            )}
+          <div className="hidden pb-2 md:block">
+            {activeTab === 'shades' && <span className="text-sm text-zinc-600 dark:text-zinc-300">Pulsa un tono para copiarlo</span>}
             {activeTab === 'preview' && (
-              <div className="flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setPreviewThemeMode('light')}
-                  className={`p-1 rounded ${
-                    previewThemeMode === 'light'
-                      ? 'bg-zinc-100 text-amber-500 font-bold'
-                      : 'text-zinc-400'
-                  }`}
-                  title="Fondo Claro"
-                >
-                  <Sun className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewThemeMode('dark')}
-                  className={`p-1 rounded ${
-                    previewThemeMode === 'dark'
-                      ? 'bg-zinc-900 text-indigo-400 font-bold'
-                      : 'text-zinc-400'
-                  }`}
-                  title="Fondo Oscuro"
-                >
-                  <Moon className="h-3.5 w-3.5" />
-                </button>
+              <div role="group" aria-label="Fondo de la vista previa" className="flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
+                {(
+                  [
+                    ['light', 'Claro'],
+                    ['dark', 'Oscuro'],
+                  ] as const
+                ).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={previewThemeMode === mode}
+                    onClick={() => setPreviewThemeMode(mode)}
+                    className={`min-h-8 rounded-lg px-3 text-sm cursor-pointer ${
+                      previewThemeMode === mode
+                        ? 'bg-white dark:bg-zinc-900 font-semibold text-zinc-900 dark:text-zinc-50 shadow-[var(--app-shadow-card)]'
+                        : 'text-zinc-600 dark:text-zinc-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
 
         {/* Modal Main Body Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
           {/* TAB 1: SHADES 50-950 */}
           {activeTab === 'shades' && (
             <PaletteShadesTab
@@ -493,18 +384,11 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
           )}
         </div>
 
-        {/* Modal Bottom Footer */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-6 py-3.5 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full border border-black/10 shrink-0"
-              style={{ backgroundColor: primaryShade.hex }}
-            />
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              Color activo: <strong className="font-mono text-zinc-800 dark:text-zinc-200">{primaryShade.hex.toUpperCase()}</strong> (Tono 500)
-            </span>
-          </div>
-
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 sm:px-8">
+          <span className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <span className="h-4 w-4 shrink-0 rounded-full border border-black/15" style={{ backgroundColor: primaryShade.hex }} />
+            Tono 500: <strong className="font-mono font-semibold text-zinc-900 dark:text-zinc-50">{primaryShade.hex.toUpperCase()}</strong>
+          </span>
           <div className="flex items-center gap-2">
             {onApplyToLabTheme && (
               <button
@@ -515,19 +399,13 @@ border-t-4 border-t-${prefix}-500 bg-white dark:bg-zinc-900 border-zinc-200 dark
                   onToast(`¡Paleta ${tokenPrefix} (${primaryShade.hex}) aplicada al laboratorio!`);
                   onClose();
                 }}
-                className="rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 px-3.5 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition-colors cursor-pointer"
-                title="Aplicar este color primario a la vista actual"
+                title="Aplicar este color a la vista actual"
+                className={modalBtn.primary}
               >
-                Aplicar al Laboratorio
+                Aplicar al laboratorio
               </button>
             )}
-
-            <button
-              type="button"
-              id="btn-close-palette-modal-footer"
-              onClick={onClose}
-              className="rounded-xl bg-zinc-200 dark:bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-700 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-            >
+            <button type="button" id="btn-close-palette-modal-footer" onClick={onClose} className={modalBtn.secondary}>
               Cerrar
             </button>
           </div>
