@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). El proyecto sigue [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Cambiado
+- Inicio «Órbita» (paleta Nebulosa): las piezas orbitan alrededor de un núcleo, un anillo por categoría y cada categoría con su color. Los anillos se pueden plegar; un satélite se enfoca con un clic y se abre en el Playground con doble clic o con «Probar». Un anillo lleno muestra un satélite «+N» que lleva a la Biblioteca. Los anillos giran despacio, salvo con «reducir movimiento». Es la primera pantalla con el nuevo aspecto; el resto sigue en «papel y tinta» hasta validarlo.
+- El aviso de copia de seguridad adopta los colores de Órbita.
+- Fuentes nuevas: Chakra Petch (rótulos y cifras) y Sora (texto), solo en Inicio.
+
 ## [1.0.0] — 2026-09-26
 
 Primera versión cerrada. Recoge la hoja de ruta de `docs/ESTADO_PROYECTO.md` (§8-§9), la auditoría de cierre (`docs/AUDITORIA_CIERRE.md`) y el rediseño visual «papel y tinta».

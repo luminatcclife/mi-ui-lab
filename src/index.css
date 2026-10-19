@@ -267,3 +267,231 @@ h1, h2, h3, h4, h5, h6 {
   font-family: inherit;
   letter-spacing: normal;
 }
+
+/* Inicio «Órbita», paleta Nebulosa. Va aparte del aspecto «papel y tinta» del resto de la app:
+   sus colores viven en variables --orb-* y solo se aplican dentro de .orbita. Cada categoría tiene
+   un color fijo (--orb-<categoría>) que se usa en su anillo, sus satélites y su filtro. */
+.orbita {
+  --orb-bg0: #07051a;
+  --orb-bg1: #1d1050;
+  --orb-ink: #f1ecff;
+  --orb-muted: #a9a0d4;
+  --orb-a1: #ff4fd8;
+  --orb-a2: #8a63ff;
+  --orb-a3: #36e0ff;
+  --orb-warn: #ffc857;
+  --orb-grad: linear-gradient(100deg, var(--orb-a1), var(--orb-a2) 50%, var(--orb-a3));
+  --orb-hud: "Chakra Petch", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --orb-cards: #ff5fd2;
+  --orb-buttons: #ffb547;
+  --orb-inputs: #5cf2a6;
+  --orb-feedback: #ff7a6b;
+  --orb-navigation: #47c8ff;
+  --orb-data: #b38cff;
+  --orb-custom: #e6e1ff;
+  font-family: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--orb-ink);
+  background: radial-gradient(1200px 760px at 50% 48%, var(--orb-bg1) 0%, var(--orb-bg0) 70%);
+}
+
+.orbita :is(h1, h2, h3) {
+  font-family: var(--orb-hud);
+  letter-spacing: 0.04em;
+}
+
+.orbita :focus-visible {
+  outline-color: var(--orb-a3);
+}
+
+.orb-hud {
+  font-family: var(--orb-hud);
+}
+
+.orb-label {
+  font-family: var(--orb-hud);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--orb-muted);
+}
+
+.orb-grad-text {
+  background: var(--orb-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.orb-panel {
+  border: 1px solid color-mix(in srgb, var(--orb-a2) 35%, transparent);
+  background: color-mix(in srgb, var(--orb-a2) 8%, transparent);
+}
+
+.orb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid color-mix(in srgb, var(--cat, var(--orb-a2)) 55%, transparent);
+  background: transparent;
+  color: var(--orb-ink);
+  font-family: var(--orb-hud);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.orb-btn:hover {
+  background: color-mix(in srgb, var(--cat, var(--orb-a2)) 14%, transparent);
+}
+
+.orb-btn-primary {
+  min-height: 56px;
+  border: 0;
+  background: var(--orb-grad);
+  color: #0b0618;
+  font-weight: 700;
+}
+
+.orb-btn-primary:hover {
+  background: var(--orb-grad);
+  filter: brightness(1.08);
+}
+
+/* Filtro de anillo: aria-pressed="false" = plegado. */
+.orb-ring-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--cat) 55%, transparent);
+  background: color-mix(in srgb, var(--cat) 10%, transparent);
+  color: var(--orb-ink);
+  font-family: var(--orb-hud);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.orb-ring-toggle[aria-pressed="false"] {
+  border-color: color-mix(in srgb, var(--cat) 20%, transparent);
+  background: transparent;
+  color: var(--orb-muted);
+}
+
+.orb-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed color-mix(in srgb, var(--cat) var(--ring-mix, 45%), transparent);
+  pointer-events: none;
+}
+
+.orb-ring-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 6px;
+  background: color-mix(in srgb, var(--orb-bg1) 70%, var(--orb-bg0));
+  font-family: var(--orb-hud);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cat);
+  pointer-events: none;
+}
+
+.orb-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 64px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 22px;
+  border: 1px solid var(--cat);
+  background: color-mix(in srgb, var(--cat) 14%, var(--orb-bg0));
+  color: var(--orb-ink);
+  font-family: var(--orb-hud);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.orb-node:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.orb-node[aria-pressed="true"] {
+  background: var(--cat);
+  color: #0b0618;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--cat) 75%, transparent);
+}
+
+.orb-core {
+  border: 2px solid transparent;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--orb-a2) 35%, var(--orb-bg0)), var(--orb-bg0) 72%) padding-box,
+    var(--orb-grad) border-box;
+}
+
+.orb-warn-box {
+  border: 1px solid color-mix(in srgb, var(--orb-warn) 55%, transparent);
+  background: color-mix(in srgb, var(--orb-warn) 8%, transparent);
+}
+
+@keyframes orb-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes orb-spin-reverse {
+  to { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 0 40px color-mix(in srgb, var(--orb-a2) 40%, transparent); }
+  50% { box-shadow: 0 0 90px color-mix(in srgb, var(--orb-a3) 55%, transparent); }
+}
+
+.orb-spin { animation: orb-spin linear infinite; }
+.orb-spin-reverse { animation: orb-spin-reverse linear infinite; }
+.orb-core { animation: orb-pulse 5s ease-in-out infinite; }
+
+/* En un móvil el mapa mide unos 350 px: satélites y etiquetas más pequeños para que no se pisen. */
+@media (max-width: 640px) {
+  .orb-node {
+    min-width: 0;
+    height: 36px;
+    padding: 0 8px;
+    border-radius: 18px;
+    font-size: 10px;
+  }
+
+  .orb-ring-label {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+
+  .orb-core-name {
+    font-size: 12px;
+    line-height: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-spin, .orb-spin-reverse, .orb-core { animation: none; }
+  .orb-node { transition: none; }
+}
