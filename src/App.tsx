@@ -203,10 +203,12 @@ function MainApp() {
         <Suspense fallback={<ScreenLoading />}>
         {screen === 'home' && (
           <HomeScreen
-            totalComponents={components.length}
+            components={components}
             customCount={customCount}
             favoritesCount={favoriteIds.length}
+            selectedId={selectedId}
             onNavigate={handleNavigate}
+            onOpenPiece={handlePlayInPlayground}
             onExport={() => setIsExportOpen(true)}
             backupKey={backupKey}
           />
